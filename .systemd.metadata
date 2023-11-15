@@ -1,0 +1,4 @@
+b5ae2cd2813d7fdeebbe4f8f1786b55b5728b17aeee80b9dafad0f49e1734392 SOURCES/0432-units-add-generic-boot-complete.target.patch
+d35bc1396cd0d9532f045911c3e33b2ce5080afb328db2b9b55a02c0dafb3bf6 SOURCES/0433-man-document-new-boot-complete.target-unit.patch
+2e2168d09517c785a30dbc379427148dc1ec1420ed02c7b67f98775ac780edd0 SOURCES/0595-rc-local-order-after-network-online.target.patch
+8a11b1b07d620f4c06a16e95bba4dd2a97e90efdf2a5ba47ed0a935085787a14 SOURCES/systemd-239.tar.gz
