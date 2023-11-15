@@ -1,0 +1,3 @@
+568238dd8c1897495398f21a852576655db2bbfad71e51559f97a9638c13c879 SOURCES/0095-rc-local-order-after-network-online.target.patch
+1fb93e16eb8d6164093542737ea4cf78b7d49f5809c8fab57a8c3ec6da475ba0 SOURCES/0332-fstab-generator-unify-initrd-root-device.target-depe.patch
+113a9342ddf89618a17c4056c2dd72c4b20b28af8da135786d7e9b4f1d18acfb SOURCES/systemd-252.tar.gz

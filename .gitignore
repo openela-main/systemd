@@ -1,0 +1,3 @@
+SOURCES/0095-rc-local-order-after-network-online.target.patch
+SOURCES/0332-fstab-generator-unify-initrd-root-device.target-depe.patch
+SOURCES/systemd-252.tar.gz
