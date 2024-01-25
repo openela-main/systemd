@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        14%{?dist}.3
+Release:        18%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -304,28 +304,149 @@ Patch0223: 0223-test-add-coverage-for-26467.patch
 Patch0224: 0224-test-add-coverage-for-24177.patch
 Patch0225: 0225-logind-session-make-stopping-of-idle-session-visible.patch
 Patch0226: 0226-journal-file-Fix-return-value-in-bump_entry_array.patch
-Patch0227: 0227-Revert-user-delegate-cpu-controller-assign-weights-t.patch
-Patch0228: 0228-systemd-Support-OOMPolicy-in-scope-units.patch
-Patch0229: 0229-systemd-Default-to-OOMPolicy-continue-for-login-sess.patch
-Patch0230: 0230-man-rework-description-of-OOMPolicy-a-bit.patch
-Patch0231: 0231-core-man-add-missing-integration-of-OOMPolicy-in-sco.patch
-Patch0232: 0232-meson-Store-fuzz-tests-in-structured-way.patch
-Patch0233: 0233-meson-Generate-fuzzer-inputs-with-directives.patch
-Patch0234: 0234-oss-fuzz-include-generated-corpora-in-the-final-zip-.patch
-Patch0235: 0235-unit-In-cgroupv1-gracefully-terminate-delegated-scop.patch
-Patch0236: 0236-journal-def-fix-type-of-signature-to-match-the-actua.patch
-Patch0237: 0237-journal-use-compound-initialization-for-journal-file.patch
-Patch0238: 0238-journald-fix-log-message.patch
-Patch0239: 0239-sd-journal-cache-results-of-parsing-environment-vari.patch
-Patch0240: 0240-compress-introduce-compression_supported-helper-func.patch
-Patch0241: 0241-sd-journal-always-use-the-compression-algorithm-spec.patch
-Patch0242: 0242-sd-journal-allow-to-specify-compression-algorithm-th.patch
-Patch0243: 0243-test-add-test-case-that-journal-file-is-created-with.patch
-Patch0244: 0244-ci-workflow-for-gathering-metadata-for-source-git-au.patch
-Patch0245: 0245-ci-first-part-of-the-source-git-automation-commit-li.patch
-Patch0246: 0246-elf-util-discard-PT_LOAD-segment-early-based-on-the-.patch
-Patch0247: 0247-elf-util-check-for-overflow-when-computing-end-of-co.patch
-Patch0248: 0248-manager-don-t-taint-the-host-if-cgroups-v1-is-used.patch
+Patch0227: 0227-systemd-Support-OOMPolicy-in-scope-units.patch
+Patch0228: 0228-systemd-Default-to-OOMPolicy-continue-for-login-sess.patch
+Patch0229: 0229-man-rework-description-of-OOMPolicy-a-bit.patch
+Patch0230: 0230-core-man-add-missing-integration-of-OOMPolicy-in-sco.patch
+Patch0231: 0231-meson-Store-fuzz-tests-in-structured-way.patch
+Patch0232: 0232-meson-Generate-fuzzer-inputs-with-directives.patch
+Patch0233: 0233-oss-fuzz-include-generated-corpora-in-the-final-zip-.patch
+Patch0234: 0234-unit-In-cgroupv1-gracefully-terminate-delegated-scop.patch
+Patch0235: 0235-ci-trigger-differential-shellcheck-workflow-on-push.patch
+Patch0236: 0236-ci-workflow-for-gathering-metadata-for-source-git-au.patch
+Patch0237: 0237-ci-first-part-of-the-source-git-automation-commit-li.patch
+Patch0238: 0238-ci-Mergify-check-CodeQL-and-build-workflows-based-on.patch
+Patch0239: 0239-ci-add-NOTICE-to-also-update-regexp-in-.mergify.yml-.patch
+Patch0240: 0240-Support-etc-system-update-for-OSTree-systems.patch
+Patch0241: 0241-journal-def-fix-type-of-signature-to-match-the-actua.patch
+Patch0242: 0242-journal-use-compound-initialization-for-journal-file.patch
+Patch0243: 0243-journald-fix-log-message.patch
+Patch0244: 0244-sd-journal-cache-results-of-parsing-environment-vari.patch
+Patch0245: 0245-compress-introduce-compression_supported-helper-func.patch
+Patch0246: 0246-sd-journal-always-use-the-compression-algorithm-spec.patch
+Patch0247: 0247-sd-journal-allow-to-specify-compression-algorithm-th.patch
+Patch0248: 0248-test-add-test-case-that-journal-file-is-created-with.patch
+Patch0249: 0249-rules-do-not-online-CPU-automatically-on-IBM-platfor.patch
+Patch0250: 0250-ci-update-permissions-for-source-git-automation-work.patch
+Patch0251: 0251-pstore-fixes-for-dmesg.txt-reconstruction.patch
+Patch0252: 0252-pstore-explicitly-set-the-base-when-converting-recor.patch
+Patch0253: 0253-pstore-avoid-opening-the-dmesg.txt-file-if-not-reque.patch
+Patch0254: 0254-test-add-a-couple-of-tests-for-systemd-pstore.patch
+Patch0255: 0255-test-match-all-messages-with-the-FILE-field.patch
+Patch0256: 0256-test-build-the-SELinux-test-module-on-the-host.patch
+Patch0257: 0257-test-make-the-stress-test-slightly-less-stressful-on.patch
+Patch0258: 0258-coredump-use-unaligned_read_ne-32-64-to-parse-auxv.patch
+Patch0259: 0259-core-transaction-make-merge_unit_ids-always-return-N.patch
+Patch0260: 0260-core-transaction-make-merge_unit_ids-return-non-NULL.patch
+Patch0261: 0261-core-transaction-do-not-log-null.patch
+Patch0262: 0262-ci-allow-RHEL-only-labels-to-mark-downstream-only-co.patch
+Patch0263: 0263-elf-util-discard-PT_LOAD-segment-early-based-on-the-.patch
+Patch0264: 0264-elf-util-check-for-overflow-when-computing-end-of-co.patch
+Patch0265: 0265-sulogin-use-DEFINE_MAIN_FUNCTION.patch
+Patch0266: 0266-sulogin-fix-control-lost-of-the-current-terminal-whe.patch
+Patch0267: 0267-journal-vacuum-count-size-of-all-journal-files.patch
+Patch0268: 0268-memory-util-add-a-concept-for-gcc-cleanup-attribute-.patch
+Patch0269: 0269-macro-introduce-FOREACH_ARRAY-macro.patch
+Patch0270: 0270-journal-vacuum-rename-function-to-match-struct-name.patch
+Patch0271: 0271-journal-vacuum-use-CLEANUP_ARRAY.patch
+Patch0272: 0272-pam-add-call-to-pam_umask.patch
+Patch0273: 0273-udev-builtin-net_id-align-VF-representor-names-with-.patch
+Patch0274: 0274-pam-add-a-call-to-pam_namespace.patch
+Patch0275: 0275-rules-online-CPU-automatically-on-IBM-s390x-platform.patch
+Patch0276: 0276-core-mount-escape-invalid-UTF8-char-in-dbus-reply.patch
+Patch0277: 0277-Revert-user-delegate-cpu-controller-assign-weights-t.patch
+Patch0278: 0278-udev-rules-fix-nvme-symlink-creation-on-namespace-ch.patch
+Patch0279: 0279-rules-add-whitespace-after-comma-before-the-line-con.patch
+Patch0280: 0280-udev-restore-compat-symlink-for-nvme-devices.patch
+Patch0281: 0281-rules-drop-doubled-space.patch
+Patch0282: 0282-manager-don-t-taint-the-host-if-cgroups-v1-is-used.patch
+Patch0283: 0283-core-service-when-resetting-PID-also-reset-known-fla.patch
+Patch0284: 0284-ci-drop-systemd-stable-from-advanced-commit-linter-c.patch
+Patch0285: 0285-Revert-core-service-when-resetting-PID-also-reset-kn.patch
+Patch0286: 0286-ci-explicitly-install-python3-lldb-COMPILER_VERSION.patch
+Patch0287: 0287-doc-add-downstream-CONTRIBUTING-document.patch
+Patch0288: 0288-doc-improve-CONTRIBUTING-document.patch
+Patch0289: 0289-doc-use-link-with-prefilled-Jira-issue.patch
+Patch0290: 0290-docs-link-downstream-CONTRIBUTING-in-README.patch
+Patch0291: 0291-bpf-fix-restrict_fs-on-s390x.patch
+Patch0292: 0292-udev-net_id-use-naming-scheme-for-RHEL-9.3.patch
+Patch0293: 0293-core-timer-Always-use-inactive_exit_timestamp-if-it-.patch
+Patch0294: 0294-timer-Use-dual_timestamp_is_set-in-one-more-place.patch
+Patch0295: 0295-loginctl-list-users-also-show-state.patch
+Patch0296: 0296-loginctl-list-sessions-minor-modernization.patch
+Patch0297: 0297-loginctl-list-sessions-also-show-state.patch
+Patch0298: 0298-test-add-test-for-state-in-loginctl-list-users-sessi.patch
+Patch0299: 0299-test-add-a-missing-session-activation.patch
+Patch0300: 0300-test-extend-test-for-loginctl-list.patch
+Patch0301: 0301-loginctl-shorten-variable-name.patch
+Patch0302: 0302-loginctl-use-bus_map_all_properties.patch
+Patch0303: 0303-loginctl-show-session-idle-status-in-list-sessions.patch
+Patch0304: 0304-loginctl-some-modernizations.patch
+Patch0305: 0305-loginctl-list-sessions-fix-timestamp-for-idle-hint.patch
+Patch0306: 0306-loginctl-list-users-use-bus_map_all_properties.patch
+Patch0307: 0307-loginctl-also-show-idle-hint-in-session-status.patch
+Patch0308: 0308-memory-util-make-ArrayCleanup-passed-to-array_cleanu.patch
+Patch0309: 0309-static-destruct-several-cleanups.patch
+Patch0310: 0310-static-destruct-introduce-STATIC_ARRAY_DESTRUCTOR_RE.patch
+Patch0311: 0311-macro-support-the-case-that-the-number-of-elements-h.patch
+Patch0312: 0312-shared-generator-apply-similar-config-reordering-of-.patch
+Patch0313: 0313-nulstr-util-make-ret_size-in-strv_make_nulstr-option.patch
+Patch0314: 0314-generator-teach-generator_add_symlink-to-instantiate.patch
+Patch0315: 0315-units-rework-growfs-units-to-be-just-a-regular-unit-.patch
+Patch0316: 0316-fstab-generator-use-correct-targets-when-sysroot-is-.patch
+Patch0317: 0317-fstab-generator-add-SYSTEMD_SYSFS_CHECK-env-var.patch
+Patch0318: 0318-test-add-fstab-file-support-for-fstab-generator-test.patch
+Patch0319: 0319-test-fstab-generator-also-check-file-contents.patch
+Patch0320: 0320-test-fstab-generator-add-tests-for-mount-options.patch
+Patch0321: 0321-fstab-generator-split-out-several-functions-from-par.patch
+Patch0322: 0322-fstab-generator-call-add_swap-earlier.patch
+Patch0323: 0323-fstab-generator-refuse-to-add-swap-earlier-if-disabl.patch
+Patch0324: 0324-fstab-generator-refuse-invalid-mount-point-path-in-f.patch
+Patch0325: 0325-fstab-generator-fix-error-code-propagation-in-run_ge.patch
+Patch0326: 0326-fstab-generator-support-defining-mount-units-through.patch
+Patch0327: 0327-test-add-test-cases-for-defining-mount-and-swap-unit.patch
+Patch0328: 0328-generators-change-TimeoutSec-0-to-TimeoutSec-infinit.patch
+Patch0329: 0329-units-change-TimeoutSec-0-to-TimeoutSec-infinity.patch
+Patch0330: 0330-fstab-generator-use-correct-swap-name-var.patch
+Patch0331: 0331-fstab-generator-add-more-parameter-name-comments.patch
+Patch0332: 0332-fstab-generator-unify-initrd-root-device.target-depe.patch
+Patch0333: 0333-fstab-util-add-fstab_is_bind.patch
+Patch0334: 0334-fstab-generator-resolve-bind-mount-source-when-in-in.patch
+Patch0335: 0335-fstab-generator-rename-initrd-flag-to-prefix_sysroot.patch
+Patch0336: 0336-fstab-generator-fix-target-of-sysroot-usr.patch
+Patch0337: 0337-fstab-generator-add-rd.systemd.mount-extra-and-frien.patch
+Patch0338: 0338-fstab-generator-add-a-flag-to-accept-entry-for-in-in.patch
+Patch0339: 0339-test-fstab-generator-extract-core-part-as-a-function.patch
+Patch0340: 0340-test-fstab-generator-also-test-with-SYSTEMD_IN_INITR.patch
+Patch0341: 0341-test-fstab-generator-add-more-tests-for-systemd.moun.patch
+Patch0342: 0342-fstab-generator-enable-fsck-for-block-device-mounts-.patch
+Patch0343: 0343-core-use-correct-scope-of-looking-up-units.patch
+Patch0344: 0344-test-merge-unit-file-related-tests-into-TEST-23-UNIT.patch
+Patch0345: 0345-test-rename-TEST-07-ISSUE-1981-to-TEST-07-PID1.patch
+Patch0346: 0346-test-merge-TEST-08-ISSUE-2730-into-TEST-07-PID1.patch
+Patch0347: 0347-test-merge-TEST-09-ISSUE-2691-into-TEST-07-PID1.patch
+Patch0348: 0348-test-merge-TEST-10-ISSUE-2467-with-TEST-07-PID1.patch
+Patch0349: 0349-test-merge-TEST-11-ISSUE-3166-into-TEST-07-PID1.patch
+Patch0350: 0350-test-merge-TEST-12-ISSUE-3171-into-TEST-07-PID1.patch
+Patch0351: 0351-test-move-TEST-23-s-units-into-a-dedicated-subfolder.patch
+Patch0352: 0352-test-merge-TEST-47-ISSUE-14566-into-TEST-07-PID1.patch
+Patch0353: 0353-test-merge-TEST-51-ISSUE-16115-into-TEST-07-PID1.patch
+Patch0354: 0354-test-merge-TEST-20-MAINPIDGAMES-into-TEST-07-PID1.patch
+Patch0355: 0355-test-abstract-the-common-test-parts-into-a-utility-s.patch
+Patch0356: 0356-test-add-tests-for-JoinsNamespaceOf.patch
+Patch0357: 0357-core-unit-drop-doubled-empty-line.patch
+Patch0358: 0358-core-unit-make-JoinsNamespaceOf-implies-the-inverse-.patch
+Patch0359: 0359-core-unit-search-shared-namespace-in-transitive-rela.patch
+Patch0360: 0360-core-unit-update-bidirectional-dependency-simultaneo.patch
+Patch0361: 0361-resolvectl-fix-type-of-ifindex-D-Bus-field-and-make-.patch
+Patch0362: 0362-resolved-add-some-line-breaks-comments.patch
+Patch0363: 0363-resolvectl-don-t-filter-loopback-DNS-server-from-glo.patch
+Patch0364: 0364-blockdev-util-add-simple-wrapper-around-BLKSSZGET.patch
+Patch0365: 0365-loop-util-insist-on-setting-the-sector-size-correctl.patch
+Patch0366: 0366-dissect-image-add-probe_sector_size-helper-for-detec.patch
+Patch0367: 0367-loop-util-always-tell-kernel-explicitly-about-loopba.patch
+Patch0368: 0368-Revert-Treat-EPERM-as-not-available-too.patch
+Patch0369: 0369-Revert-test-accept-EPERM-for-unavailable-idmapped-mo.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -982,24 +1103,24 @@ fi
 %{?ldconfig}
 
 function mod_nss() {
-    if [ -f "$1" ] ; then
-        # Add nss-systemd to passwd and group
-        grep -E -q '^(passwd|group):.* systemd' "$1" ||
+    if [ $1 -eq 1 ] && [ -f "$2" ]; then
+        # Add nss-systemd to passwd (only once, on install)
+        grep -E -q '^(passwd|group):.* systemd' "$2" ||
         sed -i.bak -r -e '
                 s/^(passwd|group):(.*)/\1:\2 systemd/
-                ' "$1" &>/dev/null || :
+                ' "$2" &>/dev/null || :
     fi
 }
 
 FILE="$(readlink /etc/nsswitch.conf || echo /etc/nsswitch.conf)"
 if [ "$FILE" = "/etc/authselect/nsswitch.conf" ] && authselect check &>/dev/null; then
-        mod_nss "/etc/authselect/user-nsswitch.conf"
+        mod_nss $1 "/etc/authselect/user-nsswitch.conf"
         authselect apply-changes &> /dev/null || :
 else
-        mod_nss "$FILE"
+        mod_nss $1 "$FILE"
         # also apply the same changes to user-nsswitch.conf to affect
         # possible future authselect configuration
-        mod_nss "/etc/authselect/user-nsswitch.conf"
+        mod_nss $1 "/etc/authselect/user-nsswitch.conf"
 fi
 
 # check if nobody or nfsnobody is defined
@@ -1147,49 +1268,159 @@ getent passwd systemd-oom &>/dev/null || useradd -r -l -g systemd-oom -d / -s /s
 %files standalone-sysusers -f .file-list-standalone-sysusers
 
 %changelog
-* Mon Jul 17 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-14.3
-- manager: don't taint the host if cgroups v1 is used (#2196479)
+* Tue Aug 22 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-18
+- doc: add downstream CONTRIBUTING document (#2170883)
+- doc: improve CONTRIBUTING document (#2170883)
+- doc: use link with prefilled Jira issue (#2170883)
+- docs: link downstream CONTRIBUTING in README (#2170883)
+- bpf: fix restrict_fs on s390x (#2230364)
+- udev/net_id: use naming scheme for RHEL-9.3 (#2231845)
+- core/timer: Always use inactive_exit_timestamp if it is set (#2211065)
+- timer: Use dual_timestamp_is_set() in one more place (#2211065)
+- loginctl: list-users: also show state (#2209912)
+- loginctl: list-sessions: minor modernization (#2209912)
+- loginctl: list-sessions: also show state (#2209912)
+- test: add test for state in loginctl list-{users,sessions} (#2209912)
+- test: add a missing session activation (#2209912)
+- test: extend test for loginctl list-* (#2209912)
+- loginctl: shorten variable name (#2209912)
+- loginctl: use bus_map_all_properties (#2209912)
+- loginctl: show session idle status in list-sessions (#2209912)
+- loginctl: some modernizations (#2209912)
+- loginctl: list-sessions: fix timestamp for idle hint (#2209912)
+- loginctl: list-users: use bus_map_all_properties (#2209912)
+- loginctl: also show idle hint in session-status (#2209912)
+- memory-util: make ArrayCleanup passed to array_cleanup() const (#2190226)
+- static-destruct: several cleanups (#2190226)
+- static-destruct: introduce STATIC_ARRAY_DESTRUCTOR_REGISTER() (#2190226)
+- macro: support the case that the number of elements has const qualifier (#2190226)
+- shared/generator: apply similar config reordering of generated units (#2190226)
+- nulstr-util: make ret_size in strv_make_nulstr() optional (#2190226)
+- generator: teach generator_add_symlink() to instantiate specified unit (#2190226)
+- units: rework growfs units to be just a regular unit that is instantiated (#2190226)
+- fstab-generator: use correct targets when /sysroot is specificied in fstab only (#2190226)
+- fstab-generator: add SYSTEMD_SYSFS_CHECK env var (#2190226)
+- test: add fstab file support for fstab-generator tests (#2190226)
+- test-fstab-generator: also check file contents (#2190226)
+- test-fstab-generator: add tests for mount options (#2190226)
+- fstab-generator: split out several functions from parse_fstab() (#2190226)
+- fstab-generator: call add_swap() earlier (#2190226)
+- fstab-generator: refuse to add swap earlier if disabled (#2190226)
+- fstab-generator: refuse invalid mount point path in fstab earlier (#2190226)
+- fstab-generator: fix error code propagation in run_generator() (#2190226)
+- fstab-generator: support defining mount units through kernel command line (#2190226)
+- test: add test cases for defining mount and swap units from kernel cmdline (#2190226)
+- generators: change TimeoutSec=0 to TimeoutSec=infinity (#2190226)
+- units: change TimeoutSec=0 to TimeoutSec=infinity (#2190226)
+- fstab-generator: use correct swap name var (#2190226)
+- fstab-generator: add more parameter name comments (#2190226)
+- fstab-generator: unify initrd-root-device.target dependency handling code (#2190226)
+- fstab-util: add fstab_is_bind (#2190226)
+- fstab-generator: resolve bind mount source when in initrd (#2190226)
+- fstab-generator: rename 'initrd' flag to 'prefix_sysroot' (#2190226)
+- fstab-generator: fix target of /sysroot/usr (#2190226)
+- fstab-generator: add rd.systemd.mount-extra= and friends (#2190226)
+- fstab-generator: add a flag to accept entry for "/" in initrd (#2190226)
+- test-fstab-generator: extract core part as a function (#2190226)
+- test-fstab-generator: also test with SYSTEMD_IN_INITRD=no (#2190226)
+- test-fstab-generator: add more tests for systemd.mount-extra= and friends (#2190226)
+- fstab-generator: enable fsck for block device mounts specified in systemd.mount-extra= (#2190226)
+- core: use correct scope of looking up units (#2226980)
+- test: merge unit file related tests into TEST-23-UNIT-FILE (#2213521)
+- test: rename TEST-07-ISSUE-1981 to TEST-07-PID1 (#2213521)
+- test: merge TEST-08-ISSUE-2730 into TEST-07-PID1 (#2213521)
+- test: merge TEST-09-ISSUE-2691 into TEST-07-PID1 (#2213521)
+- test: merge TEST-10-ISSUE-2467 with TEST-07-PID1 (#2213521)
+- test: merge TEST-11-ISSUE-3166 into TEST-07-PID1 (#2213521)
+- test: merge TEST-12-ISSUE-3171 into TEST-07-PID1 (#2213521)
+- test: move TEST-23's units into a dedicated subfolder (#2213521)
+- test: merge TEST-47-ISSUE-14566 into TEST-07-PID1 (#2213521)
+- test: merge TEST-51-ISSUE-16115 into TEST-07-PID1 (#2213521)
+- test: merge TEST-20-MAINPIDGAMES into TEST-07-PID1 (#2213521)
+- test: abstract the common test parts into a utility script (#2213521)
+- test: add tests for JoinsNamespaceOf= (#2213521)
+- core/unit: drop doubled empty line (#2213521)
+- core/unit: make JoinsNamespaceOf= implies the inverse dependency (#2213521)
+- core/unit: search shared namespace in transitive relation of JoinsNamespaceOf= (#2213521)
+- core/unit: update bidirectional dependency simultaneously (#2213521)
+- resolvectl: fix type of ifindex D-Bus field, and make sure to initialize to zero in all code paths (#2161260)
+- resolved: add some line-breaks/comments (#2161260)
+- resolvectl: don't filter loopback DNS server from global DNS server list (#2161260)
+- blockdev-util: add simple wrapper around BLKSSZGET (#2170883)
+- loop-util: insist on setting the sector size correctly (#2170883)
+- dissect-image: add probe_sector_size() helper for detecting sector size of a GPT disk image (#2170883)
+- loop-util: always tell kernel explicitly about loopback sector size (#2170883)
+- Revert "Treat EPERM as "not available" too" (#2178222)
+- Revert "test: accept EPERM for unavailable idmapped mounts as well" (#2178222)
 
-* Thu Jul 13 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-14.2
-- elf-util: discard PT_LOAD segment early based on the start address. (#2222259)
-- elf-util: check for overflow when computing end of core's PT_LOAD segments (#2222259)
+* Fri Aug 04 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-17
+- Revert "core/service: when resetting PID also reset known flag" (#2225667
+#2210237)
+- ci: explicitly install python3-lldb-$COMPILER_VERSION (#2225667)
 
-* Wed May 24 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-14.1
-- Bump version to 252-14.1 to make sure that NEVRA is higher than systemd-252-14.el9.rhaos4.13 (#2184929)
+* Mon Jul 17 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-16
+- ci: update permissions for source-git automation workflows (#2170883)
+- pstore: fixes for dmesg.txt reconstruction (#2170883)
+- pstore: explicitly set the base when converting record ID (#2170883)
+- pstore: avoid opening the dmesg.txt file if not requested (#2170883)
+- test: add a couple of tests for systemd-pstore (#2170883)
+- test: match all messages with the FILE field (#2170883)
+- test: build the SELinux test module on the host (#2170883)
+- test: make the stress test slightly less stressful on slower machines (#2170883)
+- coredump: use unaligned_read_ne{32,64}() to parse auxv (#2170883)
+- core/transaction: make merge_unit_ids() always return NUL-terminated string (#2170883)
+- core/transaction: make merge_unit_ids() return non-NULL on success (#2170883)
+- core/transaction: do not log "(null)" (#2170883)
+- ci: allow `RHEL-only` labels to mark downstream-only commits (#2170883)
+- elf-util: discard PT_LOAD segment early based on the start address. (#2215412)
+- elf-util: check for overflow when computing end of core's PT_LOAD segments (#2215412)
+- sulogin: use DEFINE_MAIN_FUNCTION() (#2169959)
+- sulogin: fix control lost of the current terminal when default.target is rescue.target (#2169959)
+- journal-vacuum: count size of all journal files (#2182632)
+- memory-util: add a concept for gcc cleanup attribute based array destruction (#2182632)
+- macro: introduce FOREACH_ARRAY() macro (#2182632)
+- journal-vacuum: rename function to match struct name (#2182632)
+- journal-vacuum: use CLEANUP_ARRAY (#2182632)
+- pam: add call to pam_umask (#2210145)
+- udev-builtin-net_id: align VF representor names with VF names (#2218886)
+- pam: add a call to pam_namespace (#2218184)
+- rules: online CPU automatically on IBM s390x platforms when configured (#2212612)
+- core/mount: escape invalid UTF8 char in dbus reply (#2208240)
+- Revert "user: delegate cpu controller, assign weights to user slices" (#2176899)
+- udev-rules: fix nvme symlink creation on namespace changes (#2172509)
+- rules: add whitespace after comma before the line continuation (#2172509)
+- udev: restore compat symlink for nvme devices (#2172509)
+- rules: drop doubled space (#2172509)
+- manager: don't taint the host if cgroups v1 is used (#2193456)
+- core/service: when resetting PID also reset known flag (#2210237)
+- ci: drop systemd-stable from advanced-commit-linter config (#2170883)
 
-* Thu May 18 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-13.1
-- journal-def: fix type of signature to match the actual field in the Header structure (#2184929)
-- journal: use compound initialization for journal file Header structure (#2184929)
-- journald: fix log message (#2184929)
-- sd-journal: cache results of parsing environment variables (#2184929)
-- compress: introduce compression_supported() helper function (#2184929)
-- sd-journal: always use the compression algorithm specified in the header (#2184929)
-- sd-journal: allow to specify compression algorithm through env (#2184929)
-- test: add test case that journal file is created with the requested compression algorithm (#2184929)
-- ci: workflow for gathering metadata for source-git automation (#2184929)
-- ci: first part of the source-git automation - commit linter (#2184929)
+* Thu May 18 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-15
+- ci: trigger `differential-shellcheck` workflow on push (#2100440)
+- ci: workflow for gathering metadata for source-git automation (#2100440)
+- ci: first part of the source-git automation - commit linter (#2100440)
+- ci(Mergify): check CodeQL and build workflows based on changed files (#2100440)
+- ci: add NOTICE to also update regexp in `.mergify.yml` when updating `paths` property (#2100440)
+- Support /etc/system-update for OSTree systems (#2203133)
+- journal-def: fix type of signature to match the actual field in the Header structure (#2183546)
+- journal: use compound initialization for journal file Header structure (#2183546)
+- journald: fix log message (#2183546)
+- sd-journal: cache results of parsing environment variables (#2183546)
+- compress: introduce compression_supported() helper function (#2183546)
+- sd-journal: always use the compression algorithm specified in the header (#2183546)
+- sd-journal: allow to specify compression algorithm through env (#2183546)
+- test: add test case that journal file is created with the requested compression algorithm (#2183546)
+- rules: do not online CPU automatically on IBM platforms (#2143107)
 
-* Mon Mar 20 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-13
-- spec: release bump (#2179165)
-
-* Mon Mar 20 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-12
-- unit: In cgroupv1, gracefully terminate delegated scopes again (#2179165)
-
-* Tue Mar 14 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-11
-- spec: release bump (#2175619)
-
-* Fri Mar 10 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-10
-- spec: move man for sd-boot into boot-unsigned subpackage (#2175619)
-
-* Fri Mar 10 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-9
-- Revert "user: delegate cpu controller, assign weights to user slices" (#2173996)
-- systemd: Support OOMPolicy in scope units (#2175619)
-- systemd: Default to OOMPolicy=continue for login session scopes (#2175619)
-- man: rework description of OOMPolicy= a bit (#2175619)
-- core,man: add missing integration of OOMPolicy= in scopes (#2175619)
-- meson: Store fuzz tests in structured way (#2175619)
-- meson: Generate fuzzer inputs with directives (#2175619)
-- oss-fuzz: include generated corpora in the final zip file (#2175619)
+* Tue Mar 21 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-14
+- systemd: Support OOMPolicy in scope units (#2176918)
+- systemd: Default to OOMPolicy=continue for login session scopes (#2176918)
+- man: rework description of OOMPolicy= a bit (#2176918)
+- core,man: add missing integration of OOMPolicy= in scopes (#2176918)
+- meson: Store fuzz tests in structured way (#2176918)
+- meson: Generate fuzzer inputs with directives (#2176918)
+- oss-fuzz: include generated corpora in the final zip file (#2176918)
+- unit: In cgroupv1, gracefully terminate delegated scopes again (#2180120)
 
 * Mon Feb 27 2023 systemd maintenance team <systemd-maint@redhat.com> - 252-8
 - journal-file: Fix return value in bump_entry_array() (#2173682)
