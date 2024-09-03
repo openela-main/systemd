@@ -25,7 +25,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        32%{?dist}.6
+Release:        32%{?dist}.7
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -820,6 +820,7 @@ Patch0728: 0728-kernel-install-fix-uki-copy-deinstall.patch
 Patch0729: 0729-cryptsetup-do-not-assert-when-unsealing-token-withou.patch
 Patch0730: 0730-cryptsetup-check-the-existence-of-salt-by-salt_size-.patch
 Patch0731: 0731-bootspec-fix-null-dereference-read.patch
+Patch0732: 0732-generator-uninline-generator_open_unit_file-and-gene.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -1699,6 +1700,9 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Thu Jul 18 2024 systemd maintenance team <systemd-maint@redhat.com> - 252-32.7
+- generator: "uninline" generator_open_unit_file and generator_add_symlink (RHEL-49495)
+
 * Wed Jun 12 2024 systemd maintenance team <systemd-maint@redhat.com> - 252-32.6
 - cryptsetup: do not assert when unsealing token without salt (RHEL-40119)
 - cryptsetup: check the existence of salt by salt_size > 0 (RHEL-40119)
