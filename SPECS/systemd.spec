@@ -12,10 +12,6 @@
 %global system_unit_dir %{pkgdir}/system
 %global user_unit_dir %{pkgdir}/user
 
-# defining macros needed by SELinux
-%global selinuxtype targeted
-%global modulename systemd-container-coredump
-
 # Bootstrap may be needed to break intercircular dependencies with
 # cryptsetup, e.g. when re-building cryptsetup on a json-c SONAME-bump.
 %bcond_with    bootstrap
@@ -25,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        46%{?dist}.2
+Release:        46%{?dist}.3
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -73,8 +69,6 @@ Source25:       rc.local
 # see: https://issues.redhat.com/browse/RHELBU-2374
 %global rhel_nns_version 0.5
 Source26:       https://gitlab.com/mschmidt2/rhel-net-naming-sysattrs/-/archive/v%{rhel_nns_version}/rhel-net-naming-sysattrs-v%{rhel_nns_version}.tar.gz
-
-Source27:       %{modulename}.pp.bz2
 
 %if 0
 GIT_DIR=../../src/systemd/.git git format-patch-ab --no-signature -M -N v235..v235-stable
@@ -1199,18 +1193,12 @@ BuildRequires:  git-core
 %if 0%{?have_gnu_efi}
 BuildRequires:  gnu-efi gnu-efi-devel
 %endif
-BuildRequires:  selinux-policy-devel
 BuildRequires:  libfido2-devel
 
 Requires(post): coreutils
 Requires(post): sed
 Requires(post): acl
 Requires(post): grep
-
-# selinux
-Requires(post): libselinux-utils
-Requires(post): policycoreutils
-Requires(post): selinux-policy
 
 # systemd-machine-id-setup requires libssl
 Requires(post): openssl-libs
@@ -1711,9 +1699,6 @@ install -m 0644 -D -t %{buildroot}%{_rpmconfigdir}/fileattrs/ %{SOURCE22}
 install -m 0755 -D -t %{buildroot}%{_rpmconfigdir}/ %{SOURCE23}
 install -m 0755 -D -t %{buildroot}%{_rpmconfigdir}/ %{SOURCE24}
 
-# install policy modules
-install -m 0644 -D -t %{buildroot}%{_datadir}/selinux/packages/%{selinuxtype}/ %{SOURCE27}
-
 %find_lang %{name}
 
 # Split files in build root into rpms. See split-files.py for the
@@ -1815,9 +1800,6 @@ chmod g+s /{run,var}/log/journal/{,${machine_id}} &>/dev/null || :
 
 # Apply ACL to the journal directory
 setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ &>/dev/null || :
-
-# Install our own selinux-policy module that allows systemd-coredump access to containers
-%selinux_modules_install -s %{selinuxtype} %{_datadir}/selinux/packages/%{selinuxtype}/%{modulename}.pp.bz2
 
 [ $1 -eq 1 ] || exit 0
 
@@ -1970,7 +1952,6 @@ systemd-hwdb update &>/dev/null || :
 %global _docdir_fmt %{name}
 
 %files -f %{name}.lang -f .file-list-main
-%{_datadir}/selinux/packages/%{selinuxtype}/%{modulename}.pp.*
 %doc %{_pkgdocdir}
 %exclude %{_pkgdocdir}/LICENSE.*
 %license LICENSE.GPL2 LICENSE.LGPL2.1
@@ -1990,7 +1971,6 @@ systemd-hwdb update &>/dev/null || :
 %ghost %dir %attr(0755,-,-) /etc/systemd/system/system-update.target.wants
 %ghost %dir %attr(0755,-,-) /etc/systemd/system/timers.target.wants
 %ghost %dir %attr(0755,-,-) /var/lib/rpm-state/systemd
-%ghost %verify(not md5 size mode mtime) %{_sharedstatedir}/selinux/%{selinuxtype}/active/modules/200/%{modulename}
 
 %files libs -f .file-list-libs
 %license LICENSE.LGPL2.1
@@ -2028,6 +2008,9 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Fri Jan 31 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-46.3
+- get rid of SELinux policy module (RHEL-76033)
+
 * Tue Sep 10 2024 systemd maintenance team <systemd-maint@redhat.com> - 252-46.2
 - add %%posttrans scriptlet to make sure our SELinux policy module is actually installed (RHEL-46339)
 
