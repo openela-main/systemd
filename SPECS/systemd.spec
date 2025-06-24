@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        51%{?dist}
+Release:        51%{?dist}.1
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1193,6 +1193,7 @@ Patch1107: 1107-core-Handle-cgroup-pruning-in-on_cgroup_empty_event.patch
 Patch1108: 1108-Fix-failing-test.patch
 Patch1109: 1109-unit-don-t-gc-unit-in-oom-queue.patch
 Patch1110: 1110-core-do-not-GC-units-jobs-that-are-in-the-D-Bus-queu.patch
+Patch1111: 1111-unit-always-return-1-in-log_kill.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2070,6 +2071,9 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Tue Apr 08 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-51.1
+- unit: always return 1 in log_kill (RHEL-86239)
+
 * Tue Jan 28 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-51
 - ci: use ubuntu 22:04 for deploy of man pages (RHEL-70884)
 - man/tmpfiles: fix off-by-one in example (RHEL-74015)
