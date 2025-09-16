@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        51%{?dist}.1
+Release:        51%{?dist}.2
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1194,6 +1194,11 @@ Patch1108: 1108-Fix-failing-test.patch
 Patch1109: 1109-unit-don-t-gc-unit-in-oom-queue.patch
 Patch1110: 1110-core-do-not-GC-units-jobs-that-are-in-the-D-Bus-queu.patch
 Patch1111: 1111-unit-always-return-1-in-log_kill.patch
+Patch1112: 1112-Add-a-set-of-assertion-macros-to-tests.h.patch
+Patch1113: 1113-Follow-up-with-the-PR-31819.patch
+Patch1114: 1114-Added-more-ASSERT-macro-and-also-make-some-test-file.patch
+Patch1115: 1115-sd-event-drop-inotify-event-from-buffer-when-no-even.patch
+Patch1116: 1116-test-add-test-case-for-issue-38265.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2071,6 +2076,13 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Mon Aug 11 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-51.2
+- Add a set of assertion macros to tests.h (ASSERT_OK(), ASSERT_EQ(), ASSERT_GE(), ASSERT_LE()) that log the failed condition before crashing and convert test-gpt.c test file to use them (RHEL-108481)
+- Follow up with the PR #31819 (RHEL-108481)
+- Added more ASSERT macro and also make some test file to use them (RHEL-108481)
+- sd-event: drop inotify event from buffer when no event source is triggered (RHEL-108481)
+- test: add test case for issue #38265 (RHEL-108481)
+
 * Tue Apr 08 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-51.1
 - unit: always return 1 in log_kill (RHEL-86239)
 
