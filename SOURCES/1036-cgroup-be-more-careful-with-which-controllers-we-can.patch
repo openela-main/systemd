@@ -1,0 +1,249 @@
+From 38e4b2bb1bea9b727424ee9ba30b8e1e2988a0b8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 22 Nov 2018 21:45:33 +0100
+Subject: [PATCH] cgroup: be more careful with which controllers we can
+ enable/disable on a cgroup
+
+This changes cg_enable_everywhere() to return which controllers are
+enabled for the specified cgroup. This information is then used to
+correctly track the enablement mask currently in effect for a unit.
+Moreover, when we try to turn off a controller, and this works, then
+this is indicates that the parent unit might succesfully turn it off
+now, too as our unit might have kept it busy.
+
+So far, when realizing cgroups, i.e. when syncing up the kernel
+representation of relevant cgroups with our own idea we would strictly
+work from the root to the leaves. This is generally a good approach, as
+when controllers are enabled this has to happen in root-to-leaves order.
+However, when controllers are disabled this has to happen in the
+opposite order: in leaves-to-root order (this is because controllers can
+only be enabled in a child if it is already enabled in the parent, and
+if it shall be disabled in the parent then it has to be disabled in the
+child first, otherwise it is considered busy when it is attempted to
+remove it in the parent).
+
+To make things complicated when invalidating a unit's cgroup membershup
+systemd can actually turn off some controllers previously turned on at
+the very same time as it turns on other controllers previously turned
+off. In such a case we have to work up leaves-to-root *and*
+root-to-leaves right after each other. With this patch this is
+implemented: we still generally operate root-to-leaves, but as soon as
+we noticed we successfully turned off a controller previously turned on
+for a cgroup we'll re-enqueue the cgroup realization for all parents of
+a unit, thus implementing leaves-to-root where necessary.
+
+(cherry picked from commit 27adcc973771a998433635672e2eee0a4489b8a4)
+
+Related: RHEL-9322
+---
+ src/basic/cgroup-util.c    | 58 ++++++++++++++++++++++++++++++++++++--
+ src/basic/cgroup-util.h    |  2 +-
+ src/core/cgroup.c          | 31 ++++++++++++++++----
+ src/core/cgroup.h          |  3 +-
+ src/nspawn/nspawn-cgroup.c |  2 +-
+ 5 files changed, 84 insertions(+), 12 deletions(-)
+
+diff --git a/src/basic/cgroup-util.c b/src/basic/cgroup-util.c
+index 14abe6e014..f0aca25a00 100644
+--- a/src/basic/cgroup-util.c
++++ b/src/basic/cgroup-util.c
+@@ -2573,22 +2573,45 @@ int cg_unified_flush(void) {
+         return cg_unified_update();
+ }
+ 
+-int cg_enable_everywhere(CGroupMask supported, CGroupMask mask, const char *p) {
++int cg_enable_everywhere(
++                CGroupMask supported,
++                CGroupMask mask,
++                const char *p,
++                CGroupMask *ret_result_mask) {
++
+         _cleanup_fclose_ FILE *f = NULL;
+         _cleanup_free_ char *fs = NULL;
+         CGroupController c;
++        CGroupMask ret = 0;
+         int r;
+ 
+         assert(p);
+ 
+-        if (supported == 0)
++        if (supported == 0) {
++                if (ret_result_mask)
++                        *ret_result_mask = 0;
+                 return 0;
++        }
+ 
+         r = cg_all_unified();
+         if (r < 0)
+                 return r;
+-        if (r == 0) /* on the legacy hiearchy there's no joining of controllers defined */
++        if (r == 0) {
++                /* On the legacy hiearchy there's no concept of "enabling" controllers in cgroups defined. Let's claim
++                 * complete success right away. (If you wonder why we return the full mask here, rather than zero: the
++                 * caller tends to use the returned mask later on to compare if all controllers where properly joined,
++                 * and if not requeues realization. This use is the primary purpose of the return value, hence let's
++                 * minimize surprises here and reduce triggers for re-realization by always saying we fully
++                 * succeeded.) */
++                if (ret_result_mask)
++                        *ret_result_mask = mask & supported & CGROUP_MASK_V2; /* If you wonder why we mask this with
++                                                                               * CGROUP_MASK_V2: The 'supported' mask
++                                                                               * might contain pure-V1 or BPF
++                                                                               * controllers, and we never want to
++                                                                               * claim that we could enable those with
++                                                                               * cgroup.subtree_control */
+                 return 0;
++        }
+ 
+         r = cg_get_path(SYSTEMD_CGROUP_CONTROLLER, p, "cgroup.subtree_control", &fs);
+         if (r < 0)
+@@ -2620,10 +2643,39 @@ int cg_enable_everywhere(CGroupMask supported, CGroupMask mask, const char *p) {
+                         if (r < 0) {
+                                 log_debug_errno(r, "Failed to enable controller %s for %s (%s): %m", n, p, fs);
+                                 clearerr(f);
++
++                                /* If we can't turn off a controller, leave it on in the reported resulting mask. This
++                                 * happens for example when we attempt to turn off a controller up in the tree that is
++                                 * used down in the tree. */
++                                if (!FLAGS_SET(mask, bit) && r == -EBUSY) /* You might wonder why we check for EBUSY
++                                                                           * only here, and not follow the same logic
++                                                                           * for other errors such as EINVAL or
++                                                                           * EOPNOTSUPP or anything else. That's
++                                                                           * because EBUSY indicates that the
++                                                                           * controllers is currently enabled and
++                                                                           * cannot be disabled because something down
++                                                                           * the hierarchy is still using it. Any other
++                                                                           * error most likely means something like "I
++                                                                           * never heard of this controller" or
++                                                                           * similar. In the former case it's hence
++                                                                           * safe to assume the controller is still on
++                                                                           * after the failed operation, while in the
++                                                                           * latter case it's safer to assume the
++                                                                           * controller is unknown and hence certainly
++                                                                           * not enabled. */
++                                        ret |= bit;
++                        } else {
++                                /* Otherwise, if we managed to turn on a controller, set the bit reflecting that. */
++                                if (FLAGS_SET(mask, bit))
++                                        ret |= bit;
+                         }
+                 }
+         }
+ 
++        /* Let's return the precise set of controllers now enabled for the cgroup. */
++        if (ret_result_mask)
++                *ret_result_mask = ret;
++
+         return 0;
+ }
+ 
+diff --git a/src/basic/cgroup-util.h b/src/basic/cgroup-util.h
+index 1b0f53e8b8..0ce63f98e8 100644
+--- a/src/basic/cgroup-util.h
++++ b/src/basic/cgroup-util.h
+@@ -248,7 +248,7 @@ int cg_attach_everywhere(CGroupMask supported, const char *path, pid_t pid, cg_m
+ int cg_attach_many_everywhere(CGroupMask supported, const char *path, Set* pids, cg_migrate_callback_t callback, void *userdata);
+ int cg_migrate_everywhere(CGroupMask supported, const char *from, const char *to, cg_migrate_callback_t callback, void *userdata);
+ int cg_trim_everywhere(CGroupMask supported, const char *path, bool delete_root);
+-int cg_enable_everywhere(CGroupMask supported, CGroupMask mask, const char *p);
++int cg_enable_everywhere(CGroupMask supported, CGroupMask mask, const char *p, CGroupMask *ret_result_mask);
+ 
+ int cg_mask_supported(CGroupMask *ret);
+ int cg_mask_from_string(const char *s, CGroupMask *ret);
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 331c97d288..93c0920c54 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -1660,8 +1660,8 @@ static int unit_create_cgroup(
+                 bool needs_bpf) {
+ 
+         CGroupContext *c;
+-        int r;
+         bool created;
++        int r;
+ 
+         assert(u);
+ 
+@@ -1685,18 +1685,37 @@ static int unit_create_cgroup(
+ 
+         /* Preserve enabled controllers in delegated units, adjust others. */
+         if (created || !unit_cgroup_delegate(u)) {
++                CGroupMask result_mask = 0;
+ 
+                 /* Enable all controllers we need */
+-                r = cg_enable_everywhere(u->manager->cgroup_supported, enable_mask, u->cgroup_path);
++                r = cg_enable_everywhere(u->manager->cgroup_supported, enable_mask, u->cgroup_path, &result_mask);
+                 if (r < 0)
+-                        log_unit_warning_errno(u, r, "Failed to enable controllers on cgroup %s, ignoring: %m",
+-                                               u->cgroup_path);
++                        log_unit_warning_errno(u, r, "Failed to enable/disable controllers on cgroup %s, ignoring: %m", u->cgroup_path);
++
++                /* If we just turned off a controller, this might release the controller for our parent too, let's
++                 * enqueue the parent for re-realization in that case again. */
++                if (UNIT_ISSET(u->slice)) {
++                        CGroupMask turned_off;
++
++                        turned_off = (u->cgroup_realized ? u->cgroup_enabled_mask & ~result_mask : 0);
++                        if (turned_off != 0) {
++                                Unit *parent;
++
++                                /* Force the parent to propagate the enable mask to the kernel again, by invalidating
++                                 * the controller we just turned off. */
++
++                                for (parent = UNIT_DEREF(u->slice); parent; parent = UNIT_DEREF(parent->slice))
++                                        unit_invalidate_cgroup(parent, turned_off);
++                        }
++                }
++
++                /* Remember what's actually enabled now */
++                u->cgroup_enabled_mask = result_mask;
+         }
+ 
+         /* Keep track that this is now realized */
+         u->cgroup_realized = true;
+         u->cgroup_realized_mask = target_mask;
+-        u->cgroup_enabled_mask = enable_mask;
+         u->cgroup_bpf_state = needs_bpf ? UNIT_CGROUP_BPF_ON : UNIT_CGROUP_BPF_OFF;
+ 
+         if (u->type != UNIT_SLICE && !unit_cgroup_delegate(u)) {
+@@ -1885,7 +1904,7 @@ static bool unit_has_mask_realized(
+                  (!needs_bpf && u->cgroup_bpf_state == UNIT_CGROUP_BPF_OFF));
+ }
+ 
+-static void unit_add_to_cgroup_realize_queue(Unit *u) {
++void unit_add_to_cgroup_realize_queue(Unit *u) {
+         assert(u);
+ 
+         if (u->in_cgroup_realize_queue)
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 36ea77fdc5..535e328ab6 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -175,7 +175,6 @@ CGroupMask unit_get_delegate_mask(Unit *u);
+ CGroupMask unit_get_members_mask(Unit *u);
+ CGroupMask unit_get_siblings_mask(Unit *u);
+ CGroupMask unit_get_subtree_mask(Unit *u);
+-
+ CGroupMask unit_get_target_mask(Unit *u);
+ CGroupMask unit_get_enable_mask(Unit *u);
+ 
+@@ -183,6 +182,8 @@ bool unit_get_needs_bpf(Unit *u);
+ 
+ void unit_update_cgroup_members_masks(Unit *u);
+ 
++void unit_add_to_cgroup_realize_queue(Unit *u);
++
+ const char *unit_get_realized_cgroup_path(Unit *u, CGroupMask mask);
+ char *unit_default_cgroup_path(Unit *u);
+ int unit_set_cgroup_path(Unit *u, const char *path);
+diff --git a/src/nspawn/nspawn-cgroup.c b/src/nspawn/nspawn-cgroup.c
+index a231622e29..975427aa31 100644
+--- a/src/nspawn/nspawn-cgroup.c
++++ b/src/nspawn/nspawn-cgroup.c
+@@ -185,6 +185,6 @@ int create_subcgroup(pid_t pid, bool keep_unit, CGroupUnified unified_requested)
+         }
+ 
+         /* Try to enable as many controllers as possible for the new payload. */
+-        (void) cg_enable_everywhere(supported, supported, cgroup);
++        (void) cg_enable_everywhere(supported, supported, cgroup, NULL);
+         return 0;
+ }

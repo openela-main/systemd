@@ -1,0 +1,99 @@
+From fd3ab2173da5a35660565c289675c9961be28c16 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Thu, 31 Jul 2025 18:26:09 +0200
+Subject: [PATCH] sd-bus/bus-track: use install_callback in
+ sd_bus_track_add_name()
+
+Previously we didn't provide any install_callback to
+sd_bus_add_match_async() so in case AddMatch() method call timed out we
+destroyed the bus connection. This seems overly aggressive and simply
+updating the sd_bus_track object accordingly should be enough.
+
+Follow-up for 37ce3fd2b7dd8f81f6f4bca2003961a92b2963dc.
+
+Fixes #32381
+
+(cherry picked from commit dcf42d1ee21222ee698e5e0ab3ecf3411b63da40)
+
+Related: RHEL-75081
+---
+ src/libsystemd/sd-bus/bus-track.c | 30 ++++++++++++++++++++++++++----
+ 1 file changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-track.c b/src/libsystemd/sd-bus/bus-track.c
+index b818e93bec..7bb92a507b 100644
+--- a/src/libsystemd/sd-bus/bus-track.c
++++ b/src/libsystemd/sd-bus/bus-track.c
+@@ -5,6 +5,7 @@
+ #include "sd-bus.h"
+ 
+ #include "alloc-util.h"
++#include "bus-error.h"
+ #include "bus-internal.h"
+ #include "bus-track.h"
+ #include "bus-util.h"
+@@ -13,6 +14,7 @@ struct track_item {
+         unsigned n_ref;
+         char *name;
+         sd_bus_slot *slot;
++        sd_bus_track *track;
+ };
+ 
+ struct sd_bus_track {
+@@ -181,18 +183,37 @@ _public_ sd_bus_track* sd_bus_track_unref(sd_bus_track *track) {
+ }
+ 
+ static int on_name_owner_changed(sd_bus_message *message, void *userdata, sd_bus_error *error) {
+-        sd_bus_track *track = userdata;
++        struct track_item *item = userdata;
+         const char *name;
+         int r;
+ 
+         assert(message);
+-        assert(track);
++        assert(item->track);
+ 
+         r = sd_bus_message_read(message, "sss", &name, NULL, NULL);
+         if (r < 0)
+                 return 0;
+ 
+-        bus_track_remove_name_fully(track, name);
++        bus_track_remove_name_fully(item->track, name);
++        return 0;
++}
++
++static int name_owner_changed_install_callback(sd_bus_message *message, void *userdata, sd_bus_error *reterr_error) {
++        struct track_item *item = userdata;
++        const sd_bus_error *e;
++
++        assert(userdata);
++        assert(message);
++        assert(item->track);
++        assert(item->name);
++
++        e = sd_bus_message_get_error(message);
++        if (!e)
++                return 0;
++
++        log_debug_errno(sd_bus_error_get_errno(e), "Failed to install match for tracking name '%s': %s", item->name, e->message);
++
++        bus_track_remove_name_fully(item->track, item->name);
+         return 0;
+ }
+ 
+@@ -234,13 +255,14 @@ _public_ int sd_bus_track_add_name(sd_bus_track *track, const char *name) {
+         n->name = strdup(name);
+         if (!n->name)
+                 return -ENOMEM;
++        n->track = track;
+ 
+         /* First, subscribe to this name */
+         match = MATCH_FOR_NAME(name);
+ 
+         bus_track_remove_from_queue(track); /* don't dispatch this while we work in it */
+ 
+-        r = sd_bus_add_match_async(track->bus, &n->slot, match, on_name_owner_changed, NULL, track);
++        r = sd_bus_add_match_async(track->bus, &n->slot, match, on_name_owner_changed, name_owner_changed_install_callback, n);
+         if (r < 0) {
+                 bus_track_add_to_queue(track);
+                 return r;

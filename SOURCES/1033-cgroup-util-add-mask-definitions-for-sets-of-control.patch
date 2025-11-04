@@ -1,0 +1,31 @@
+From 0b05aee0750c68bfd18bda777a3860c26cf154fc Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 24 Oct 2018 17:30:46 +0200
+Subject: [PATCH] cgroup-util: add mask definitions for sets of controllers
+ supported by cgroupsv1 vs. cgroupsv2
+
+(cherry picked from commit 4edd65e4cff40158dded65c010b8c3e0b5ff5519)
+
+Related: RHEL-9322
+---
+ src/basic/cgroup-util.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/basic/cgroup-util.h b/src/basic/cgroup-util.h
+index 65d2dbd4b6..1b0f53e8b8 100644
+--- a/src/basic/cgroup-util.h
++++ b/src/basic/cgroup-util.h
+@@ -43,6 +43,13 @@ typedef enum CGroupMask {
+         CGROUP_MASK_MEMORY = CGROUP_CONTROLLER_TO_MASK(CGROUP_CONTROLLER_MEMORY),
+         CGROUP_MASK_DEVICES = CGROUP_CONTROLLER_TO_MASK(CGROUP_CONTROLLER_DEVICES),
+         CGROUP_MASK_PIDS = CGROUP_CONTROLLER_TO_MASK(CGROUP_CONTROLLER_PIDS),
++
++        /* All real cgroupv1 controllers */
++        CGROUP_MASK_V1 = CGROUP_MASK_CPU|CGROUP_MASK_CPUACCT|CGROUP_MASK_BLKIO|CGROUP_MASK_MEMORY|CGROUP_MASK_DEVICES|CGROUP_MASK_PIDS,
++
++        /* All real cgroupv2 controllers */
++        CGROUP_MASK_V2 = CGROUP_MASK_CPU|CGROUP_MASK_IO|CGROUP_MASK_MEMORY|CGROUP_MASK_PIDS,
++
+         _CGROUP_MASK_ALL = CGROUP_CONTROLLER_TO_MASK(_CGROUP_CONTROLLER_MAX) - 1
+ } CGroupMask;
+ 

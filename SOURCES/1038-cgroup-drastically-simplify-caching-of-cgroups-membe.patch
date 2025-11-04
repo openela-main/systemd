@@ -1,0 +1,228 @@
+From 18d667eb7895b47dad3b4144b69e6e9e3afe4994 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 23 Nov 2018 01:07:34 +0100
+Subject: [PATCH] cgroup: drastically simplify caching of cgroups members mask
+
+Previously we tried to be smart: when a new unit appeared and it only
+added controllers to the cgroup mask we'd update the cached members mask
+in all parents by ORing in the controller flags in their cached values.
+Unfortunately this was quite broken, as we missed some conditions when
+this cache had to be reset (for example, when a unit got unloaded),
+moreover the optimization doesn't work when a controller is removed
+anyway (as in that case there's no other way for the parent to iterate
+though all children if any other, remaining child unit still needs it).
+Hence, let's simplify the logic substantially: instead of updating the
+cache on the right events (which we didn't get right), let's simply
+invalidate the cache, and generate it lazily when we encounter it later.
+This should actually result in better behaviour as we don't have to
+calculate the new members mask for a whole subtree whever we have the
+suspicion something changed, but can delay it to the point where we
+actually need the members mask.
+
+This allows us to simplify things quite a bit, which is good, since
+validating this cache for correctness is hard enough.
+
+Fixes: #9512
+(cherry picked from commit 5af8805872809e6de4cc4d9495cb1a904772ab4e)
+
+Resolves: RHEL-9322
+---
+ src/core/cgroup.c       | 49 +++++------------------------------------
+ src/core/cgroup.h       |  1 +
+ src/core/dbus-mount.c   |  2 +-
+ src/core/dbus-scope.c   |  2 +-
+ src/core/dbus-service.c |  2 +-
+ src/core/dbus-slice.c   |  2 +-
+ src/core/dbus-socket.c  |  2 +-
+ src/core/dbus-swap.c    |  2 +-
+ src/core/unit.c         |  3 ++-
+ src/core/unit.h         |  2 --
+ 10 files changed, 14 insertions(+), 53 deletions(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index bf829407b8..3276c876ec 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -1454,53 +1454,14 @@ bool unit_get_needs_bpf(Unit *u) {
+         return false;
+ }
+ 
+-/* Recurse from a unit up through its containing slices, propagating
+- * mask bits upward. A unit is also member of itself. */
+-void unit_update_cgroup_members_masks(Unit *u) {
+-        CGroupMask m;
+-        bool more;
+-
++void unit_invalidate_cgroup_members_masks(Unit *u) {
+         assert(u);
+ 
+-        /* Calculate subtree mask */
+-        m = unit_get_subtree_mask(u);
+-
+-        /* See if anything changed from the previous invocation. If
+-         * not, we're done. */
+-        if (u->cgroup_subtree_mask_valid && m == u->cgroup_subtree_mask)
+-                return;
+-
+-        more =
+-                u->cgroup_subtree_mask_valid &&
+-                ((m & ~u->cgroup_subtree_mask) != 0) &&
+-                ((~m & u->cgroup_subtree_mask) == 0);
+-
+-        u->cgroup_subtree_mask = m;
+-        u->cgroup_subtree_mask_valid = true;
+-
+-        if (UNIT_ISSET(u->slice)) {
+-                Unit *s = UNIT_DEREF(u->slice);
+-
+-                if (more)
+-                        /* There's more set now than before. We
+-                         * propagate the new mask to the parent's mask
+-                         * (not caring if it actually was valid or
+-                         * not). */
+-
+-                        s->cgroup_members_mask |= m;
+-
+-                else
+-                        /* There's less set now than before (or we
+-                         * don't know), we need to recalculate
+-                         * everything, so let's invalidate the
+-                         * parent's members mask */
++        /* Recurse invalidate the member masks cache all the way up the tree */
++        u->cgroup_members_mask_valid = false;
+ 
+-                        s->cgroup_members_mask_valid = false;
+-
+-                /* And now make sure that this change also hits our
+-                 * grandparents */
+-                unit_update_cgroup_members_masks(s);
+-        }
++        if (UNIT_ISSET(u->slice))
++                unit_invalidate_cgroup_members_masks(UNIT_DEREF(u->slice));
+ }
+ 
+ const char *unit_get_realized_cgroup_path(Unit *u, CGroupMask mask) {
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 535e328ab6..2ec8dd8fba 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -180,6 +180,7 @@ CGroupMask unit_get_enable_mask(Unit *u);
+ 
+ bool unit_get_needs_bpf(Unit *u);
+ 
++void unit_invalidate_cgroup_members_masks(Unit *u);
+ void unit_update_cgroup_members_masks(Unit *u);
+ 
+ void unit_add_to_cgroup_realize_queue(Unit *u);
+diff --git a/src/core/dbus-mount.c b/src/core/dbus-mount.c
+index a089b37e04..345494fd64 100644
+--- a/src/core/dbus-mount.c
++++ b/src/core/dbus-mount.c
+@@ -190,7 +190,7 @@ int bus_mount_set_property(
+ int bus_mount_commit_properties(Unit *u) {
+         assert(u);
+ 
+-        unit_update_cgroup_members_masks(u);
++        unit_invalidate_cgroup_members_masks(u);
+         unit_realize_cgroup(u);
+ 
+         return 0;
+diff --git a/src/core/dbus-scope.c b/src/core/dbus-scope.c
+index 534302d188..8504352cbf 100644
+--- a/src/core/dbus-scope.c
++++ b/src/core/dbus-scope.c
+@@ -192,7 +192,7 @@ int bus_scope_set_property(
+ int bus_scope_commit_properties(Unit *u) {
+         assert(u);
+ 
+-        unit_update_cgroup_members_masks(u);
++        unit_invalidate_cgroup_members_masks(u);
+         unit_realize_cgroup(u);
+ 
+         return 0;
+diff --git a/src/core/dbus-service.c b/src/core/dbus-service.c
+index 5f768a77c8..6db583492b 100644
+--- a/src/core/dbus-service.c
++++ b/src/core/dbus-service.c
+@@ -393,7 +393,7 @@ int bus_service_set_property(
+ int bus_service_commit_properties(Unit *u) {
+         assert(u);
+ 
+-        unit_update_cgroup_members_masks(u);
++        unit_invalidate_cgroup_members_masks(u);
+         unit_realize_cgroup(u);
+ 
+         return 0;
+diff --git a/src/core/dbus-slice.c b/src/core/dbus-slice.c
+index 722a5688a5..effd5fa5d7 100644
+--- a/src/core/dbus-slice.c
++++ b/src/core/dbus-slice.c
+@@ -28,7 +28,7 @@ int bus_slice_set_property(
+ int bus_slice_commit_properties(Unit *u) {
+         assert(u);
+ 
+-        unit_update_cgroup_members_masks(u);
++        unit_invalidate_cgroup_members_masks(u);
+         unit_realize_cgroup(u);
+ 
+         return 0;
+diff --git a/src/core/dbus-socket.c b/src/core/dbus-socket.c
+index 17494b80c8..dc74c82714 100644
+--- a/src/core/dbus-socket.c
++++ b/src/core/dbus-socket.c
+@@ -469,7 +469,7 @@ int bus_socket_set_property(
+ int bus_socket_commit_properties(Unit *u) {
+         assert(u);
+ 
+-        unit_update_cgroup_members_masks(u);
++        unit_invalidate_cgroup_members_masks(u);
+         unit_realize_cgroup(u);
+ 
+         return 0;
+diff --git a/src/core/dbus-swap.c b/src/core/dbus-swap.c
+index b272d10113..353fa20132 100644
+--- a/src/core/dbus-swap.c
++++ b/src/core/dbus-swap.c
+@@ -63,7 +63,7 @@ int bus_swap_set_property(
+ int bus_swap_commit_properties(Unit *u) {
+         assert(u);
+ 
+-        unit_update_cgroup_members_masks(u);
++        unit_invalidate_cgroup_members_masks(u);
+         unit_realize_cgroup(u);
+ 
+         return 0;
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 15c5bdf2a2..a7f610eca8 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1583,7 +1583,8 @@ int unit_load(Unit *u) {
+                 if (u->job_running_timeout != USEC_INFINITY && u->job_running_timeout > u->job_timeout)
+                         log_unit_warning(u, "JobRunningTimeoutSec= is greater than JobTimeoutSec=, it has no effect.");
+ 
+-                unit_update_cgroup_members_masks(u);
++                /* We finished loading, let's ensure our parents recalculate the members mask */
++                unit_invalidate_cgroup_members_masks(u);
+         }
+ 
+         assert((u->load_state != UNIT_MERGED) == !u->merged_into);
+diff --git a/src/core/unit.h b/src/core/unit.h
+index b8b914711f..e2dd7949e5 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -265,7 +265,6 @@ typedef struct Unit {
+         char *cgroup_path;
+         CGroupMask cgroup_realized_mask;
+         CGroupMask cgroup_enabled_mask;
+-        CGroupMask cgroup_subtree_mask;
+         CGroupMask cgroup_members_mask;
+         int cgroup_inotify_wd;
+ 
+@@ -341,7 +340,6 @@ typedef struct Unit {
+ 
+         bool cgroup_realized:1;
+         bool cgroup_members_mask_valid:1;
+-        bool cgroup_subtree_mask_valid:1;
+ 
+         UnitCGroupBPFState cgroup_bpf_state:2;
+ 

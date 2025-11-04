@@ -1,0 +1,31 @@
+From f51c9ff5bd879c5cd1a7872fbd97cc2c447c19a0 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Mon, 13 Jan 2025 17:30:51 +0100
+Subject: [PATCH] core/manager: restore bus track deserialization cleanup in
+ manager_reload()
+
+There's zero explanation why it got (spuriously) removed in
+8402ca04d1a063c3d8a9e3d5c16df8bb8778ae98...
+
+(cherry picked from commit 34f4b817f67b002eae7e2c09b19bf4b66c4791b6)
+
+Related: RHEL-75081
+---
+ src/core/manager.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 37bdac8b1d..bee94fb80d 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3542,6 +3542,10 @@ int manager_reload(Manager *m) {
+         if (q < 0 && r >= 0)
+                 r = q;
+ 
++        /* Clean up deserialized bus track information. They're never consumed during reload (as opposed to
++         * reexec) since we do not disconnect from the bus. */
++        m->subscribed_as_strv = strv_free(m->subscribed_as_strv);
++
+         /* Third, fire things up! */
+         manager_coldplug(m);
+ 

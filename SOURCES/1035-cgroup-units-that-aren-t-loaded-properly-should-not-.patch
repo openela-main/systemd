@@ -1,0 +1,32 @@
+From 3bd48135a82129199e99d212304cee4e0045302c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 21 Nov 2018 18:25:37 +0100
+Subject: [PATCH] cgroup: units that aren't loaded properly should not result
+ in cgroup controllers being pulled in
+
+This shouldn't make much difference in real life, but is a bit cleaner.
+
+(cherry picked from commit 442ce7759c668bf9857eff13a90b0cfa6be8d426)
+
+Related: RHEL-9322
+---
+ src/core/cgroup.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 0c8a66edd1..331c97d288 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -1308,7 +1308,11 @@ static CGroupMask unit_get_cgroup_mask(Unit *u) {
+ CGroupMask unit_get_own_mask(Unit *u) {
+         CGroupContext *c;
+ 
+-        /* Returns the mask of controllers the unit needs for itself */
++        /* Returns the mask of controllers the unit needs for itself. If a unit is not properly loaded, return an empty
++         * mask, as we shouldn't reflect it in the cgroup hierarchy then. */
++
++        if (u->load_state != UNIT_LOADED)
++                return 0;
+ 
+         c = unit_get_cgroup_context(u);
+         if (!c)

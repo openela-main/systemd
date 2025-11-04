@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.5
+Release:        82%{?dist}.8
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1075,6 +1075,28 @@ Patch1022: 1022-core-fix-member-access-within-null-pointer.patch
 Patch1023: 1023-man-be-even-clearer-that-tmpfiles-user-group-mode-ar.patch
 Patch1024: 1024-Revert-man-fix-description-of-force-in-halt-8-7392.patch
 Patch1025: 1025-man-explicitly-document-that-reboot-f-is-different-f.patch
+Patch1026: 1026-dbus-stash-the-subscriber-list-when-we-disconenct-fr.patch
+Patch1027: 1027-manager-s-deserialized_subscribed-subscribed_as_strv.patch
+Patch1028: 1028-bus-util-do-not-reset-the-count-returned-by-sd_bus_t.patch
+Patch1029: 1029-core-do-not-disconnect-from-bus-when-failed-to-insta.patch
+Patch1030: 1030-sd-bus-bus-track-use-install_callback-in-sd_bus_trac.patch
+Patch1031: 1031-core-manager-restore-bus-track-deserialization-clean.patch
+Patch1032: 1032-core-manager-drop-duplicate-bus-track-deserializatio.patch
+Patch1033: 1033-cgroup-util-add-mask-definitions-for-sets-of-control.patch
+Patch1034: 1034-cgroup-dump-delegation-mask-too.patch
+Patch1035: 1035-cgroup-units-that-aren-t-loaded-properly-should-not-.patch
+Patch1036: 1036-cgroup-be-more-careful-with-which-controllers-we-can.patch
+Patch1037: 1037-cgroup-extend-reasons-when-we-realize-the-enable-mas.patch
+Patch1038: 1038-cgroup-drastically-simplify-caching-of-cgroups-membe.patch
+Patch1039: 1039-cgroup-when-we-unload-a-unit-also-update-all-its-par.patch
+Patch1040: 1040-test-extend-testcase-to-ensure-controller-membership.patch
+Patch1041: 1041-test-execute-let-s-ignore-the-difference-between-CLD.patch
+Patch1042: 1042-test-execute-turn-off-coredump-generation-in-test-se.patch
+Patch1043: 1043-test-introduce-TEST-53-TIMER.patch
+Patch1044: 1044-test-restarting-elapsed-timer-shouldn-t-trigger-the-.patch
+Patch1045: 1045-test-check-the-next-elapse-timer-timestamp-after-des.patch
+Patch1046: 1046-timer-don-t-run-service-immediately-after-restart-of.patch
+Patch1047: 1047-Revert-test-extend-testcase-to-ensure-controller-mem.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1701,6 +1723,34 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Thu Oct 02 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.8
+- test-execute: let's ignore the difference between CLD_KILLED and CLD_DUMPED (RHEL-108744)
+- test-execute: turn off coredump generation in test services (RHEL-108744)
+- test: introduce TEST-53-TIMER (RHEL-108744)
+- test: restarting elapsed timer shouldn't trigger the corresponding service (RHEL-108744)
+- test: check the next elapse timer timestamp after deserialization (RHEL-108744)
+- timer: don't run service immediately after restart of a timer (RHEL-108744)
+- Revert "test: extend testcase to ensure controller membership doesn't regress" (RHEL-9322)
+
+* Fri Aug 29 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.7
+- cgroup-util: add mask definitions for sets of controllers supported by cgroupsv1 vs. cgroupsv2 (RHEL-9322)
+- cgroup: dump delegation mask too (RHEL-9322)
+- cgroup: units that aren't loaded properly should not result in cgroup controllers being pulled in (RHEL-9322)
+- cgroup: be more careful with which controllers we can enable/disable on a cgroup (RHEL-9322)
+- cgroup: extend reasons when we realize the enable mask (RHEL-9322)
+- cgroup: drastically simplify caching of cgroups members mask (RHEL-9322)
+- cgroup: when we unload a unit, also update all its parent's members mask (RHEL-9322)
+- test: extend testcase to ensure controller membership doesn't regress (RHEL-9322)
+
+* Mon Aug 25 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.6
+- dbus: stash the subscriber list when we disconenct from the bus (RHEL-75081)
+- manager: s/deserialized_subscribed/subscribed_as_strv (RHEL-75081)
+- bus-util: do not reset the count returned by sd_bus_track_count_name() (RHEL-75081)
+- core: do not disconnect from bus when failed to install signal match (RHEL-75081)
+- sd-bus/bus-track: use install_callback in sd_bus_track_add_name() (RHEL-75081)
+- core/manager: restore bus track deserialization cleanup in manager_reload() (RHEL-75081)
+- core/manager: drop duplicate bus track deserialization (RHEL-75081)
+
 * Wed Mar 05 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.5
 - man: be even clearer that tmpfiles user/group/mode are applied on existing inodes (RHEL-77145)
 - Revert "man: fix description of --force in halt(8) (#7392)" (RHEL-81056)

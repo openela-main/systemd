@@ -1,0 +1,37 @@
+From bbec8198d56f141ab3e97dca3607744e2497bf9a Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Tue, 2 Sep 2025 13:41:22 +0200
+Subject: [PATCH] test-execute: turn off coredump generation in test services
+
+These services are likely to coredump, and we expect that but aren't interested in the coredump. Hence let's turn off processing by setting RLIMIT_CORE to 0/0.
+
+(cherry picked from commit a429223d1767a9d6cb0a95fd2fa3b0d64ce3d4e7)
+
+Related: RHEL-108744
+---
+ test/test-execute/exec-systemcallfilter-failing.service  | 1 +
+ test/test-execute/exec-systemcallfilter-failing2.service | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/test/test-execute/exec-systemcallfilter-failing.service b/test/test-execute/exec-systemcallfilter-failing.service
+index bcebc99507..996f859217 100644
+--- a/test/test-execute/exec-systemcallfilter-failing.service
++++ b/test/test-execute/exec-systemcallfilter-failing.service
+@@ -4,6 +4,7 @@ Description=Test for SystemCallFilter
+ [Service]
+ ExecStart=/bin/sh -c 'echo "This should not be seen"'
+ Type=oneshot
++LimitCORE=0
+ SystemCallFilter=ioperm
+ SystemCallFilter=~ioperm
+ SystemCallFilter=ioperm
+diff --git a/test/test-execute/exec-systemcallfilter-failing2.service b/test/test-execute/exec-systemcallfilter-failing2.service
+index 2fdc0ed772..c74f42248b 100644
+--- a/test/test-execute/exec-systemcallfilter-failing2.service
++++ b/test/test-execute/exec-systemcallfilter-failing2.service
+@@ -4,4 +4,5 @@ Description=Test for SystemCallFilter
+ [Service]
+ ExecStart=/bin/sh -c 'echo "This should not be seen"'
+ Type=oneshot
++LimitCORE=0
+ SystemCallFilter=~write open execve exit_group close mmap munmap fstat DONOTEXIST

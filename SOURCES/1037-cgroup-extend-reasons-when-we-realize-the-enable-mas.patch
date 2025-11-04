@@ -1,0 +1,35 @@
+From 70d03cffc01a77df5441e8c62e07c010e16882b2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 23 Nov 2018 01:03:18 +0100
+Subject: [PATCH] cgroup: extend reasons when we realize the enable mask
+
+After creating a cgroup we need to initialize its
+"cgroup.subtree_control" file with the controllers its children want to
+use. Currently we do so whenever the mkdir() on the cgroup succeeded,
+i.e. when we know the cgroup is "fresh". Let's update the condition
+slightly that we also do so when internally we assume a cgroup doesn't
+exist yet, even if it already does (maybe left-over from a previous
+run).
+
+This shouldn't change anything IRL but make things a bit more robust.
+
+(cherry picked from commit 1fd3a10c38a0be4fc42ae94cf9f8401003187b80)
+
+Related: RHEL-9322
+---
+ src/core/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 93c0920c54..bf829407b8 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -1684,7 +1684,7 @@ static int unit_create_cgroup(
+         (void) unit_watch_cgroup(u);
+ 
+         /* Preserve enabled controllers in delegated units, adjust others. */
+-        if (created || !unit_cgroup_delegate(u)) {
++        if (created || !u->cgroup_realized || !unit_cgroup_delegate(u)) {
+                 CGroupMask result_mask = 0;
+ 
+                 /* Enable all controllers we need */

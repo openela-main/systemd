@@ -1,0 +1,36 @@
+From 8b64f8944a9e48ca07c2fb086457675031814b46 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 23 Nov 2018 01:13:47 +0100
+Subject: [PATCH] cgroup: when we unload a unit, also update all its parent's
+ members mask
+
+This way we can corectly ensure that when a unit that requires some
+controller goes away, we propagate the removal of it all the way up, so
+that the controller is turned off in all the parents too.
+
+(cherry picked from commit b8b6f321044ab085358de91a1f72a7d86593dfda)
+
+Related: RHEL-9322
+---
+ src/core/unit.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index a7f610eca8..70e1d68ea4 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -578,6 +578,14 @@ void unit_free(Unit *u) {
+         if (!u)
+                 return;
+ 
++        if (UNIT_ISSET(u->slice)) {
++                /* A unit is being dropped from the tree, make sure our parent slice recalculates the member mask */
++                unit_invalidate_cgroup_members_masks(UNIT_DEREF(u->slice));
++
++                /* And make sure the parent is realized again, updating cgroup memberships */
++                unit_add_to_cgroup_realize_queue(UNIT_DEREF(u->slice));
++        }
++
+         u->transient_file = safe_fclose(u->transient_file);
+ 
+         if (!MANAGER_IS_RELOADING(u->manager))

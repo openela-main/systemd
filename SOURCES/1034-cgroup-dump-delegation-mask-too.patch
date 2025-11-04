@@ -1,0 +1,51 @@
+From fb30cb6cb667dc97afeadb4e0ac6ad9134f2d30a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 21 Nov 2018 17:48:41 +0100
+Subject: [PATCH] cgroup: dump delegation mask too
+
+(cherry picked from commit 0adf88b68ce71b49009d731ac6d96d9d59c4f2a9)
+
+Related: RHEL-9322
+---
+ src/core/unit.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index aedc1d806f..15c5bdf2a2 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -1194,17 +1194,20 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+                 (void) cg_mask_to_string(u->cgroup_realized_mask, &s);
+                 fprintf(f, "%s\tCGroup realized mask: %s\n", prefix, strnull(s));
+         }
++
+         if (u->cgroup_enabled_mask != 0) {
+                 _cleanup_free_ char *s = NULL;
+                 (void) cg_mask_to_string(u->cgroup_enabled_mask, &s);
+                 fprintf(f, "%s\tCGroup enabled mask: %s\n", prefix, strnull(s));
+         }
++
+         m = unit_get_own_mask(u);
+         if (m != 0) {
+                 _cleanup_free_ char *s = NULL;
+                 (void) cg_mask_to_string(m, &s);
+                 fprintf(f, "%s\tCGroup own mask: %s\n", prefix, strnull(s));
+         }
++
+         m = unit_get_members_mask(u);
+         if (m != 0) {
+                 _cleanup_free_ char *s = NULL;
+@@ -1212,6 +1215,13 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
+                 fprintf(f, "%s\tCGroup members mask: %s\n", prefix, strnull(s));
+         }
+ 
++        m = unit_get_delegate_mask(u);
++        if (m != 0) {
++                _cleanup_free_ char *s = NULL;
++                (void) cg_mask_to_string(m, &s);
++                fprintf(f, "%s\tCGroup delegate mask: %s\n", prefix, strnull(s));
++        }
++
+         SET_FOREACH(t, u->names, i)
+                 fprintf(f, "%s\tName: %s\n", prefix, t);
+ 
