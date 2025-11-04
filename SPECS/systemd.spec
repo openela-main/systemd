@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        51%{?dist}.2
+Release:        51%{?dist}.3
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1199,6 +1199,18 @@ Patch1113: 1113-Follow-up-with-the-PR-31819.patch
 Patch1114: 1114-Added-more-ASSERT-macro-and-also-make-some-test-file.patch
 Patch1115: 1115-sd-event-drop-inotify-event-from-buffer-when-no-even.patch
 Patch1116: 1116-test-add-test-case-for-issue-38265.patch
+Patch1117: 1117-meson-etc-systemd-network-is-also-used-by-udevd.patch
+Patch1118: 1118-sd-bus-make-bus_add_match_full-accept-timeout.patch
+Patch1119: 1119-core-unit-add-get_timeout_start_usec-in-UnitVTable-a.patch
+Patch1120: 1120-core-unit-increase-the-NameOwnerChanged-GetNameOwner.patch
+Patch1121: 1121-core-sd-bus-drop-empty-lines-between-function-call-a.patch
+Patch1122: 1122-core-do-not-disconnect-from-bus-when-failed-to-insta.patch
+Patch1123: 1123-dbus-stash-the-subscriber-list-when-we-disconenct-fr.patch
+Patch1124: 1124-manager-s-deserialized_subscribed-subscribed_as_strv.patch
+Patch1125: 1125-bus-util-do-not-reset-the-count-returned-by-sd_bus_t.patch
+Patch1126: 1126-core-manager-restore-bus-track-deserialization-clean.patch
+Patch1127: 1127-core-manager-drop-duplicate-bus-track-deserializatio.patch
+Patch1128: 1128-sd-bus-bus-track-use-install_callback-in-sd_bus_trac.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2076,6 +2088,20 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Fri Sep 12 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-51.3
+- meson: /etc/systemd/network is also used by udevd (RHEL-111610)
+- sd-bus: make bus_add_match_full accept timeout (RHEL-111629)
+- core/unit: add get_timeout_start_usec in UnitVTable and define it for service (RHEL-111629)
+- core/unit: increase the NameOwnerChanged/GetNameOwner timeout to the unit's start timeout (RHEL-111629)
+- core,sd-bus: drop empty lines between function call and error check (RHEL-111629)
+- core: do not disconnect from bus when failed to install signal match (RHEL-111629)
+- dbus: stash the subscriber list when we disconenct from the bus (RHEL-111629)
+- manager: s/deserialized_subscribed/subscribed_as_strv (RHEL-111629)
+- bus-util: do not reset the count returned by sd_bus_track_count_name() (RHEL-111629)
+- core/manager: restore bus track deserialization cleanup in manager_reload() (RHEL-111629)
+- core/manager: drop duplicate bus track deserialization (RHEL-111629)
+- sd-bus/bus-track: use install_callback in sd_bus_track_add_name() (RHEL-111629)
+
 * Mon Aug 11 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-51.2
 - Add a set of assertion macros to tests.h (ASSERT_OK(), ASSERT_EQ(), ASSERT_GE(), ASSERT_LE()) that log the failed condition before crashing and convert test-gpt.c test file to use them (RHEL-108481)
 - Follow up with the PR #31819 (RHEL-108481)
