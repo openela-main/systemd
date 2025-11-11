@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        55%{?dist}
+Release:        55%{?dist}.2
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1292,6 +1292,47 @@ Patch1206: 1206-core-when-removing-a-job-from-a-transaction-include-.patch
 Patch1207: 1207-catalog-add-entries-for-the-order-cycle-log-messages.patch
 Patch1208: 1208-tree-wide-check-more-log-message-format-in-log_struc.patch
 Patch1209: 1209-core-transaction-do-not-attempt-to-log-n-a-as-a-jour.patch
+Patch1210: 1210-meson-etc-systemd-network-is-also-used-by-udevd.patch
+Patch1211: 1211-test-add-tests-for-format_timestamp-and-parse_timest.patch
+Patch1212: 1212-test-time-util-disable-failing-tests.patch
+Patch1213: 1213-test-test-parse_timestamp-in-various-timezone.patch
+Patch1214: 1214-systemctl-logind-add-missing-asserts.patch
+Patch1215: 1215-systemctl-logind-make-logind_schedule_shutdown-accep.patch
+Patch1216: 1216-systemctl-add-option-when-for-scheduled-shutdown.patch
+Patch1217: 1217-test-time-util-add-test-cases-to-invalidate-show-and.patch
+Patch1218: 1218-sd-bus-make-bus_add_match_full-accept-timeout.patch
+Patch1219: 1219-core-unit-add-get_timeout_start_usec-in-UnitVTable-a.patch
+Patch1220: 1220-core-unit-increase-the-NameOwnerChanged-GetNameOwner.patch
+Patch1221: 1221-core-sd-bus-drop-empty-lines-between-function-call-a.patch
+Patch1222: 1222-core-do-not-disconnect-from-bus-when-failed-to-insta.patch
+Patch1223: 1223-dbus-stash-the-subscriber-list-when-we-disconenct-fr.patch
+Patch1224: 1224-manager-s-deserialized_subscribed-subscribed_as_strv.patch
+Patch1225: 1225-bus-util-do-not-reset-the-count-returned-by-sd_bus_t.patch
+Patch1226: 1226-core-manager-restore-bus-track-deserialization-clean.patch
+Patch1227: 1227-core-manager-drop-duplicate-bus-track-deserializatio.patch
+Patch1228: 1228-sd-bus-bus-track-use-install_callback-in-sd_bus_trac.patch
+Patch1229: 1229-Revert-test-time-util-disable-failing-tests.patch
+Patch1230: 1230-test-use-get_timezones-to-iterate-all-known-timezone.patch
+Patch1231: 1231-test-time-util-do-not-fail-on-DST-change.patch
+Patch1232: 1232-test-time-util-suppress-timestamp-conversion-failure.patch
+Patch1233: 1233-test-time-util-do-more-suppression-of-time-zone-chec.patch
+Patch1234: 1234-test-time-util-fix-truncation-of-usec-to-sec.patch
+Patch1235: 1235-test-unset-TZ-before-timezone-sensitive-unit-tests-a.patch
+Patch1236: 1236-meson-extend-timeout-for-test-time-util.patch
+Patch1237: 1237-time-util-use-DEFINE_STRING_TABLE_LOOKUP_TO_STRING-m.patch
+Patch1238: 1238-time-util-align-string-table.patch
+Patch1239: 1239-time-util-rename-variables.patch
+Patch1240: 1240-time-util-add-assertions.patch
+Patch1241: 1241-time-util-drop-redundant-else.patch
+Patch1242: 1242-time-util-do-not-use-strdupa.patch
+Patch1243: 1243-time-util-use-result-from-startswith_no_case.patch
+Patch1244: 1244-time-util-use-usec_add-and-usec_sub_unsigned.patch
+Patch1245: 1245-time-util-shorten-code-a-bit.patch
+Patch1246: 1246-time-util-rename-variables.patch
+Patch1247: 1247-time-util-drop-unnecessary-assignment-of-timezone-na.patch
+Patch1248: 1248-time-util-make-parse_timestamp-use-the-RFC-822-ISO-8.patch
+Patch1249: 1249-time-util-fix-typo.patch
+Patch1250: 1250-ci-bump-the-tools-tree-to-F42.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2169,6 +2210,51 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Fri Sep 12 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.2
+- Revert "test-time-util: disable failing tests" (RHEL-110954)
+- test: use get_timezones() to iterate all known timezones (RHEL-110954)
+- test-time-util: do not fail on DST change (RHEL-110954)
+- test-time-util: suppress timestamp conversion failures for Africa/Khartoum timezone (RHEL-110954)
+- test-time-util: do more suppression of time zone checks (RHEL-110954)
+- test-time-util: fix truncation of usec to sec (RHEL-110954)
+- test: unset TZ before timezone-sensitive unit tests are run (RHEL-110954)
+- meson: extend timeout for test-time-util (RHEL-110954)
+- time-util: use DEFINE_STRING_TABLE_LOOKUP_TO_STRING() macro (RHEL-110954)
+- time-util: align string table (RHEL-110954)
+- time-util: rename variables (RHEL-110954)
+- time-util: add assertions (RHEL-110954)
+- time-util: drop redundant else (RHEL-110954)
+- time-util: do not use strdupa() (RHEL-110954)
+- time-util: use result from startswith_no_case() (RHEL-110954)
+- time-util: use usec_add() and usec_sub_unsigned() (RHEL-110954)
+- time-util: shorten code a bit (RHEL-110954)
+- time-util: rename variables (RHEL-110954)
+- time-util: drop unnecessary assignment of timezone name (RHEL-110954)
+- time-util: make parse_timestamp() use the RFC-822/ISO 8601 standard timezone spec (RHEL-110954)
+- time-util: fix typo (RHEL-110954)
+- ci: bump the tools tree to F42 (RHEL-110954)
+
+* Fri Aug 29 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.1
+- meson: /etc/systemd/network is also used by udevd (RHEL-111611)
+- test: add tests for format_timestamp() and parse_timestamp() with various timezone (RHEL-110954)
+- test-time-util: disable failing tests (RHEL-110954)
+- test: test parse_timestamp() in various timezone (RHEL-110954)
+- systemctl: logind: add missing asserts (RHEL-110954)
+- systemctl: logind: make logind_schedule_shutdown accept action as param (RHEL-110954)
+- systemctl: add option --when for scheduled shutdown (RHEL-110954)
+- test-time-util: add test cases to invalidate "show" and "cancel" (RHEL-110954)
+- sd-bus: make bus_add_match_full accept timeout (RHEL-111630)
+- core/unit: add get_timeout_start_usec in UnitVTable and define it for service (RHEL-111630)
+- core/unit: increase the NameOwnerChanged/GetNameOwner timeout to the unit's start timeout (RHEL-111630)
+- core,sd-bus: drop empty lines between function call and error check (RHEL-111630)
+- core: do not disconnect from bus when failed to install signal match (RHEL-111630)
+- dbus: stash the subscriber list when we disconenct from the bus (RHEL-111630)
+- manager: s/deserialized_subscribed/subscribed_as_strv (RHEL-111630)
+- bus-util: do not reset the count returned by sd_bus_track_count_name() (RHEL-111630)
+- core/manager: restore bus track deserialization cleanup in manager_reload() (RHEL-111630)
+- core/manager: drop duplicate bus track deserialization (RHEL-111630)
+- sd-bus/bus-track: use install_callback in sd_bus_track_add_name() (RHEL-111630)
+
 * Fri Aug 15 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55
 - tree-wide: check more log message format in log_struct() and friends (RHEL-100353)
 - build: add some coloring to --version output (RHEL-100353)
