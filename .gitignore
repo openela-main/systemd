@@ -1,2 +1,3 @@
-SOURCES/systemd-257.tar.gz
 SOURCES/0259-rc-local-order-after-network-online.target.patch
+SOURCES/0410-hwdb-run-update-hwdb.patch
+SOURCES/systemd-257.tar.gz
