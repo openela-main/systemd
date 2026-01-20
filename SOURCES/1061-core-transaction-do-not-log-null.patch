@@ -1,0 +1,53 @@
+From 231be769332d2b699b9add3f8add7b8941c3a7aa Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Sat, 18 Mar 2023 12:15:10 +0900
+Subject: [PATCH] core/transaction: do not log "(null)"
+
+As we ignores the failure in merge_unit_ids(), so unit_ids may be NULL.
+
+(cherry picked from commit 5803c24da5cf543a55c4fce9009a9c5f2b18519a)
+
+Related: RHEL-132317
+---
+ src/core/transaction.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index cd80e7e111..159c10c7c8 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -6,6 +6,7 @@
+ #include "alloc-util.h"
+ #include "bus-common-errors.h"
+ #include "bus-error.h"
++#include "string-util.h"
+ #include "terminal-util.h"
+ #include "transaction.h"
+ #include "dbus-unit.h"
+@@ -402,7 +403,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
+                                    j->unit->id,
+                                    unit_id == array ? "ordering cycle" : "dependency",
+                                    *unit_id, *job_type,
+-                                   "%s", unit_ids);
++                                   "%s", strna(unit_ids));
+ 
+                 if (delete) {
+                         const char *status;
+@@ -411,7 +412,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
+                                    "MESSAGE=%s: Job %s/%s deleted to break ordering cycle starting with %s/%s",
+                                    j->unit->id, delete->unit->id, job_type_to_string(delete->type),
+                                    j->unit->id, job_type_to_string(j->type),
+-                                   "%s", unit_ids);
++                                   "%s", strna(unit_ids));
+ 
+                         if (log_get_show_color())
+                                 status = ANSI_HIGHLIGHT_RED " SKIP " ANSI_NORMAL;
+@@ -427,7 +428,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
+                 log_struct(LOG_ERR,
+                            "MESSAGE=%s: Unable to break cycle starting with %s/%s",
+                            j->unit->id, j->unit->id, job_type_to_string(j->type),
+-                           "%s", unit_ids);
++                           "%s", strna(unit_ids));
+ 
+                 return sd_bus_error_setf(e, BUS_ERROR_TRANSACTION_ORDER_IS_CYCLIC,
+                                          "Transaction order is cyclic. See system logs for details.");

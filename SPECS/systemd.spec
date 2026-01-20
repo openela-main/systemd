@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.8
+Release:        82%{?dist}.13
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1097,6 +1097,23 @@ Patch1044: 1044-test-restarting-elapsed-timer-shouldn-t-trigger-the-.patch
 Patch1045: 1045-test-check-the-next-elapse-timer-timestamp-after-des.patch
 Patch1046: 1046-timer-don-t-run-service-immediately-after-restart-of.patch
 Patch1047: 1047-Revert-test-extend-testcase-to-ensure-controller-mem.patch
+Patch1048: 1048-cryptsetup-generator-refactor-add_crypttab_devices.patch
+Patch1049: 1049-cryptsetup-generator-continue-parsing-after-error.patch
+Patch1050: 1050-hwdb-add-ACCEL_LOCATION-property-to-parse_hwdb.py.patch
+Patch1051: 1051-hwdb-update-ACCEL_LOCATION-property-to-use-Or-instea.patch
+Patch1052: 1052-test-support-general-properties-in-hwdb-files.patch
+Patch1053: 1053-hwdb-Relax-parsing-script-to-allow-0-and-1-for-all-I.patch
+Patch1054: 1054-hwdb-allow-spaces-in-usb-matches-and-similar-pattern.patch
+Patch1055: 1055-test-fix-parsing-of-60-seat.hwdb-and-60-keyboard.hwd.patch
+Patch1056: 1056-parse_hwdb-fix-compatibility-with-pyparsing-2.4.patch
+Patch1057: 1057-login-use-parse_uid-when-unmounting-user-runtime-dir.patch
+Patch1058: 1058-pid1-do-not-use-generated-strings-as-format-strings-.patch
+Patch1059: 1059-core-transaction-make-merge_unit_ids-always-return-N.patch
+Patch1060: 1060-core-transaction-make-merge_unit_ids-return-non-NULL.patch
+Patch1061: 1061-core-transaction-do-not-log-null.patch
+Patch1062: 1062-run-update-checks-to-allow-running-with-a-user-s-bus.patch
+Patch1063: 1063-Revert-run-update-checks-to-allow-running-with-a-use.patch
+Patch1064: 1064-logind-fix-crash-in-logind-on-user-specified-message.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1723,6 +1740,33 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Mon Dec 08 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.13
+- logind: fix crash in logind on user-specified message string (RHEL-132317)
+
+* Fri Dec 05 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.12
+- Revert "run: update checks to allow running with a user's bus" (RHEL-118835)
+
+* Tue Dec 02 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.11
+- run: update checks to allow running with a user's bus (RHEL-118835)
+
+* Tue Dec 02 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.10
+- hwdb: add ACCEL_LOCATION property to parse_hwdb.py (RHEL-130979)
+- hwdb: update ACCEL_LOCATION property to use Or instead of QuotedString (RHEL-130979)
+- test: support general properties in hwdb files (RHEL-130979)
+- hwdb: Relax parsing script to allow 0 and 1 for all ID_* properties (RHEL-130979)
+- hwdb: allow spaces in usb: matches and similar patterns (RHEL-130979)
+- test: fix parsing of 60-seat.hwdb and 60-keyboard.hwdb (RHEL-130979)
+- parse_hwdb: fix compatibility with pyparsing 2.4.* (RHEL-130979)
+- login: use parse_uid() when unmounting user runtime directory (RHEL-132175)
+- pid1: do not use generated strings as format strings (#19098) (RHEL-132317)
+- core/transaction: make merge_unit_ids() always return NUL-terminated string (RHEL-132317)
+- core/transaction: make merge_unit_ids() return non-NULL on success (RHEL-132317)
+- core/transaction: do not log "(null)" (RHEL-132317)
+
+* Wed Nov 05 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.9
+- cryptsetup-generator: refactor add_crypttab_devices() (RHEL-38859)
+- cryptsetup-generator: continue parsing after error (RHEL-38859)
+
 * Thu Oct 02 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.8
 - test-execute: let's ignore the difference between CLD_KILLED and CLD_DUMPED (RHEL-108744)
 - test-execute: turn off coredump generation in test services (RHEL-108744)

@@ -1,0 +1,83 @@
+From aa5ed0d813964222dfe337c0733d4586d7a4f647 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Tue, 25 Nov 2025 17:56:16 +0100
+Subject: [PATCH] test: fix parsing of 60-seat.hwdb and 60-keyboard.hwdb
+
+This includes changes for hwdb/parse_hwdb.py from commits:
+  - c0b2e69f8815881d51b68b4f73e6c7f8cc2417a1
+  - d7d31692bf7cde5dce7f4ed3cae429a5b302a9f0
+  - a136c2cdd84c93c2fa5e1cedb20f5acac80df5be
+  - and possibly others
+
+The hwdb changes from these commits were backported as part of
+793dc4d9e32baba27eac1f37283a7485b0889803.
+
+rhel-only
+Related: RHEL-130979
+---
+ hwdb/parse_hwdb.py | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/hwdb/parse_hwdb.py b/hwdb/parse_hwdb.py
+index db26a5e4d4..956b206b00 100755
+--- a/hwdb/parse_hwdb.py
++++ b/hwdb/parse_hwdb.py
+@@ -34,7 +34,7 @@ try:
+                            LineStart, LineEnd,
+                            OneOrMore, Combine, Or, Optional, Suppress, Group,
+                            nums, alphanums, printables,
+-                           stringEnd, pythonStyleComment, QuotedString,
++                           stringEnd, pythonStyleComment,
+                            ParseBaseException)
+ except ImportError:
+     print('pyparsing is not available')
+@@ -56,13 +56,13 @@ EOL = LineEnd().suppress()
+ EMPTYLINE = LineEnd()
+ COMMENTLINE = pythonStyleComment + EOL
+ INTEGER = Word(nums)
+-STRING =  QuotedString('"')
+ REAL = Combine((INTEGER + Optional('.' + Optional(INTEGER))) ^ ('.' + INTEGER))
+ SIGNED_REAL = Combine(Optional(Word('-+')) + REAL)
+ UDEV_TAG = Word(string.ascii_uppercase, alphanums + '_')
+ 
+ TYPES = {'mouse':    ('usb', 'bluetooth', 'ps2', '*'),
+          'evdev':    ('name', 'atkbd', 'input'),
++         'fb':       ('pci'),
+          'id-input': ('modalias'),
+          'touchpad': ('i8042', 'rmi', 'bluetooth', 'usb'),
+          'joystick': ('i8042', 'rmi', 'bluetooth', 'usb'),
+@@ -93,7 +93,8 @@ def hwdb_grammar():
+     matchline = (matchline_typed | matchline_general) + EOL
+ 
+     propertyline = (White(' ', exact=1).suppress() +
+-                    Combine(UDEV_TAG - '=' - Word(alphanums + '_=:@*.!-;, "') - Optional(pythonStyleComment)) +
++                    Combine(UDEV_TAG - '=' - Optional(Word(alphanums + '_=:@*.!-;, "'))
++                            - Optional(pythonStyleComment)) +
+                     EOL)
+     propertycomment = White(' ', exact=1) + pythonStyleComment + EOL
+ 
+@@ -113,6 +114,7 @@ def property_grammar():
+     dpi_setting = (Optional('*')('DEFAULT') + INTEGER('DPI') + Suppress('@') + INTEGER('HZ'))('SETTINGS*')
+     mount_matrix_row = SIGNED_REAL + ',' + SIGNED_REAL + ',' + SIGNED_REAL
+     mount_matrix = (mount_matrix_row + ';' + mount_matrix_row + ';' + mount_matrix_row)('MOUNT_MATRIX')
++    xkb_setting = Optional(Word(alphanums + '+-/@._'))
+ 
+     props = (('MOUSE_DPI', Group(OneOrMore(dpi_setting))),
+              ('MOUSE_WHEEL_CLICK_ANGLE', INTEGER),
+@@ -139,12 +141,14 @@ def property_grammar():
+              ('POINTINGSTICK_CONST_ACCEL', REAL),
+              ('ID_INPUT_JOYSTICK_INTEGRATION', Or(('internal', 'external'))),
+              ('ID_INPUT_TOUCHPAD_INTEGRATION', Or(('internal', 'external'))),
+-             ('XKB_FIXED_LAYOUT', STRING),
+-             ('XKB_FIXED_VARIANT', STRING),
++             ('XKB_FIXED_LAYOUT', xkb_setting),
++             ('XKB_FIXED_VARIANT', xkb_setting),
++             ('XKB_FIXED_MODEL', xkb_setting),
+              ('KEYBOARD_LED_NUMLOCK', Literal('0')),
+              ('KEYBOARD_LED_CAPSLOCK', Literal('0')),
+              ('ACCEL_MOUNT_MATRIX', mount_matrix),
+              ('ACCEL_LOCATION', Or(('display', 'base'))),
++             ('ID_TAG_MASTER_OF_SEAT', Literal('1')),
+             )
+     fixed_props = [Literal(name)('NAME') - Suppress('=') - val('VALUE')
+                    for name, val in props]

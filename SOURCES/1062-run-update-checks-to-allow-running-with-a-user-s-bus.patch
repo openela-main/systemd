@@ -1,0 +1,47 @@
+From b3d8c010014f19b8c563d3e13819620d2d068332 Mon Sep 17 00:00:00 2001
+From: Anita Zhang <the.anitazha@gmail.com>
+Date: Thu, 13 May 2021 01:17:51 -0700
+Subject: [PATCH] run: update checks to allow running with a user's bus
+
+systemd-run is documented to as being able to connect and run on a
+specific user bus with "--user --machine=lennart@.host" arguments.
+This PR updates some logic that prevented this from working.
+
+(cherry picked from commit cbdc29492097e24ef3320280bc2a8dedbce02d9a)
+
+Resolves: RHEL-118835
+---
+ src/run/run.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/run/run.c b/src/run/run.c
+index 9ad44e7b57..b1d2d6fa4a 100644
+--- a/src/run/run.c
++++ b/src/run/run.c
+@@ -415,13 +415,13 @@ static int parse_argv(int argc, char *argv[]) {
+                 return -EINVAL;
+         }
+ 
+-        if (arg_user && arg_transport != BUS_TRANSPORT_LOCAL) {
+-                log_error("Execution in user context is not supported on non-local systems.");
++        if (arg_user && arg_transport == BUS_TRANSPORT_REMOTE) {
++                log_error("Execution in user context is not supported on remote systems.");
+                 return -EINVAL;
+         }
+ 
+-        if (arg_scope && arg_transport != BUS_TRANSPORT_LOCAL) {
+-                log_error("Scope execution is not supported on non-local systems.");
++        if (arg_scope && arg_transport == BUS_TRANSPORT_REMOTE) {
++                log_error("Scope execution is not supported on remote systems.");
+                 return -EINVAL;
+         }
+ 
+@@ -1495,7 +1495,7 @@ int main(int argc, char* argv[]) {
+ 
+         /* If --wait is used connect via the bus, unconditionally, as ref/unref is not supported via the limited direct
+          * connection */
+-        if (arg_wait || arg_stdio != ARG_STDIO_NONE)
++        if (arg_wait || arg_stdio != ARG_STDIO_NONE || (arg_user && arg_transport != BUS_TRANSPORT_LOCAL))
+                 r = bus_connect_transport(arg_transport, arg_host, arg_user, &bus);
+         else
+                 r = bus_connect_transport_systemd(arg_transport, arg_host, arg_user, &bus);

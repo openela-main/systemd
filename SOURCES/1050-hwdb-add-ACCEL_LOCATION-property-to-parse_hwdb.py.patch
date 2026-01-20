@@ -1,0 +1,48 @@
+From fea96208a7fbe748e2aefbf0c52dafcbf691f05f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lu=C3=ADs=20Ferreira?= <contact@lsferreira.net>
+Date: Sat, 13 Apr 2019 19:12:51 +0100
+Subject: [PATCH] hwdb: add ACCEL_LOCATION property to parse_hwdb.py
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Luís Ferreira <contact@lsferreira.net>
+(cherry picked from commit ccf478417455ab1191571923fa640363d4c4b7a6)
+
+Related: RHEL-130979
+---
+ hwdb/parse_hwdb.py | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb/parse_hwdb.py b/hwdb/parse_hwdb.py
+index 4900a25778..6943c688eb 100755
+--- a/hwdb/parse_hwdb.py
++++ b/hwdb/parse_hwdb.py
+@@ -128,6 +128,7 @@ def property_grammar():
+              ('KEYBOARD_LED_NUMLOCK', Literal('0')),
+              ('KEYBOARD_LED_CAPSLOCK', Literal('0')),
+              ('ACCEL_MOUNT_MATRIX', mount_matrix),
++             ('ACCEL_LOCATION', STRING),
+             )
+     fixed_props = [Literal(name)('NAME') - Suppress('=') - val('VALUE')
+                    for name, val in props]
+@@ -179,6 +180,10 @@ def check_one_default(prop, settings):
+     if len(defaults) > 1:
+         error('More than one star entry: {!r}', prop)
+ 
++def check_one_accel_location(prop, value):
++    if value not in ['base', 'display']:
++        error('Wrong accel location: {!r}', prop)
++
+ def check_one_mount_matrix(prop, value):
+     numbers = [s for s in value if s not in {';', ','}]
+     if len(numbers) != 9:
+@@ -221,6 +226,8 @@ def check_properties(groups):
+                 check_one_default(prop, parsed.VALUE.SETTINGS)
+             elif parsed.NAME == 'ACCEL_MOUNT_MATRIX':
+                 check_one_mount_matrix(prop, parsed.VALUE)
++            elif parsed.NAME == 'ACCEL_LOCATION':
++                check_one_accel_location(prop, parsed.VALUE)
+             elif parsed.NAME.startswith('KEYBOARD_KEY_'):
+                 check_one_keycode(prop, parsed.VALUE)
+ 

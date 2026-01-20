@@ -1,0 +1,57 @@
+From 1f6175b1b397293fe363f2c192dd2f994cbfe43d Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Sat, 18 Mar 2023 12:12:01 +0900
+Subject: [PATCH] core/transaction: make merge_unit_ids() always return
+ NUL-terminated string
+
+Follow-up for 924775e8ce49817f96df19c2b06356c12ecfc754.
+
+The loop run with `STRV_FOREACH_PAIR()`, hence `if (*(unit_id+1))` is
+not a good way to detect if there exist a next entry.
+
+Fixes #26872.
+
+(cherry picked from commit 366eced4c81a15a25b9225347fa203aa67798b02)
+
+Resolves: RHEL-132317
+---
+ src/core/transaction.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 4d6cb01fa4..89cc1d0a4c 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -322,22 +322,26 @@ _pure_ static bool unit_matters_to_anchor(Unit *u, Job *j) {
+ }
+ 
+ static char* merge_unit_ids(const char* unit_log_field, char **pairs) {
+-        char **unit_id, **job_type, *ans = NULL;
+-        size_t alloc = 0, size = 0, next;
++        _cleanup_free_ char *ans = NULL;
++        char **unit_id, **job_type;
++        size_t alloc = 0, size = 0;
+ 
+         STRV_FOREACH_PAIR(unit_id, job_type, pairs) {
++                size_t next;
++
++                if (size > 0)
++                        ans[size - 1] = '\n';
++
+                 next = strlen(unit_log_field) + strlen(*unit_id);
+                 if (!GREEDY_REALLOC(ans, alloc, size + next + 1)) {
+-                        return mfree(ans);
++                        return NULL;
+                 }
+ 
+                 sprintf(ans + size, "%s%s", unit_log_field, *unit_id);
+-                if (*(unit_id+1))
+-                        ans[size + next] =  '\n';
+                 size += next + 1;
+         }
+ 
+-        return ans;
++        return TAKE_PTR(ans);
+ }
+ 
+ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsigned generation, sd_bus_error *e) {

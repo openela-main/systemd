@@ -1,0 +1,74 @@
+From ed784c6dccf4e7b7d4628e02cf28b0d5725bab34 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 8 May 2022 17:21:09 +0200
+Subject: [PATCH] logind: fix crash in logind on user-specified message string
+
+This is trivially exploitable (in the sense of causing a crash from SEGV) e.g.
+by 'shutdown now "Message %s %s %n"'. The message is settable through polkit,
+but is limited to auth_admin:
+
+<action id="org.freedesktop.login1.set-wall-message">
+         <description gettext-domain="systemd">Set a wall message</description>
+         <message gettext-domain="systemd">Authentication is required to set a wall message</message>
+         <defaults>
+                <allow_any>auth_admin_keep</allow_any>
+                <allow_inactive>auth_admin_keep</allow_inactive>
+                <allow_active>auth_admin_keep</allow_active>
+        </defaults>
+</action>
+
+Bug introduced in 9ef15026c0e7e6600372056c43442c99ec53746e
+('logind/systemctl: introduce SetWallMessage and --message', 2015-09-15).
+
+(cherry picked from commit 0cb09bcb825ab86ba4ca70be4e6322eaf9baee95)
+
+Related: RHEL-132317
+---
+ src/login/logind-dbus.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 61fd47999d..ffa6af8d49 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -1414,30 +1414,29 @@ static int bus_manager_log_shutdown(
+         assert(unit_name);
+ 
+         if (streq(unit_name, SPECIAL_POWEROFF_TARGET)) {
+-                p = "MESSAGE=System is powering down";
++                p = "System is powering down";
+                 q = "SHUTDOWN=power-off";
+         } else if (streq(unit_name, SPECIAL_REBOOT_TARGET)) {
+-                p = "MESSAGE=System is rebooting";
++                p = "System is rebooting";
+                 q = "SHUTDOWN=reboot";
+         } else if (streq(unit_name, SPECIAL_HALT_TARGET)) {
+-                p = "MESSAGE=System is halting";
++                p = "System is halting";
+                 q = "SHUTDOWN=halt";
+         } else if (streq(unit_name, SPECIAL_KEXEC_TARGET)) {
+-                p = "MESSAGE=System is rebooting with kexec";
++                p = "System is rebooting with kexec";
+                 q = "SHUTDOWN=kexec";
+         } else {
+-                p = "MESSAGE=System is shutting down";
++                p = "System is shutting down";
+                 q = NULL;
+         }
+ 
+-        if (isempty(m->wall_message))
+-                p = strjoina(p, ".");
+-        else
+-                p = strjoina(p, " (", m->wall_message, ").");
+-
+         return log_struct(LOG_NOTICE,
+                           "MESSAGE_ID=" SD_MESSAGE_SHUTDOWN_STR,
+-                          p,
++                          LOG_MESSAGE("%s%s%s%s.",
++                                      p,
++                                      m->wall_message ? " (" : "",
++                                      strempty(m->wall_message),
++                                      m->wall_message ? ")" : ""),
+                           q);
+ }
+ 

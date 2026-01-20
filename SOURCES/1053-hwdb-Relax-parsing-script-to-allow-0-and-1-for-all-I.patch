@@ -1,0 +1,56 @@
+From 77fec6b9de7ae11fe69d0ff48cfd4406345be3f9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Bj=C3=B6rn=20Daase?= <bjoern@daase.net>
+Date: Fri, 8 Jan 2021 10:32:36 +0100
+Subject: [PATCH] hwdb: Relax parsing script to allow 0 and 1 for all ID_*
+ properties
+
+(cherry picked from commit ad0d9c0109d45c12c6517684d84ea033cf8d54a7)
+
+Related: RHEL-130979
+---
+ hwdb/parse_hwdb.py | 32 ++++++++++++++++----------------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/hwdb/parse_hwdb.py b/hwdb/parse_hwdb.py
+index c94ad9bea6..d15ae0470c 100755
+--- a/hwdb/parse_hwdb.py
++++ b/hwdb/parse_hwdb.py
+@@ -119,22 +119,22 @@ def property_grammar():
+              ('MOUSE_WHEEL_CLICK_ANGLE_HORIZONTAL', INTEGER),
+              ('MOUSE_WHEEL_CLICK_COUNT', INTEGER),
+              ('MOUSE_WHEEL_CLICK_COUNT_HORIZONTAL', INTEGER),
+-             ('ID_AUTOSUSPEND', Literal('1')),
+-             ('ID_INPUT', Literal('1')),
+-             ('ID_INPUT_ACCELEROMETER', Literal('1')),
+-             ('ID_INPUT_JOYSTICK', Literal('1')),
+-             ('ID_INPUT_KEY', Literal('1')),
+-             ('ID_INPUT_KEYBOARD', Literal('1')),
+-             ('ID_INPUT_MOUSE', Literal('1')),
+-             ('ID_INPUT_POINTINGSTICK', Literal('1')),
+-             ('ID_INPUT_SWITCH', Literal('1')),
+-             ('ID_INPUT_TABLET', Literal('1')),
+-             ('ID_INPUT_TABLET_PAD', Literal('1')),
+-             ('ID_INPUT_TOUCHPAD', Literal('1')),
+-             ('ID_INPUT_TOUCHSCREEN', Literal('1')),
+-             ('ID_INPUT_TRACKBALL', Literal('1')),
+-             ('MOUSE_WHEEL_TILT_HORIZONTAL', Literal('1')),
+-             ('MOUSE_WHEEL_TILT_VERTICAL', Literal('1')),
++             ('ID_AUTOSUSPEND', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_ACCELEROMETER', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_JOYSTICK', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_KEY', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_KEYBOARD', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_MOUSE', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_POINTINGSTICK', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_SWITCH', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_TABLET', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_TABLET_PAD', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_TOUCHPAD', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_TOUCHSCREEN', Or((Literal('0'), Literal('1')))),
++             ('ID_INPUT_TRACKBALL', Or((Literal('0'), Literal('1')))),
++             ('MOUSE_WHEEL_TILT_HORIZONTAL', Or((Literal('0'), Literal('1')))),
++             ('MOUSE_WHEEL_TILT_VERTICAL', Or((Literal('0'), Literal('1')))),
+              ('POINTINGSTICK_SENSITIVITY', INTEGER),
+              ('POINTINGSTICK_CONST_ACCEL', REAL),
+              ('ID_INPUT_JOYSTICK_INTEGRATION', Or(('internal', 'external'))),

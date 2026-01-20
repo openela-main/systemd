@@ -1,0 +1,44 @@
+From c3767a4460b41af817e01160e4bc201871f3bedd Mon Sep 17 00:00:00 2001
+From: Jan Macku <jamacku@redhat.com>
+Date: Thu, 4 Dec 2025 15:18:22 +0100
+Subject: [PATCH] Revert "run: update checks to allow running with a user's
+ bus"
+
+This reverts commit b3d8c010014f19b8c563d3e13819620d2d068332.
+
+Related: RHEL-118835
+---
+ src/run/run.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/run/run.c b/src/run/run.c
+index b1d2d6fa4a..9ad44e7b57 100644
+--- a/src/run/run.c
++++ b/src/run/run.c
+@@ -415,13 +415,13 @@ static int parse_argv(int argc, char *argv[]) {
+                 return -EINVAL;
+         }
+ 
+-        if (arg_user && arg_transport == BUS_TRANSPORT_REMOTE) {
+-                log_error("Execution in user context is not supported on remote systems.");
++        if (arg_user && arg_transport != BUS_TRANSPORT_LOCAL) {
++                log_error("Execution in user context is not supported on non-local systems.");
+                 return -EINVAL;
+         }
+ 
+-        if (arg_scope && arg_transport == BUS_TRANSPORT_REMOTE) {
+-                log_error("Scope execution is not supported on remote systems.");
++        if (arg_scope && arg_transport != BUS_TRANSPORT_LOCAL) {
++                log_error("Scope execution is not supported on non-local systems.");
+                 return -EINVAL;
+         }
+ 
+@@ -1495,7 +1495,7 @@ int main(int argc, char* argv[]) {
+ 
+         /* If --wait is used connect via the bus, unconditionally, as ref/unref is not supported via the limited direct
+          * connection */
+-        if (arg_wait || arg_stdio != ARG_STDIO_NONE || (arg_user && arg_transport != BUS_TRANSPORT_LOCAL))
++        if (arg_wait || arg_stdio != ARG_STDIO_NONE)
+                 r = bus_connect_transport(arg_transport, arg_host, arg_user, &bus);
+         else
+                 r = bus_connect_transport_systemd(arg_transport, arg_host, arg_user, &bus);

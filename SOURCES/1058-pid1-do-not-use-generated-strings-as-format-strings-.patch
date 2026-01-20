@@ -1,0 +1,49 @@
+From 2b0d33678cbd86d87691d044a5c11aa981a2316e Mon Sep 17 00:00:00 2001
+From: Lincoln Ramsay <a1291762@gmail.com>
+Date: Wed, 24 Mar 2021 17:37:25 +1000
+Subject: [PATCH] pid1: do not use generated strings as format strings (#19098)
+
+The generated string may include %, which will confuse both the
+xprintf call, and the VA_FORMAT_ADVANCE macro.
+
+Pass the generated string as an argument to a "%s" format string
+instead.
+
+(cherry picked from commit 7325a2b2d15af09a9389723d6153050130c0bd36)
+
+Resolves: RHEL-132317
+---
+ src/core/transaction.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/transaction.c b/src/core/transaction.c
+index 8196aba927..4d6cb01fa4 100644
+--- a/src/core/transaction.c
++++ b/src/core/transaction.c
+@@ -395,7 +395,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
+                                    j->unit->id,
+                                    unit_id == array ? "ordering cycle" : "dependency",
+                                    *unit_id, *job_type,
+-                                   unit_ids);
++                                   "%s", unit_ids);
+ 
+                 if (delete) {
+                         const char *status;
+@@ -404,7 +404,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
+                                    "MESSAGE=%s: Job %s/%s deleted to break ordering cycle starting with %s/%s",
+                                    j->unit->id, delete->unit->id, job_type_to_string(delete->type),
+                                    j->unit->id, job_type_to_string(j->type),
+-                                   unit_ids);
++                                   "%s", unit_ids);
+ 
+                         if (log_get_show_color())
+                                 status = ANSI_HIGHLIGHT_RED " SKIP " ANSI_NORMAL;
+@@ -420,7 +420,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
+                 log_struct(LOG_ERR,
+                            "MESSAGE=%s: Unable to break cycle starting with %s/%s",
+                            j->unit->id, j->unit->id, job_type_to_string(j->type),
+-                           unit_ids);
++                           "%s", unit_ids);
+ 
+                 return sd_bus_error_setf(e, BUS_ERROR_TRANSACTION_ORDER_IS_CYCLIC,
+                                          "Transaction order is cyclic. See system logs for details.");

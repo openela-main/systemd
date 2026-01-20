@@ -1,0 +1,54 @@
+From c85ce044e87038724cc1095d86ebd15b2da4564f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 8 Oct 2019 14:44:35 +0200
+Subject: [PATCH] parse_hwdb: fix compatibility with pyparsing 2.4.*
+
+pyparsing 2.3.1/2.4.0 had some changes to grouping of And matches, and as a
+result we'd report 0 properties and 0 matches, and not really do any checks.
+
+With this change we get identical behaviour for pyparsing 2.3.1, 2.4.0, 2.4.2:
+
+$ hwdb/parse_hwdb.py
+hwdb/60-evdev.hwdb: 72 match groups, 94 matches, 262 properties
+hwdb/60-input-id.hwdb: 3 match groups, 3 matches, 4 properties
+hwdb/60-keyboard.hwdb: 173 match groups, 256 matches, 872 properties
+Keycode KBD_LCD_MENU1 unknown
+Keycode KBD_LCD_MENU4 unknown
+Keycode KBD_LCD_MENU2 unknown
+Keycode KBD_LCD_MENU3 unknown
+hwdb/60-sensor.hwdb: 101 match groups, 120 matches, 105 properties
+hwdb/70-joystick.hwdb: 2 match groups, 3 matches, 2 properties
+hwdb/70-mouse.hwdb: 104 match groups, 119 matches, 123 properties
+hwdb/70-pointingstick.hwdb: 8 match groups, 30 matches, 11 properties
+hwdb/70-touchpad.hwdb: 6 match groups, 9 matches, 6 properties
+
+(cherry picked from commit 2382a2e32b6076fa4603c958f84b46d5a5b13dfa)
+
+Related: RHEL-130979
+---
+ hwdb/parse_hwdb.py | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb/parse_hwdb.py b/hwdb/parse_hwdb.py
+index 956b206b00..8118ad4e3a 100755
+--- a/hwdb/parse_hwdb.py
++++ b/hwdb/parse_hwdb.py
+@@ -103,7 +103,7 @@ def hwdb_grammar():
+              (EMPTYLINE ^ stringEnd()).suppress())
+     commentgroup = OneOrMore(COMMENTLINE).suppress() - EMPTYLINE.suppress()
+ 
+-    grammar = OneOrMore(group('GROUPS*') ^ commentgroup) + stringEnd()
++    grammar = OneOrMore(Group(group)('GROUPS*') ^ commentgroup) + stringEnd()
+ 
+     return grammar
+ 
+@@ -243,7 +243,8 @@ def check_properties(groups):
+             elif parsed.NAME == 'ACCEL_MOUNT_MATRIX':
+                 check_one_mount_matrix(prop, parsed.VALUE)
+             elif parsed.NAME.startswith('KEYBOARD_KEY_'):
+-                check_one_keycode(prop, parsed.VALUE)
++                val = parsed.VALUE if isinstance(parsed.VALUE, str) else parsed.VALUE[0]
++                check_one_keycode(prop, val)
+ 
+ def print_summary(fname, groups):
+     print('{}: {} match groups, {} matches, {} properties'
