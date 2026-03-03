@@ -1,0 +1,64 @@
+From 8e1076baa6a568c582a923119608eebbc67151e1 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Thu, 15 May 2025 07:18:38 +0900
+Subject: [PATCH] resolve: exit from loop for transactions when transactions
+ has been regenerated
+
+Fixes #37458.
+
+(cherry picked from commit 5814acca9aa4354d121de4bf174851f092a6b643)
+
+Related: RHEL-93425
+---
+ src/resolve/resolved-dns-query.c | 11 +++++++++++
+ src/resolve/resolved-dns-query.h |  1 +
+ 2 files changed, 12 insertions(+)
+
+diff --git a/src/resolve/resolved-dns-query.c b/src/resolve/resolved-dns-query.c
+index 55ce0e0a63..6972cc4f29 100644
+--- a/src/resolve/resolved-dns-query.c
++++ b/src/resolve/resolved-dns-query.c
+@@ -152,6 +152,8 @@ static int dns_query_candidate_go(DnsQueryCandidate *c) {
+ 
+         c->query->block_ready++;
+ 
++        uint64_t generation = c->generation;
++
+         /* Start the transactions that are not started yet */
+         SET_FOREACH(t, c->transactions, i) {
+                 if (t->state != DNS_TRANSACTION_NULL)
+@@ -166,6 +168,13 @@ static int dns_query_candidate_go(DnsQueryCandidate *c) {
+                         /* A transaction is complete. */
+                         notify = true;
+ 
++                if (c->generation != generation)
++                        /* The transaction has been completed, and dns_transaction_complete() ->
++                         * dns_query_candidate_notify() has been already called. Moreover, the query
++                         * candidate has been regenerated, and the query should be already restarted.
++                         * Let's exit from the loop now. */
++                        return 0;
++
+                 n++;
+         }
+ 
+@@ -257,6 +266,8 @@ static int dns_query_candidate_setup_transactions(DnsQueryCandidate *c) {
+ 
+         dns_query_candidate_stop(c);
+ 
++        c->generation++;
++
+         question = dns_query_question_for_protocol(c->query, c->scope->protocol);
+ 
+         /* Create one transaction per question key */
+diff --git a/src/resolve/resolved-dns-query.h b/src/resolve/resolved-dns-query.h
+index fd70b15311..09d3f9cc92 100644
+--- a/src/resolve/resolved-dns-query.h
++++ b/src/resolve/resolved-dns-query.h
+@@ -20,6 +20,7 @@ struct DnsQueryCandidate {
+         DnsSearchDomain *search_domain;
+ 
+         int error_code;
++        uint64_t generation;
+         Set *transactions;
+ 
+         LIST_FIELDS(DnsQueryCandidate, candidates_by_query);

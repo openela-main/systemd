@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.13
+Release:        82%{?dist}.15
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1114,6 +1114,11 @@ Patch1061: 1061-core-transaction-do-not-log-null.patch
 Patch1062: 1062-run-update-checks-to-allow-running-with-a-user-s-bus.patch
 Patch1063: 1063-Revert-run-update-checks-to-allow-running-with-a-use.patch
 Patch1064: 1064-logind-fix-crash-in-logind-on-user-specified-message.patch
+Patch1065: 1065-core-only-activate-transaction-that-contain-useful-j.patch
+Patch1066: 1066-resolved-add-dns_query_candidate_freep.patch
+Patch1067: 1067-resolved-fix-use-after-free-with-queries-hitting-the.patch
+Patch1068: 1068-resolve-exit-from-loop-for-transactions-when-transac.patch
+Patch1069: 1069-locale-util-do-not-call-setlocale-when-multi-threade.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1740,6 +1745,15 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Fri Jan 30 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.15
+- resolved: add dns_query_candidate_freep() (RHEL-93425)
+- resolved: fix use-after-free with queries hitting the cache (RHEL-93425)
+- resolve: exit from loop for transactions when transactions has been regenerated (RHEL-93425)
+- locale-util: do not call setlocale() when multi-threaded (RHEL-93425)
+
+* Wed Jan 21 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.14
+- core: only activate transaction that contain useful jobs (RHEL-138710)
+
 * Mon Dec 08 2025 systemd maintenance team <systemd-maint@redhat.com> - 239-82.13
 - logind: fix crash in logind on user-specified message string (RHEL-132317)
 

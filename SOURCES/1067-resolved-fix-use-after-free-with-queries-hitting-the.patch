@@ -1,0 +1,177 @@
+From e3cd3a9b9840300b0f97b60dc81f7772374ea44c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 17 Jan 2021 19:51:28 +0100
+Subject: [PATCH] resolved: fix use-after-free with queries hitting the cache
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When dns_transaction_complete() manages to resolve a query, it invalidates the
+query candidate object. It shall not be accessed afterwards.
+
+We have the following chain of calls:
+dns_query_candidate_go → dns_transaction_go → dns_transaction_prepare → dns_cache_lookup (success: 1)
+                                                                      → dns_transaction_complete
+After returning back to dns_query_candidate_go(), we'd attempt to continue
+iteration over the list of transactions attached to the query candidate,
+accessing already freed (and overwritten) memory:
+
+(gdb) bt
+0  0x00007f637297cf47 in hashmap_iterate_entry (i=0x7ffe7e15cc90, h=0x706f746b73656465) at ../src/basic/hashmap.c:703
+1  _hashmap_iterate (h=0x706f746b73656465, i=i@entry=0x7ffe7e15cc90, value=value@entry=0x7ffe7e15cc88,
+    key=key@entry=0x0) at ../src/basic/hashmap.c:712
+2  0x00007f637297d01b in set_iterate (s=<optimized out>, i=i@entry=0x7ffe7e15cc90, value=value@entry=0x7ffe7e15cc88)
+    at ../src/basic/hashmap.c:733
+hence we crash
+
+3  0x0000557bc99eb80f in dns_query_candidate_go (c=c@entry=0x557bcaf86890) at ../src/resolve/resolved-dns-query.c:139
+...but c is not valid here in the second iteration of the loop
+
+4  0x0000557bc99eb720 in dns_query_candidate_notify (c=0x557bcaf86890) at ../src/resolve/resolved-dns-query.c:271
+c was valid here at entry...
+
+5  0x0000557bc99efe28 in dns_transaction_complete (t=0x557bcac072f0, state=<optimized out>)
+    at ../src/resolve/resolved-dns-transaction.c:350
+t is a valid transaction (11481 in the backtrace below)
+
+6  0x0000557bc99f1efb in dns_transaction_process_reply (t=0x557bcac072f0, p=<optimized out>)
+    at ../src/resolve/resolved-dns-transaction.c:1171
+7  0x0000557bc99f2d41 in on_dns_packet (s=<optimized out>, fd=<optimized out>, revents=<optimized out>,
+    userdata=0x557bcac072f0) at ../src/resolve/resolved-dns-transaction.c:1223
+8  0x00007f6372a25217 in source_dispatch (s=s@entry=0x557bcb162c50) at ../src/libsystemd/sd-event/sd-event.c:3181
+9  0x00007f6372a254fd in sd_event_dispatch (e=0x557bcb15b050) at ../src/libsystemd/sd-event/sd-event.c:3620
+10 0x00007f6372a267c8 in sd_event_run (e=e@entry=0x557bcb15b050, timeout=timeout@entry=18446744073709551615)
+    at ../src/libsystemd/sd-event/sd-event.c:3678
+11 0x00007f6372a269ef in sd_event_loop (e=0x557bcb15b050) at ../src/libsystemd/sd-event/sd-event.c:3700
+12 0x0000557bc99ddc14 in run (argc=<optimized out>, argv=<optimized out>) at ../src/resolve/resolved.c:92
+13 0x0000557bc99d260a in main (argc=<optimized out>, argv=<optimized out>) at ../src/resolve/resolved.c:99
+
+xxx.name.net systemd-resolved[31705]: Got message type=method_call sender=:1.3644 destination=org.freedesktop.resolve1 path=/org/freedesktop/resolve1 interface=org.freedesktop.resolve1.Manager member=ResolveHostname cookie=2 reply_cookie=0 signature=isit error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: idn2_lookup_u8: xxx → xxx
+xxx.name.net systemd-resolved[31705]: Looking up RR for xxx IN A.
+xxx.name.net systemd-resolved[31705]: Sent message type=method_call sender=n/a destination=org.freedesktop.DBus path=/org/freedesktop/DBus interface=org.freedesktop.DBus member=AddMatch cookie=1102 reply_cookie=0 signature=s error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: Sent message type=method_call sender=n/a destination=org.freedesktop.DBus path=/org/freedesktop/DBus interface=org.freedesktop.DBus member=GetNameOwner cookie=1103 reply_cookie=0 signature=s error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: Got message type=method_return sender=org.freedesktop.DBus destination=:1.3324 path=n/a interface=n/a member=n/a cookie=4294967295 reply_cookie=1103 signature=s error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: Cache miss for xxx.name.net IN A
+xxx.name.net systemd-resolved[31705]: Transaction 11481 for <xxx.name.net IN A> scope dns on enp42s0/*.
+xxx.name.net systemd-resolved[31705]: Using feature level UDP for transaction 11481.
+xxx.name.net systemd-resolved[31705]: Using DNS server 192.168.1.1 for transaction 11481.
+xxx.name.net systemd-resolved[31705]: Sending query packet with id 11481 of size 35.
+xxx.name.net systemd-resolved[31705]: Got message type=method_return sender=org.freedesktop.DBus destination=:1.3324 path=n/a interface=n/a member=n/a cookie=4294967295 reply_cookie=1102 signature= error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: Match type='signal',sender='org.freedesktop.DBus',path='/org/freedesktop/DBus',interface='org.freedesktop.DBus',member='NameOwnerChanged',arg0=':1.3644' successfully installed.
+xxx.name.net systemd-resolved[31705]: Processing incoming packet on transaction 11481 (rcode=NXDOMAIN).
+xxx.name.net systemd-resolved[31705]: Not caching negative entry without a SOA record: xxx.name.net IN A
+xxx.name.net systemd-resolved[31705]: Transaction 11481 for <xxx.name.net IN A> on scope dns on enp42s0/* now complete with <rcode-failure> from network (unsigned).
+xxx.name.net systemd-resolved[31705]: Positive cache hit for xxx.lan IN A
+xxx.name.net systemd-resolved[31705]: Transaction 64364 for <xxx.lan IN A> on scope dns on enp42s0/* now complete with <success> from cache (unsigned).
+xxx.name.net systemd-resolved[31705]: Sent message type=method_return sender=n/a destination=:1.3644 path=n/a interface=n/a member=n/a cookie=1104 reply_cookie=2 signature=a(iiay)st error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: Sent message type=method_call sender=n/a destination=org.freedesktop.DBus path=/org/freedesktop/DBus interface=org.freedesktop.DBus member=RemoveMatch cookie=1105 reply_cookie=0 signature=s error-name=n/a error-message=n/a
+xxx.name.net systemd-resolved[31705]: Freeing transaction 64364.
+xxx.name.net systemd[1]: systemd-resolved.service: Main process exited, code=dumped, status=11/SEGV
+xxx.name.net systemd[1]: systemd-resolved.service: Failed with result 'core-dump'.
+
+Fixes #16168, https://bugzilla.redhat.com/show_bug.cgi?id=1895937.
+
+(cherry picked from commit 4ea8b443de8be0f7a932f325dfafa1ee2a843795)
+
+Resolves: RHEL-93425
+---
+ src/resolve/resolved-dns-query.c       | 14 ++++++++++++--
+ src/resolve/resolved-dns-transaction.c | 16 ++++++++++------
+ 2 files changed, 22 insertions(+), 8 deletions(-)
+
+diff --git a/src/resolve/resolved-dns-query.c b/src/resolve/resolved-dns-query.c
+index 13276abdcd..55ce0e0a63 100644
+--- a/src/resolve/resolved-dns-query.c
++++ b/src/resolve/resolved-dns-query.c
+@@ -146,23 +146,33 @@ static int dns_query_candidate_go(DnsQueryCandidate *c) {
+         Iterator i;
+         int r;
+         unsigned n = 0;
++        bool notify = false;
+ 
+         assert(c);
+ 
++        c->query->block_ready++;
++
+         /* Start the transactions that are not started yet */
+         SET_FOREACH(t, c->transactions, i) {
+                 if (t->state != DNS_TRANSACTION_NULL)
+                         continue;
+ 
+                 r = dns_transaction_go(t);
+-                if (r < 0)
++                if (r < 0) {
++                        c->query->block_ready--;
+                         return r;
++                }
++                if (r == 0)
++                        /* A transaction is complete. */
++                        notify = true;
+ 
+                 n++;
+         }
+ 
++        c->query->block_ready--;
++
+         /* If there was nothing to start, then let's proceed immediately */
+-        if (n == 0)
++        if (n == 0 || notify)
+                 dns_query_candidate_notify(c);
+ 
+         return 0;
+diff --git a/src/resolve/resolved-dns-transaction.c b/src/resolve/resolved-dns-transaction.c
+index 1ca6c9abc8..5a2b254526 100644
+--- a/src/resolve/resolved-dns-transaction.c
++++ b/src/resolve/resolved-dns-transaction.c
+@@ -175,8 +175,8 @@ bool dns_transaction_gc(DnsTransaction *t) {
+ static uint16_t pick_new_id(Manager *m) {
+         uint16_t new_id;
+ 
+-        /* Find a fresh, unused transaction id. Note that this loop is bounded because there's a limit on the number of
+-         * transactions, and it's much lower than the space of IDs. */
++        /* Find a fresh, unused transaction id. Note that this loop is bounded because there's a limit on the
++         * number of transactions, and it's much lower than the space of IDs. */
+ 
+         assert_cc(TRANSACTIONS_MAX < 0xFFFF);
+ 
+@@ -1404,6 +1404,10 @@ static int dns_transaction_prepare(DnsTransaction *t, usec_t ts) {
+ 
+         assert(t);
+ 
++        /* Returns 0 if dns_transaction_complete() has been called. In that case the transaction and query
++         * candidate objects may have been invalidated and must not be accessed. Returns 1 if the transaction
++         * has been prepared. */
++
+         dns_transaction_stop_timeout(t);
+ 
+         r = dns_scope_network_good(t->scope);
+@@ -1525,7 +1529,6 @@ static int dns_transaction_prepare(DnsTransaction *t, usec_t ts) {
+ }
+ 
+ static int dns_transaction_make_packet_mdns(DnsTransaction *t) {
+-
+         _cleanup_(dns_packet_unrefp) DnsPacket *p = NULL;
+         bool add_known_answers = false;
+         DnsTransaction *other;
+@@ -1702,8 +1705,9 @@ int dns_transaction_go(DnsTransaction *t) {
+ 
+         assert(t);
+ 
+-        /* Returns > 0 if the transaction is now pending, returns 0 if could be processed immediately and has finished
+-         * now. */
++        /* Returns > 0 if the transaction is now pending, returns 0 if could be processed immediately and has
++         * finished now. In the latter case, the transaction and query candidate objects must not be accessed.
++         */
+ 
+         assert_se(sd_event_now(t->scope->manager->event, clock_boottime_or_monotonic(), &ts) >= 0);
+ 
+@@ -1761,7 +1765,7 @@ int dns_transaction_go(DnsTransaction *t) {
+                 t->state = DNS_TRANSACTION_PENDING;
+ 
+                 log_debug("Delaying %s transaction for " USEC_FMT "us.", dns_protocol_to_string(t->scope->protocol), jitter);
+-                return 0;
++                return 1;
+         }
+ 
+         /* Otherwise, we need to ask the network */

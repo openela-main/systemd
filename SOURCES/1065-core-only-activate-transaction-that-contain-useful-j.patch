@@ -1,0 +1,33 @@
+From 63899267ba57ab4b0b11c039f5c6b03a78528aa7 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Fri, 9 Jan 2026 17:18:41 +0100
+Subject: [PATCH] core: only activate transaction that contain useful jobs
+
+If no real jobs were added to the transaction, do not activate it.
+The JOB_NOP anchor does not perform any useful work and activating
+such transaction only wastes resources.
+
+Fixes #9751
+
+(cherry picked from commit bcbf80c43d107ad233edc990a60bdc40f517085a)
+Resolves: RHEL-138710
+---
+ src/core/manager.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 5212650fec..d95a6db77c 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -1810,6 +1810,11 @@ int manager_propagate_reload(Manager *m, Unit *unit, JobMode mode, sd_bus_error
+         /* Failure in adding individual dependencies is ignored, so this always succeeds. */
+         transaction_add_propagate_reload_jobs(tr, unit, tr->anchor_job, mode == JOB_IGNORE_DEPENDENCIES, e);
+ 
++        /* Only activate the transaction if it contains jobs other than NOP anchor.
++         * Short-circuiting here avoids unnecessary processing, such as emitting D-Bus signals. */
++        if (hashmap_size(tr->jobs) <= 1)
++                return 0;
++
+         r = transaction_activate(tr, m, mode, NULL, e);
+         if (r < 0)
+                 goto tr_abort;

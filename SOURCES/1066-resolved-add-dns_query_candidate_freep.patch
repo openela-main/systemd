@@ -1,0 +1,69 @@
+From b64ab05c1c251fb9283e315571c97e08c7ee3217 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 3 Jun 2020 12:53:27 +0200
+Subject: [PATCH] resolved: add dns_query_candidate_freep()
+
+(cherry picked from commit 7877e5ca7c7f654478d7bce458a28edb7a157fa3)
+
+Related: RHEL-93425
+---
+ src/resolve/resolved-dns-query.c | 13 +++++--------
+ src/resolve/resolved-dns-query.h |  2 ++
+ 2 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/src/resolve/resolved-dns-query.c b/src/resolve/resolved-dns-query.c
+index 573e27d662..13276abdcd 100644
+--- a/src/resolve/resolved-dns-query.c
++++ b/src/resolve/resolved-dns-query.c
+@@ -544,7 +544,7 @@ static int on_query_timeout(sd_event_source *s, usec_t usec, void *userdata) {
+ }
+ 
+ static int dns_query_add_candidate(DnsQuery *q, DnsScope *s) {
+-        DnsQueryCandidate *c;
++        _cleanup_(dns_query_candidate_freep) DnsQueryCandidate *c = NULL;
+         int r;
+ 
+         assert(q);
+@@ -558,25 +558,22 @@ static int dns_query_add_candidate(DnsQuery *q, DnsScope *s) {
+         if ((q->flags & SD_RESOLVED_NO_SEARCH) == 0)  {
+                 r = dns_scope_name_needs_search_domain(s, dns_question_first_name(q->question_idna));
+                 if (r < 0)
+-                        goto fail;
++                        return r;
+                 if (r > 0) {
+                         /* OK, we need a search domain now. Let's find one for this scope */
+ 
+                         r = dns_query_candidate_next_search_domain(c);
+                         if (r <= 0) /* if there's no search domain, then we won't add any transaction. */
+-                                goto fail;
++                                return r;
+                 }
+         }
+ 
+         r = dns_query_candidate_setup_transactions(c);
+         if (r < 0)
+-                goto fail;
++                return r;
+ 
++        TAKE_PTR(c);
+         return 0;
+-
+-fail:
+-        dns_query_candidate_free(c);
+-        return r;
+ }
+ 
+ static int dns_query_synthesize_reply(DnsQuery *q, DnsTransactionState *state) {
+diff --git a/src/resolve/resolved-dns-query.h b/src/resolve/resolved-dns-query.h
+index 5ee946bc75..fd70b15311 100644
+--- a/src/resolve/resolved-dns-query.h
++++ b/src/resolve/resolved-dns-query.h
+@@ -102,6 +102,8 @@ enum {
+ };
+ 
+ DnsQueryCandidate* dns_query_candidate_free(DnsQueryCandidate *c);
++DEFINE_TRIVIAL_CLEANUP_FUNC(DnsQueryCandidate*, dns_query_candidate_free);
++
+ void dns_query_candidate_notify(DnsQueryCandidate *c);
+ 
+ int dns_query_new(Manager *m, DnsQuery **q, DnsQuestion *question_utf8, DnsQuestion *question_idna, int family, uint64_t flags);
