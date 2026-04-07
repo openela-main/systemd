@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        55%{?dist}.7
+Release:        55%{?dist}.8
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -68,7 +68,7 @@ Source25:       rc.local
 # Download hwdb of RHEL net naming scheme; this is a temporary it will be later moved to kernel
 # see: https://issues.redhat.com/browse/RHELBU-2374
 %global rhel_nns_version 0.5
-Source26:       https://gitlab.com/mschmidt2/rhel-net-naming-sysattrs/-/archive/v%{rhel_nns_version}/rhel-net-naming-sysattrs-v%{rhel_nns_version}.tar.gz
+Source26:       https://gitlab.com/mschmidt2/net-naming-sysattrs/-/archive/v%{rhel_nns_version}/net-naming-sysattrs-v%{rhel_nns_version}.tar.gz
 
 %if 0
 GIT_DIR=../../src/systemd/.git git format-patch-ab --no-signature -M -N v235..v235-stable
@@ -1968,7 +1968,7 @@ python3 %{SOURCE2} %buildroot <<EOF
 EOF
 
 # Install rhel-net-naming-sysattrs
-%make_install -C rhel-net-naming-sysattrs-v%{rhel_nns_version}
+%make_install -C net-naming-sysattrs-v%{rhel_nns_version}
 
 %check
 %if %{with tests}
@@ -2230,6 +2230,9 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Tue Feb 24 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-55.8
+- update specfile and sources after renaming rhel-net-naming-sysattrs to net-naming-sysattrs (RHEL-150628)
+
 * Mon Dec 01 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.7
 - core: fix array size in unit_log_resources() (RHEL-132120)
 
