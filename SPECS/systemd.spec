@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.15
+Release:        82%{?dist}.16
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1119,6 +1119,12 @@ Patch1066: 1066-resolved-add-dns_query_candidate_freep.patch
 Patch1067: 1067-resolved-fix-use-after-free-with-queries-hitting-the.patch
 Patch1068: 1068-resolve-exit-from-loop-for-transactions-when-transac.patch
 Patch1069: 1069-locale-util-do-not-call-setlocale-when-multi-threade.patch
+Patch1070: 1070-core-validate-input-cgroup-path-more-prudently.patch
+Patch1071: 1071-nspawn-normalize-pivot_root-paths.patch
+Patch1072: 1072-udev-check-for-invalid-chars-in-various-fields-recei.patch
+Patch1073: 1073-udev-fix-review-mixup.patch
+Patch1074: 1074-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
+Patch1075: 1075-core-manager-fix-memory-leak.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1745,6 +1751,14 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.16
+- core: validate input cgroup path more prudently (RHEL-152085)
+- nspawn: normalize pivot_root paths (RHEL-163868)
+- udev: check for invalid chars in various fields received from the kernel (RHEL-163874)
+- udev: fix review mixup (RHEL-163874)
+- udev/scsi-id: check for invalid chars in various fields received from the kernel (RHEL-163874)
+- core/manager: fix memory leak (RHEL-163867)
+
 * Fri Jan 30 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.15
 - resolved: add dns_query_candidate_freep() (RHEL-93425)
 - resolved: fix use-after-free with queries hitting the cache (RHEL-93425)
