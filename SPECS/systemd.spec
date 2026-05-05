@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        55%{?dist}.8
+Release:        55%{?dist}.9
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1353,6 +1353,7 @@ Patch1267: 1267-timer-rebase-the-next-elapse-timestamp-only-if-timer.patch
 Patch1268: 1268-coredump-handle-ENOBUFS-and-EMSGSIZE-the-same-way.patch
 Patch1269: 1269-timer-rebase-last_trigger-timestamp-if-needed.patch
 Patch1270: 1270-core-fix-array-size-in-unit_log_resources.patch
+Patch1271: 1271-core-validate-input-cgroup-path-more-prudently.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2230,6 +2231,9 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Thu Apr 02 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-55.9
+- core: validate input cgroup path more prudently (RHEL-155391)
+
 * Tue Feb 24 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-55.8
 - update specfile and sources after renaming rhel-net-naming-sysattrs to net-naming-sysattrs (RHEL-150628)
 
