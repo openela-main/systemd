@@ -1,0 +1,27 @@
+From 0cab1e6254b62e39459e33ad814a6143730d3a85 Mon Sep 17 00:00:00 2001
+From: Ludwig Nussel <ludwig.nussel@suse.de>
+Date: Wed, 15 Mar 2023 10:20:59 +0100
+Subject: [PATCH] manager: fix scope for environment generators
+
+fixes regression introduced by 4870133bfa
+
+(cherry picked from commit 361cacf49e8fd6b0fc983f0ee507c1d22fa00103)
+
+Resolves: RHEL-154262
+---
+ src/core/manager.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index ec5e374f24..79408b18dc 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3695,7 +3695,7 @@ static int manager_run_environment_generators(Manager *m) {
+         if (MANAGER_IS_TEST_RUN(m) && !(m->test_run_flags & MANAGER_TEST_RUN_ENV_GENERATORS))
+                 return 0;
+ 
+-        paths = env_generator_binary_paths(MANAGER_IS_SYSTEM(m));
++        paths = env_generator_binary_paths(m->runtime_scope);
+         if (!paths)
+                 return log_oom();
+ 

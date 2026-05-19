@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        67%{?dist}
+Release:        67%{?dist}.2
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1408,6 +1408,8 @@ Patch1322: 1322-tmpfiles-teach-tmpfiles-the-new-XDG_STATE_HOME-varia.patch
 Patch1323: 1323-test-use-XDG_STATE_HOME-for-S-and-L.patch
 Patch1324: 1324-man-fully-adopt-.local-state.patch
 Patch1325: 1325-core-only-activate-transaction-that-contain-useful-j.patch
+Patch1326: 1326-manager-fix-scope-for-environment-generators.patch
+Patch1327: 1327-core-validate-input-cgroup-path-more-prudently.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2285,6 +2287,12 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Thu Apr 02 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.2
+- core: validate input cgroup path more prudently (RHEL-152082)
+
+* Tue Mar 24 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.1
+- manager: fix scope for environment generators (RHEL-154262)
+
 * Mon Feb 23 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67
 - core: only activate transaction that contain useful jobs (RHEL-143727)
 
