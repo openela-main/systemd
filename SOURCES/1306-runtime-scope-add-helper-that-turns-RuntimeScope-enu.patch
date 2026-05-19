@@ -1,0 +1,68 @@
+From 2728e6821ab6f5c0c5316a367bb1aa626b036779 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 9 Mar 2023 17:41:25 +0100
+Subject: [PATCH] runtime-scope: add helper that turns RuntimeScope enum into
+ --system/--user string
+
+(cherry picked from commit 40d73340faabb6073602ba3ff41896f3478a2cbf)
+
+Related: RHEL-137252
+---
+ src/basic/runtime-scope.c               | 8 ++++++++
+ src/basic/runtime-scope.h               | 2 ++
+ src/core/main.c                         | 2 +-
+ src/systemctl/systemctl-start-special.c | 2 +-
+ 4 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/src/basic/runtime-scope.c b/src/basic/runtime-scope.c
+index 88afb53d0b..3d653d6cef 100644
+--- a/src/basic/runtime-scope.c
++++ b/src/basic/runtime-scope.c
+@@ -10,3 +10,11 @@ static const char* const runtime_scope_table[_RUNTIME_SCOPE_MAX] = {
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(runtime_scope, RuntimeScope);
++
++static const char* const runtime_scope_cmdline_option_table[_RUNTIME_SCOPE_MAX] = {
++        [RUNTIME_SCOPE_SYSTEM] = "--system",
++        [RUNTIME_SCOPE_USER]   = "--user",
++        [RUNTIME_SCOPE_GLOBAL] = "--global",
++};
++
++DEFINE_STRING_TABLE_LOOKUP_TO_STRING(runtime_scope_cmdline_option, RuntimeScope);
+diff --git a/src/basic/runtime-scope.h b/src/basic/runtime-scope.h
+index 6a7f9e65d4..6553e4c199 100644
+--- a/src/basic/runtime-scope.h
++++ b/src/basic/runtime-scope.h
+@@ -15,3 +15,5 @@ typedef enum RuntimeScope {
+ 
+ const char *runtime_scope_to_string(RuntimeScope scope) _const_;
+ RuntimeScope runtime_scope_from_string(const char *s) _const_;
++
++const char *runtime_scope_cmdline_option_to_string(RuntimeScope scope) _const_;
+diff --git a/src/core/main.c b/src/core/main.c
+index 3ef613a8b1..18f5781126 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1821,7 +1821,7 @@ static int do_reexecute(
+                  * we get weird stuff from the kernel cmdline (like --) */
+                 if (switch_root_dir)
+                         args[i++] = "--switched-root";
+-                args[i++] = arg_runtime_scope == RUNTIME_SCOPE_SYSTEM ? "--system" : "--user";
++                args[i++] = runtime_scope_cmdline_option_to_string(arg_runtime_scope);
+                 args[i++] = "--deserialize";
+                 args[i++] = sfd;
+ 
+diff --git a/src/systemctl/systemctl-start-special.c b/src/systemctl/systemctl-start-special.c
+index 503d69f2a0..8373dabe15 100644
+--- a/src/systemctl/systemctl-start-special.c
++++ b/src/systemctl/systemctl-start-special.c
+@@ -260,7 +260,7 @@ int verb_start_system_special(int argc, char *argv[], void *userdata) {
+         if (arg_runtime_scope != RUNTIME_SCOPE_SYSTEM)
+                 return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
+                                        "Bad action for %s mode.",
+-                                       arg_runtime_scope == RUNTIME_SCOPE_GLOBAL ? "--global" : "--user");
++                                       runtime_scope_cmdline_option_to_string(arg_runtime_scope));
+ 
+         return verb_start_special(argc, argv, userdata);
+ }

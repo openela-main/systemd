@@ -1,0 +1,96 @@
+From 3d54c58e3d4c720a9a95a39879b795e7154f0209 Mon Sep 17 00:00:00 2001
+From: Jan Janssen <medhefgo@web.de>
+Date: Fri, 23 Dec 2022 14:14:53 +0100
+Subject: [PATCH] Revert "boot: Use EFI_BOOT_MANAGER_POLICY_PROTOCOL to connect
+ console devices"
+
+This reverts commit b99bf5811850afdb2502ba37251c48348da63c82.
+
+It seems that using this protocol on some firmwares to forcibly
+initialize console devices may break handles (already opened file
+handles and the device handle itself) that we rely on to access the
+boot filesystem, making it impossible to load the selected entry.
+
+It might be possible to get a new handle by querying for the device
+handle by using its device path after calling into this protocol, but
+this is untested. The firmware might also be so buggy that accessing
+devices after using this protocol is impossible.
+
+It seems prudent to revert this for now until some reliable way is found
+to initialize console devices without introducing huge boot delays. Any
+users on firmware where console devices cannot be accessed would have to
+rely on disabling fastboot.
+
+Fixes: #25737, #25846
+(cherry picked from commit f151abb0e5fa4f820109eb0541bfdcba319d2b92)
+
+Resolves: RHEL-108596
+---
+ src/boot/efi/console.c     | 16 ----------------
+ src/boot/efi/missing_efi.h | 19 -------------------
+ 2 files changed, 35 deletions(-)
+
+diff --git a/src/boot/efi/console.c b/src/boot/efi/console.c
+index 85a76e6e68..3b8b6b2e41 100644
+--- a/src/boot/efi/console.c
++++ b/src/boot/efi/console.c
+@@ -12,20 +12,6 @@
+ #define VERTICAL_MAX_OK 1080
+ #define VIEWPORT_RATIO 10
+ 
+-static EFI_STATUS console_connect(void) {
+-        EFI_BOOT_MANAGER_POLICY_PROTOCOL *boot_policy;
+-        EFI_STATUS err;
+-
+-        /* This should make console devices appear/fully initialize on fastboot firmware. */
+-
+-        err = BS->LocateProtocol(
+-                        &(EFI_GUID) EFI_BOOT_MANAGER_POLICY_PROTOCOL_GUID, NULL, (void **) &boot_policy);
+-        if (err != EFI_SUCCESS)
+-                return err;
+-
+-        return boot_policy->ConnectDeviceClass(boot_policy, &(EFI_GUID) EFI_BOOT_MANAGER_POLICY_CONSOLE_GUID);
+-}
+-
+ static inline void event_closep(EFI_EVENT *event) {
+         if (!*event)
+                 return;
+@@ -61,8 +47,6 @@ EFI_STATUS console_key_read(uint64_t *key, uint64_t timeout_usec) {
+         assert(key);
+ 
+         if (!checked) {
+-                console_connect();
+-
+                 /* Get the *first* TextInputEx device.*/
+                 err = BS->LocateProtocol(
+                                 MAKE_GUID_PTR(EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL), NULL, (void **) &extraInEx);
+diff --git a/src/boot/efi/missing_efi.h b/src/boot/efi/missing_efi.h
+index d34dfc3379..3c35a85e46 100644
+--- a/src/boot/efi/missing_efi.h
++++ b/src/boot/efi/missing_efi.h
+@@ -399,25 +399,6 @@ typedef struct {
+ } EFI_SHELL_PARAMETERS_PROTOCOL;
+ #endif
+ 
+-#ifndef EFI_BOOT_MANAGER_POLICY_PROTOCOL_GUID
+-#define EFI_BOOT_MANAGER_POLICY_PROTOCOL_GUID \
+-        { 0xFEDF8E0C, 0xE147, 0x11E3, { 0x99, 0x03, 0xB8, 0xE8, 0x56, 0x2C, 0xBA, 0xFA } }
+-#define EFI_BOOT_MANAGER_POLICY_CONSOLE_GUID \
+-        { 0xCAB0E94C, 0xE15F, 0x11E3, { 0x91, 0x8D, 0xB8, 0xE8, 0x56, 0x2C, 0xBA, 0xFA } }
+-
+-typedef struct EFI_BOOT_MANAGER_POLICY_PROTOCOL EFI_BOOT_MANAGER_POLICY_PROTOCOL;
+-struct EFI_BOOT_MANAGER_POLICY_PROTOCOL {
+-        UINT64 Revision;
+-        EFI_STATUS (EFIAPI *ConnectDevicePath)(
+-                EFI_BOOT_MANAGER_POLICY_PROTOCOL *This,
+-                EFI_DEVICE_PATH *DevicePath,
+-                BOOLEAN Recursive);
+-        EFI_STATUS (EFIAPI *ConnectDeviceClass)(
+-                EFI_BOOT_MANAGER_POLICY_PROTOCOL *This,
+-                EFI_GUID *Class);
+-};
+-#endif
+-
+ #ifndef EFI_WARN_UNKNOWN_GLYPH
+ #  define EFI_WARN_UNKNOWN_GLYPH 1
+ #endif

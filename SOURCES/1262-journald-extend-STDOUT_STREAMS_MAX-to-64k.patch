@@ -1,0 +1,27 @@
+From 8cec69eb3fe332ac618c34780dd5275d931d9bf8 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Sun, 1 Dec 2024 14:46:40 +0900
+Subject: [PATCH] journald: extend STDOUT_STREAMS_MAX to 64k
+
+Closes #35390.
+
+(cherry picked from commit c576ba7182f54f352c03f0768c9178b173fb8bcb)
+
+Resolves: RHEL-111065
+---
+ src/journal/journald-stream.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/journal/journald-stream.c b/src/journal/journald-stream.c
+index 8bdcd8c2ae..3ec6e7fcf3 100644
+--- a/src/journal/journald-stream.c
++++ b/src/journal/journald-stream.c
+@@ -38,7 +38,7 @@
+ #include "unit-name.h"
+ #include "user-util.h"
+ 
+-#define STDOUT_STREAMS_MAX 4096
++#define STDOUT_STREAMS_MAX (64*1024)
+ 
+ /* During the "setup" protocol phase of the stream logic let's define a different maximum line length than
+  * during the actual operational phase. We want to allow users to specify very short line lengths after all,

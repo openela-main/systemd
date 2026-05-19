@@ -1,0 +1,44 @@
+From a48488d06e60af0d02387488d4de0abbaddf93ad Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 27 Nov 2023 18:39:02 +0100
+Subject: [PATCH] logind: add "background-light" session class
+
+This is the same as the "background" class, but does *not* pull in a
+service manager. It might be useful for things like select cron jobs
+that do not intend to call per-user IPC calls.
+
+Replaces: #23569
+Fixes: #23978
+
+(cherry picked from commit b5100c736f1fce2b6b22c07cf2725e4ec3764a75)
+
+Related: RHEL-109833
+---
+ src/login/logind-session.c | 1 +
+ src/login/logind-session.h | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 8c8dd0d43e..5ba1e690ac 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -1525,6 +1525,7 @@ static const char* const session_class_table[_SESSION_CLASS_MAX] = {
+         [SESSION_GREETER]     = "greeter",
+         [SESSION_LOCK_SCREEN] = "lock-screen",
+         [SESSION_BACKGROUND]  = "background",
++        [SESSION_BACKGROUND_LIGHT]  = "background-light",
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(session_class, SessionClass);
+diff --git a/src/login/logind-session.h b/src/login/logind-session.h
+index 5ee059aa4f..a02d72c211 100644
+--- a/src/login/logind-session.h
++++ b/src/login/logind-session.h
+@@ -23,6 +23,7 @@ typedef enum SessionClass {
+         SESSION_GREETER,
+         SESSION_LOCK_SCREEN,
+         SESSION_BACKGROUND,
++        SESSION_BACKGROUND_LIGHT,   /* Like SESSION_BACKGROUND, but without the service manager */
+         _SESSION_CLASS_MAX,
+         _SESSION_CLASS_INVALID = -EINVAL,
+ } SessionClass;

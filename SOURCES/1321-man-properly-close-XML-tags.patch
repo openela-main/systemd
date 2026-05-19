@@ -1,0 +1,34 @@
+From 7fddcfa3d2c7b4c77c6b325a3a6779dea7afa2ba Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 27 Jun 2023 10:32:11 +0200
+Subject: [PATCH] man: properly close XML tags
+
+(cherry picked from commit cc8fdd5d307a620700d4729d74143ca434f0707c)
+
+Related: RHEL-137252
+---
+ man/systemd.exec.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index cce0426ed4..6f172994f7 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -1393,7 +1393,7 @@ CapabilityBoundingSet=~CAP_B CAP_C</programlisting>
+         The second parameter will be interpreted as a destination path that will be created as a symlink to the directory.
+         The symlinks will be created after any <varname>BindPaths=</varname> or <varname>TemporaryFileSystem=</varname>
+         options have been set up, to make ephemeral symlinking possible. The same source can have multiple symlinks, by
+-        using the same first parameter, but a different second parameter.</para></listitem>
++        using the same first parameter, but a different second parameter.</para>
+ 
+         <para>The directories defined by these options are always created under the standard paths used by systemd
+         (<filename>/var/</filename>, <filename>/run/</filename>, <filename>/etc/</filename>, …). If the service needs
+@@ -1429,7 +1429,7 @@ StateDirectory=aaa/bbb ccc</programlisting>
+         <programlisting>RuntimeDirectory=foo:bar foo:baz</programlisting>
+         the service manager creates <filename index='false'>/run/foo</filename> (if it does not exist), and
+         <filename index='false'>/run/bar</filename> plus <filename index='false'>/run/baz</filename> as symlinks to
+-        <filename index='false'>/run/foo</filename>.</para>
++        <filename index='false'>/run/foo</filename>.</para></listitem>
+       </varlistentry>
+ 
+       <varlistentry>

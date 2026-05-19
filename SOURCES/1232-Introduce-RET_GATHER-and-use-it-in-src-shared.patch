@@ -1,0 +1,128 @@
+From 5bec9826a14483e7e612879fe2630f1b517e37be Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 9 Jul 2023 13:25:42 -0600
+Subject: [PATCH] Introduce RET_GATHER and use it in src/shared/
+
+The idea is to make it easier to implement the common pattern of
+accumulating errors (negative values) in an accumulator to return
+the first error.
+
+(cherry picked from commit 809c3a84e1a572ccaaa7eca5394c0b842118c22f)
+
+Resolves: RHEL-108598
+---
+ src/basic/errno-util.h     | 10 ++++++++++
+ src/shared/bus-util.c      | 10 ++--------
+ src/shared/devnode-acl.c   |  4 ++--
+ src/shared/nscd-flush.c    | 16 +++++-----------
+ src/test/test-errno-util.c | 11 +++++++++++
+ 5 files changed, 30 insertions(+), 21 deletions(-)
+
+diff --git a/src/basic/errno-util.h b/src/basic/errno-util.h
+index b10dd755c9..27804e6382 100644
+--- a/src/basic/errno-util.h
++++ b/src/basic/errno-util.h
+@@ -74,6 +74,16 @@ static inline int RET_NERRNO(int ret) {
+         return ret;
+ }
+ 
++/* Collect possible errors in <acc>, so that the first error can be returned.
++ * Returns (possibly updated) <acc>. */
++#define RET_GATHER(acc, err)                    \
++        ({                                      \
++                int *__a = &(acc), __e = (err); \
++                if (*__a >= 0 && __e < 0)       \
++                        *__a = __e;             \
++                *__a;                           \
++        })
++
+ static inline int errno_or_else(int fallback) {
+         /* To be used when invoking library calls where errno handling is not defined clearly: we return
+          * errno if it is set, and the specified error otherwise. The idea is that the caller initializes
+diff --git a/src/shared/bus-util.c b/src/shared/bus-util.c
+index 5e6d17d201..7c8d2aa6f5 100644
+--- a/src/shared/bus-util.c
++++ b/src/shared/bus-util.c
+@@ -484,14 +484,8 @@ int bus_track_add_name_many(sd_bus_track *t, char **l) {
+ 
+         /* Continues adding after failure, and returns the first failure. */
+ 
+-        STRV_FOREACH(i, l) {
+-                int k;
+-
+-                k = sd_bus_track_add_name(t, *i);
+-                if (k < 0 && r >= 0)
+-                        r = k;
+-        }
+-
++        STRV_FOREACH(i, l)
++                RET_GATHER(r, sd_bus_track_add_name(t, *i));
+         return r;
+ }
+ 
+diff --git a/src/shared/devnode-acl.c b/src/shared/devnode-acl.c
+index 66e3a40f2f..8c961061cf 100644
+--- a/src/shared/devnode-acl.c
++++ b/src/shared/devnode-acl.c
+@@ -220,8 +220,8 @@ int devnode_acl_all(const char *seat,
+                 k = devnode_acl(n, flush, del, old_uid, add, new_uid);
+                 if (k == -ENOENT)
+                         log_debug("Device %s disappeared while setting ACLs", n);
+-                else if (k < 0 && r == 0)
+-                        r = k;
++                else
++                        RET_GATHER(r, k);
+         }
+ 
+         return r;
+diff --git a/src/shared/nscd-flush.c b/src/shared/nscd-flush.c
+index 9b0ba2d67a..d2b41f2b4d 100644
+--- a/src/shared/nscd-flush.c
++++ b/src/shared/nscd-flush.c
+@@ -128,21 +128,15 @@ static int nscd_flush_cache_one(const char *database, usec_t end) {
+ }
+ 
+ int nscd_flush_cache(char **databases) {
+-        usec_t end;
+         int r = 0;
+ 
+-        /* Tries to invalidate the specified database in nscd. We do this carefully, with a 5s timeout, so that we
+-         * don't block indefinitely on another service. */
++        /* Tries to invalidate the specified database in nscd. We do this carefully, with a 5s timeout,
++         * so that we don't block indefinitely on another service. */
+ 
+-        end = usec_add(now(CLOCK_MONOTONIC), NSCD_FLUSH_CACHE_TIMEOUT_USEC);
++        usec_t end = usec_add(now(CLOCK_MONOTONIC), NSCD_FLUSH_CACHE_TIMEOUT_USEC);
+ 
+-        STRV_FOREACH(i, databases) {
+-                int k;
+-
+-                k = nscd_flush_cache_one(*i, end);
+-                if (k < 0 && r >= 0)
+-                        r = k;
+-        }
++        STRV_FOREACH(i, databases)
++                RET_GATHER(r, nscd_flush_cache_one(*i, end));
+ 
+         return r;
+ }
+diff --git a/src/test/test-errno-util.c b/src/test/test-errno-util.c
+index cac0d5402b..77fb7d0011 100644
+--- a/src/test/test-errno-util.c
++++ b/src/test/test-errno-util.c
+@@ -67,4 +67,15 @@ TEST(ERRNO_IS_TRANSIENT) {
+         assert_se(!ERRNO_IS_NEG_TRANSIENT(INTMAX_MIN));
+ }
+ 
++TEST(RET_GATHER) {
++        int x = 0, y = 2;
++
++        assert_se(RET_GATHER(x, 5) == 0);
++        assert_se(RET_GATHER(x, -5) == -5);
++        assert_se(RET_GATHER(x, -1) == -5);
++
++        assert_se(RET_GATHER(x, y++) == -5);
++        assert_se(y == 3);
++}
++
+ DEFINE_TEST_MAIN(LOG_INFO);

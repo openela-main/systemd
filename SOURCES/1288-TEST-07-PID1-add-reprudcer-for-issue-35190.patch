@@ -1,0 +1,33 @@
+From 1aa6c0d3bcac98d3442d07412f4296d5b9b18dc0 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Mon, 27 Jan 2025 22:24:16 +0900
+Subject: [PATCH] TEST-07-PID1: add reprudcer for issue #35190
+
+(cherry picked from commit 448e99251aa47a5986425a1783da44d1200fe733)
+
+Related: RHEL-14112
+---
+ test/units/testsuite-07.transient.sh | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100755 test/units/testsuite-07.transient.sh
+
+diff --git a/test/units/testsuite-07.transient.sh b/test/units/testsuite-07.transient.sh
+new file mode 100755
+index 0000000000..ae71a38143
+--- /dev/null
++++ b/test/units/testsuite-07.transient.sh
+@@ -0,0 +1,14 @@
++#!/usr/bin/env bash
++# SPDX-License-Identifier: LGPL-2.1-or-later
++set -ex
++set -o pipefail
++
++journalctl --sync
++TS="$(date '+%H:%M:%S')"
++
++systemd-run -u hogehoge.service sleep infinity
++systemctl daemon-reload
++systemctl stop hogehoge.service
++
++journalctl --sync
++[[ -z "$(journalctl -b -q --since "$TS" -u hogehoge.service -p notice)" ]]

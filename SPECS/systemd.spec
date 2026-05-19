@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        55%{?dist}.9
+Release:        67%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1292,68 +1292,122 @@ Patch1206: 1206-core-when-removing-a-job-from-a-transaction-include-.patch
 Patch1207: 1207-catalog-add-entries-for-the-order-cycle-log-messages.patch
 Patch1208: 1208-tree-wide-check-more-log-message-format-in-log_struc.patch
 Patch1209: 1209-core-transaction-do-not-attempt-to-log-n-a-as-a-jour.patch
-Patch1210: 1210-meson-etc-systemd-network-is-also-used-by-udevd.patch
-Patch1211: 1211-test-add-tests-for-format_timestamp-and-parse_timest.patch
-Patch1212: 1212-test-time-util-disable-failing-tests.patch
-Patch1213: 1213-test-test-parse_timestamp-in-various-timezone.patch
-Patch1214: 1214-systemctl-logind-add-missing-asserts.patch
-Patch1215: 1215-systemctl-logind-make-logind_schedule_shutdown-accep.patch
-Patch1216: 1216-systemctl-add-option-when-for-scheduled-shutdown.patch
-Patch1217: 1217-test-time-util-add-test-cases-to-invalidate-show-and.patch
-Patch1218: 1218-sd-bus-make-bus_add_match_full-accept-timeout.patch
-Patch1219: 1219-core-unit-add-get_timeout_start_usec-in-UnitVTable-a.patch
-Patch1220: 1220-core-unit-increase-the-NameOwnerChanged-GetNameOwner.patch
-Patch1221: 1221-core-sd-bus-drop-empty-lines-between-function-call-a.patch
-Patch1222: 1222-core-do-not-disconnect-from-bus-when-failed-to-insta.patch
-Patch1223: 1223-dbus-stash-the-subscriber-list-when-we-disconenct-fr.patch
-Patch1224: 1224-manager-s-deserialized_subscribed-subscribed_as_strv.patch
-Patch1225: 1225-bus-util-do-not-reset-the-count-returned-by-sd_bus_t.patch
-Patch1226: 1226-core-manager-restore-bus-track-deserialization-clean.patch
-Patch1227: 1227-core-manager-drop-duplicate-bus-track-deserializatio.patch
-Patch1228: 1228-sd-bus-bus-track-use-install_callback-in-sd_bus_trac.patch
-Patch1229: 1229-Revert-test-time-util-disable-failing-tests.patch
-Patch1230: 1230-test-use-get_timezones-to-iterate-all-known-timezone.patch
-Patch1231: 1231-test-time-util-do-not-fail-on-DST-change.patch
-Patch1232: 1232-test-time-util-suppress-timestamp-conversion-failure.patch
-Patch1233: 1233-test-time-util-do-more-suppression-of-time-zone-chec.patch
-Patch1234: 1234-test-time-util-fix-truncation-of-usec-to-sec.patch
-Patch1235: 1235-test-unset-TZ-before-timezone-sensitive-unit-tests-a.patch
-Patch1236: 1236-meson-extend-timeout-for-test-time-util.patch
-Patch1237: 1237-time-util-use-DEFINE_STRING_TABLE_LOOKUP_TO_STRING-m.patch
-Patch1238: 1238-time-util-align-string-table.patch
-Patch1239: 1239-time-util-rename-variables.patch
-Patch1240: 1240-time-util-add-assertions.patch
-Patch1241: 1241-time-util-drop-redundant-else.patch
-Patch1242: 1242-time-util-do-not-use-strdupa.patch
-Patch1243: 1243-time-util-use-result-from-startswith_no_case.patch
-Patch1244: 1244-time-util-use-usec_add-and-usec_sub_unsigned.patch
-Patch1245: 1245-time-util-shorten-code-a-bit.patch
-Patch1246: 1246-time-util-rename-variables.patch
-Patch1247: 1247-time-util-drop-unnecessary-assignment-of-timezone-na.patch
-Patch1248: 1248-time-util-make-parse_timestamp-use-the-RFC-822-ISO-8.patch
-Patch1249: 1249-time-util-fix-typo.patch
-Patch1250: 1250-ci-bump-the-tools-tree-to-F42.patch
-Patch1251: 1251-cryptsetup-Add-optional-support-for-linking-volume-k.patch
-Patch1252: 1252-cryptsetup-fix-typo.patch
-Patch1253: 1253-cryptsetup-HAVE_CRYPT_SET_KEYRING_TO_LINK-is-always-.patch
-Patch1254: 1254-basic-add-PIDFS-magic-31709.patch
-Patch1255: 1255-time-util-make-USEC_TIMESTAMP_FORMATTABLE_MAX-for-32.patch
-Patch1256: 1256-coredump-make-check-that-all-argv-meta-data-fields-a.patch
-Patch1257: 1257-coredump-restore-compatibility-with-older-patterns.patch
-Patch1258: 1258-coredump-use-d-in-kernel-core-pattern.patch
-Patch1259: 1259-pidref-add-structure-that-can-reference-a-pid-via-bo.patch
-Patch1260: 1260-fd-util-introduce-parse_fd.patch
-Patch1261: 1261-coredump-add-support-for-new-F-PIDFD-specifier.patch
-Patch1262: 1262-test-rename-TEST-53-ISSUE-16347-to-TEST-53-TIMER.patch
-Patch1263: 1263-test-restarting-elapsed-timer-shouldn-t-trigger-the-.patch
-Patch1264: 1264-test-check-the-next-elapse-timer-timestamp-after-des.patch
-Patch1265: 1265-timer-don-t-run-service-immediately-after-restart-of.patch
-Patch1266: 1266-test-store-and-compare-just-the-property-value.patch
-Patch1267: 1267-timer-rebase-the-next-elapse-timestamp-only-if-timer.patch
-Patch1268: 1268-coredump-handle-ENOBUFS-and-EMSGSIZE-the-same-way.patch
-Patch1269: 1269-timer-rebase-last_trigger-timestamp-if-needed.patch
-Patch1270: 1270-core-fix-array-size-in-unit_log_resources.patch
-Patch1271: 1271-core-validate-input-cgroup-path-more-prudently.patch
+Patch1210: 1210-Revert-boot-Use-EFI_BOOT_MANAGER_POLICY_PROTOCOL-to-.patch
+Patch1211: 1211-boot-Use-correct-memory-type-for-allocations.patch
+Patch1212: 1212-meson-etc-systemd-network-is-also-used-by-udevd.patch
+Patch1213: 1213-sd-bus-make-bus_add_match_full-accept-timeout.patch
+Patch1214: 1214-core-unit-add-get_timeout_start_usec-in-UnitVTable-a.patch
+Patch1215: 1215-core-unit-increase-the-NameOwnerChanged-GetNameOwner.patch
+Patch1216: 1216-core-sd-bus-drop-empty-lines-between-function-call-a.patch
+Patch1217: 1217-core-do-not-disconnect-from-bus-when-failed-to-insta.patch
+Patch1218: 1218-dbus-stash-the-subscriber-list-when-we-disconenct-fr.patch
+Patch1219: 1219-manager-s-deserialized_subscribed-subscribed_as_strv.patch
+Patch1220: 1220-bus-util-do-not-reset-the-count-returned-by-sd_bus_t.patch
+Patch1221: 1221-core-manager-restore-bus-track-deserialization-clean.patch
+Patch1222: 1222-core-manager-drop-duplicate-bus-track-deserializatio.patch
+Patch1223: 1223-sd-bus-bus-track-use-install_callback-in-sd_bus_trac.patch
+Patch1224: 1224-shell-completion-add-kernel-identify-inspect-verbs-f.patch
+Patch1225: 1225-test-add-tests-for-format_timestamp-and-parse_timest.patch
+Patch1226: 1226-test-time-util-disable-failing-tests.patch
+Patch1227: 1227-test-test-parse_timestamp-in-various-timezone.patch
+Patch1228: 1228-systemctl-logind-add-missing-asserts.patch
+Patch1229: 1229-systemctl-logind-make-logind_schedule_shutdown-accep.patch
+Patch1230: 1230-systemctl-add-option-when-for-scheduled-shutdown.patch
+Patch1231: 1231-test-time-util-add-test-cases-to-invalidate-show-and.patch
+Patch1232: 1232-Introduce-RET_GATHER-and-use-it-in-src-shared.patch
+Patch1233: 1233-fd-util-don-t-eat-up-errors-in-fd_cloexec_many.patch
+Patch1234: 1234-sd-bus-refuse-to-send-messages-with-an-invalid-strin.patch
+Patch1235: 1235-test-check-if-we-correctly-handle-invalid-UTF-8-in-m.patch
+Patch1236: 1236-test-fix-a-typo-in-the-cleanup-stuff.patch
+Patch1237: 1237-test-explicitly-specify-a-UTF-8-locale-for-UTF-8-she.patch
+Patch1238: 1238-test-use-the-correct-file-name-when-restoring-the-or.patch
+Patch1239: 1239-core-escape-UTF-8-in-mount-unit-Where-field-before-s.patch
+Patch1240: 1240-Revert-test-time-util-disable-failing-tests.patch
+Patch1241: 1241-test-use-get_timezones-to-iterate-all-known-timezone.patch
+Patch1242: 1242-test-time-util-do-not-fail-on-DST-change.patch
+Patch1243: 1243-test-time-util-suppress-timestamp-conversion-failure.patch
+Patch1244: 1244-test-time-util-do-more-suppression-of-time-zone-chec.patch
+Patch1245: 1245-test-time-util-fix-truncation-of-usec-to-sec.patch
+Patch1246: 1246-test-unset-TZ-before-timezone-sensitive-unit-tests-a.patch
+Patch1247: 1247-meson-extend-timeout-for-test-time-util.patch
+Patch1248: 1248-time-util-use-DEFINE_STRING_TABLE_LOOKUP_TO_STRING-m.patch
+Patch1249: 1249-time-util-align-string-table.patch
+Patch1250: 1250-time-util-rename-variables.patch
+Patch1251: 1251-time-util-add-assertions.patch
+Patch1252: 1252-time-util-drop-redundant-else.patch
+Patch1253: 1253-time-util-do-not-use-strdupa.patch
+Patch1254: 1254-time-util-use-result-from-startswith_no_case.patch
+Patch1255: 1255-time-util-use-usec_add-and-usec_sub_unsigned.patch
+Patch1256: 1256-time-util-shorten-code-a-bit.patch
+Patch1257: 1257-time-util-rename-variables.patch
+Patch1258: 1258-time-util-drop-unnecessary-assignment-of-timezone-na.patch
+Patch1259: 1259-time-util-make-parse_timestamp-use-the-RFC-822-ISO-8.patch
+Patch1260: 1260-time-util-fix-typo.patch
+Patch1261: 1261-ci-bump-the-tools-tree-to-F42.patch
+Patch1262: 1262-journald-extend-STDOUT_STREAMS_MAX-to-64k.patch
+Patch1263: 1263-Revert-Revert-udev-builtin-net_id-use-firmware_node-.patch
+Patch1264: 1264-udev-builtin-net_id-ignore-firmware_node-sun-0.patch
+Patch1265: 1265-fundamental-fix-compile-check-for-explicit_bzero.patch
+Patch1266: 1266-time-util-make-USEC_TIMESTAMP_FORMATTABLE_MAX-for-32.patch
+Patch1267: 1267-test-rename-TEST-53-ISSUE-16347-to-TEST-53-TIMER.patch
+Patch1268: 1268-test-restarting-elapsed-timer-shouldn-t-trigger-the-.patch
+Patch1269: 1269-test-check-the-next-elapse-timer-timestamp-after-des.patch
+Patch1270: 1270-timer-don-t-run-service-immediately-after-restart-of.patch
+Patch1271: 1271-test-store-and-compare-just-the-property-value.patch
+Patch1272: 1272-test-make-test-fd-util-more-lenient-when-using-fd_mo.patch
+Patch1273: 1273-basic-add-PIDFS-magic-31709.patch
+Patch1274: 1274-man-fix-a-missing-word.patch
+Patch1275: 1275-cryptsetup-Add-optional-support-for-linking-volume-k.patch
+Patch1276: 1276-cryptsetup-fix-typo.patch
+Patch1277: 1277-cryptsetup-HAVE_CRYPT_SET_KEYRING_TO_LINK-is-always-.patch
+Patch1278: 1278-coredump-make-check-that-all-argv-meta-data-fields-a.patch
+Patch1279: 1279-coredump-restore-compatibility-with-older-patterns.patch
+Patch1280: 1280-coredump-use-d-in-kernel-core-pattern.patch
+Patch1281: 1281-pidref-add-structure-that-can-reference-a-pid-via-bo.patch
+Patch1282: 1282-fd-util-introduce-parse_fd.patch
+Patch1283: 1283-coredump-add-support-for-new-F-PIDFD-specifier.patch
+Patch1284: 1284-timer-rebase-the-next-elapse-timestamp-only-if-timer.patch
+Patch1285: 1285-strv-introduce-string_strv_hashmap_remove.patch
+Patch1286: 1286-unit-file-introduce-unit_file_remove_from_name_map.patch
+Patch1287: 1287-core-unit-remove-path-to-transient-unit-file-from-un.patch
+Patch1288: 1288-TEST-07-PID1-add-reprudcer-for-issue-35190.patch
+Patch1289: 1289-coredump-handle-ENOBUFS-and-EMSGSIZE-the-same-way.patch
+Patch1290: 1290-ukify-rstrip-and-escape-binary-null-characters-from-.patch
+Patch1291: 1291-timer-rebase-last_trigger-timestamp-if-needed.patch
+Patch1292: 1292-cryptsetup-generator-refactor-add_crypttab_devices.patch
+Patch1293: 1293-cryptsetup-generator-continue-parsing-after-error.patch
+Patch1294: 1294-cryptsetup-generator-parse-all-cmdline-devices-too.patch
+Patch1295: 1295-cryptsetup-generator-always-process-cmdline-devices.patch
+Patch1296: 1296-logind-add-background-light-session-class.patch
+Patch1297: 1297-pam_systemd-honor-session-class-provided-via-PAM-env.patch
+Patch1298: 1298-core-fix-array-size-in-unit_log_resources.patch
+Patch1299: 1299-pid1-add-env-var-to-override-default-mount-rate-limi.patch
+Patch1300: 1300-pid1-add-env-var-to-override-default-mount-rate-limi.patch
+Patch1301: 1301-core-service-fix-error-cause-in-the-log.patch
+Patch1302: 1302-fstab-generator-drop-assertions-for-mount-opts.patch
+Patch1303: 1303-fstab-generator-fix-options-in-systemd.mount-extra-a.patch
+Patch1304: 1304-core-reorder-systemd-arguments-on-reexec.patch
+Patch1305: 1305-basic-add-RuntimeScope-enum.patch
+Patch1306: 1306-runtime-scope-add-helper-that-turns-RuntimeScope-enu.patch
+Patch1307: 1307-sd-path-add-support-for-XDG_STATE_HOME.patch
+Patch1308: 1308-sd-path-bring-spacing-in-sd-path.h-and-systemd-path-.patch
+Patch1309: 1309-path-tool-add-some-basic-ansi-highlighing.patch
+Patch1310: 1310-execude-include-RuntimeScope-field-in-ExecParameters.patch
+Patch1311: 1311-execute-remove-redundant-assignment.patch
+Patch1312: 1312-execute-when-recursively-chowning-StateDirectory-whe.patch
+Patch1313: 1313-execute-add-support-for-XDG_STATE_HOME-for-placing-s.patch
+Patch1314: 1314-execute-associate-logs-from-setup_exec_directory-wit.patch
+Patch1315: 1315-execute-shorten-some-code-by-using-RET_NERRNO.patch
+Patch1316: 1316-execute-shorten-code-by-making-use-of-laccess-return.patch
+Patch1317: 1317-execute-don-t-bother-with-chowning-StateDirectory-an.patch
+Patch1318: 1318-test-add-test-for-new-XDG_STATE_HOME-handling.patch
+Patch1319: 1319-man-mention-the-newly-added-XDG_STATE_HOME.patch
+Patch1320: 1320-man-rebreak-lines-in-file-hierarchy-7-a-bit.patch
+Patch1321: 1321-man-properly-close-XML-tags.patch
+Patch1322: 1322-tmpfiles-teach-tmpfiles-the-new-XDG_STATE_HOME-varia.patch
+Patch1323: 1323-test-use-XDG_STATE_HOME-for-S-and-L.patch
+Patch1324: 1324-man-fully-adopt-.local-state.patch
+Patch1325: 1325-core-only-activate-transaction-that-contain-useful-j.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2231,33 +2285,68 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
-* Thu Apr 02 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-55.9
-- core: validate input cgroup path more prudently (RHEL-155391)
+* Mon Feb 23 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67
+- core: only activate transaction that contain useful jobs (RHEL-143727)
 
-* Tue Feb 24 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-55.8
-- update specfile and sources after renaming rhel-net-naming-sysattrs to net-naming-sysattrs (RHEL-150628)
+* Mon Feb 23 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-66
+- core/service: fix error cause in the log (RHEL-138414)
+- fstab-generator: drop assertions for mount opts (RHEL-92752)
+- fstab-generator: fix options in systemd.mount-extra= arg (RHEL-92752)
+- core: reorder systemd arguments on reexec (RHEL-111135)
+- basic: add RuntimeScope enum (RHEL-137252)
+- runtime-scope: add helper that turns RuntimeScope enum into --system/--user string (RHEL-137252)
+- sd-path: add support for XDG_STATE_HOME (RHEL-137252)
+- sd-path: bring spacing in sd-path.h and systemd-path tool in sync (RHEL-137252)
+- path tool: add some basic ansi highlighing (RHEL-137252)
+- execude: include RuntimeScope field in ExecParameters (RHEL-137252)
+- execute: remove redundant assignment (RHEL-137252)
+- execute: when recursively chowning StateDirectory= when spawning services, follow initial symlink (RHEL-137252)
+- execute: add support for XDG_STATE_HOME for placing service state data in --user mode (RHEL-137252)
+- execute: associate logs from setup_exec_directory() with the unit name (RHEL-137252)
+- execute: shorten some code by using RET_NERRNO() (RHEL-137252)
+- execute: shorten code by making use of laccess() return code properly (RHEL-137252)
+- execute: don't bother with chowning StateDirectory= and friends in user mode (RHEL-137252)
+- test: add test for new XDG_STATE_HOME handling (RHEL-137252)
+- man: mention the newly-added XDG_STATE_HOME (RHEL-137252)
+- man: rebreak lines in file-hierarchy(7) a bit (RHEL-137252)
+- man: properly close XML tags (RHEL-137252)
+- tmpfiles: teach tmpfiles the new XDG_STATE_HOME variable too (RHEL-137252)
+- test: use XDG_STATE_HOME for %%S and %%L (RHEL-137252)
+- man: fully adopt ~/.local/state/ (RHEL-137252)
 
-* Mon Dec 01 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.7
-- core: fix array size in unit_log_resources() (RHEL-132120)
+* Wed Feb 18 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-65
+- update specfile and sources after renaming rhel-net-naming-sysattrs to net-naming-sysattrs (RHEL-150622)
 
-* Mon Nov 24 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.6
-- timer: rebase last_trigger timestamp if needed (RHEL-127022)
+* Fri Dec 12 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-64
+- core: fix array size in unit_log_resources() (RHEL-131338)
+- pid1: add env var to override default mount rate limit burst (RHEL-129153)
+- pid1: add env var to override default mount rate limit interval (RHEL-129153)
 
-* Tue Nov 18 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.5
-- test: rename TEST-53-ISSUE-16347 to TEST-53-TIMER (RHEL-127022)
-- test: restarting elapsed timer shouldn't trigger the corresponding service (RHEL-127022)
-- test: check the next elapse timer timestamp after deserialization (RHEL-127022)
-- timer: don't run service immediately after restart of a timer (RHEL-127022)
-- test: store and compare just the property value (RHEL-127022)
-- timer: rebase the next elapse timestamp only if timer didn't already run (RHEL-127022)
-- coredump: handle ENOBUFS and EMSGSIZE the same way (RHEL-126114)
+* Thu Nov 27 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-63
+- cryptsetup-generator: refactor add_crypttab_devices() (RHEL-127859)
+- cryptsetup-generator: continue parsing after error (RHEL-127859)
+- cryptsetup-generator: parse all cmdline devices too (RHEL-127859)
+- cryptsetup-generator: always process cmdline devices (RHEL-127859)
+- logind: add "background-light" session class (RHEL-109833)
+- pam_systemd: honor session class provided via PAM environment (RHEL-109833)
 
-* Thu Nov 06 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.4
-- cryptsetup: Add optional support for linking volume key in keyring. (RHEL-118294)
-- cryptsetup: fix typo (RHEL-118294)
-- cryptsetup: HAVE_CRYPT_SET_KEYRING_TO_LINK is always defined (RHEL-118294)
-- basic: add PIDFS magic (#31709) (RHEL-118294)
-- time-util: make USEC_TIMESTAMP_FORMATTABLE_MAX for 32bit system off by one day (RHEL-118294)
+* Mon Nov 24 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-62
+- ukify: rstrip and escape binary null characters from 'inspect' output (#38607) (RHEL-109558)
+- timer: rebase last_trigger timestamp if needed (RHEL-118215)
+
+* Fri Nov 21 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-61
+- timer: rebase the next elapse timestamp only if timer didn't already run (RHEL-118215)
+- strv: introduce string_strv_hashmap_remove() (RHEL-14112)
+- unit-file: introduce unit_file_remove_from_name_map() (RHEL-14112)
+- core/unit: remove path to transient unit file from unit name maps on stop (RHEL-14112)
+- TEST-07-PID1: add reprudcer for issue #35190 (RHEL-14112)
+- coredump: handle ENOBUFS and EMSGSIZE the same way (RHEL-103801)
+
+* Wed Nov 05 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-60
+- man: fix a missing word (RHEL-115182)
+- cryptsetup: Add optional support for linking volume key in keyring. (RHEL-97175)
+- cryptsetup: fix typo (RHEL-97175)
+- cryptsetup: HAVE_CRYPT_SET_KEYRING_TO_LINK is always defined (RHEL-97175)
 - coredump: make check that all argv[] meta data fields are passed strict (RHEL-104138)
 - coredump: restore compatibility with older patterns (RHEL-104138)
 - coredump: use %d in kernel core pattern (RHEL-104138)
@@ -2265,50 +2354,73 @@ systemd-hwdb update &>/dev/null || :
 - fd-util: introduce parse_fd() (RHEL-104138)
 - coredump: add support for new %F PIDFD specifier (RHEL-104138)
 
-* Fri Sep 12 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.2
-- Revert "test-time-util: disable failing tests" (RHEL-110954)
-- test: use get_timezones() to iterate all known timezones (RHEL-110954)
-- test-time-util: do not fail on DST change (RHEL-110954)
-- test-time-util: suppress timestamp conversion failures for Africa/Khartoum timezone (RHEL-110954)
-- test-time-util: do more suppression of time zone checks (RHEL-110954)
-- test-time-util: fix truncation of usec to sec (RHEL-110954)
-- test: unset TZ before timezone-sensitive unit tests are run (RHEL-110954)
-- meson: extend timeout for test-time-util (RHEL-110954)
-- time-util: use DEFINE_STRING_TABLE_LOOKUP_TO_STRING() macro (RHEL-110954)
-- time-util: align string table (RHEL-110954)
-- time-util: rename variables (RHEL-110954)
-- time-util: add assertions (RHEL-110954)
-- time-util: drop redundant else (RHEL-110954)
-- time-util: do not use strdupa() (RHEL-110954)
-- time-util: use result from startswith_no_case() (RHEL-110954)
-- time-util: use usec_add() and usec_sub_unsigned() (RHEL-110954)
-- time-util: shorten code a bit (RHEL-110954)
-- time-util: rename variables (RHEL-110954)
-- time-util: drop unnecessary assignment of timezone name (RHEL-110954)
-- time-util: make parse_timestamp() use the RFC-822/ISO 8601 standard timezone spec (RHEL-110954)
-- time-util: fix typo (RHEL-110954)
-- ci: bump the tools tree to F42 (RHEL-110954)
+* Thu Oct 02 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-59
+- test: rename TEST-53-ISSUE-16347 to TEST-53-TIMER (RHEL-118215)
+- test: restarting elapsed timer shouldn't trigger the corresponding service (RHEL-118215)
+- test: check the next elapse timer timestamp after deserialization (RHEL-118215)
+- timer: don't run service immediately after restart of a timer (RHEL-118215)
+- test: store and compare just the property value (RHEL-118215)
+- test: make test-fd-util more lenient when using fd_move_above_stdio() (RHEL-114974)
+- basic: add PIDFS magic (#31709) (RHEL-114974)
 
-* Fri Aug 29 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55.1
-- meson: /etc/systemd/network is also used by udevd (RHEL-111611)
-- test: add tests for format_timestamp() and parse_timestamp() with various timezone (RHEL-110954)
-- test-time-util: disable failing tests (RHEL-110954)
-- test: test parse_timestamp() in various timezone (RHEL-110954)
-- systemctl: logind: add missing asserts (RHEL-110954)
-- systemctl: logind: make logind_schedule_shutdown accept action as param (RHEL-110954)
-- systemctl: add option --when for scheduled shutdown (RHEL-110954)
-- test-time-util: add test cases to invalidate "show" and "cancel" (RHEL-110954)
-- sd-bus: make bus_add_match_full accept timeout (RHEL-111630)
-- core/unit: add get_timeout_start_usec in UnitVTable and define it for service (RHEL-111630)
-- core/unit: increase the NameOwnerChanged/GetNameOwner timeout to the unit's start timeout (RHEL-111630)
-- core,sd-bus: drop empty lines between function call and error check (RHEL-111630)
-- core: do not disconnect from bus when failed to install signal match (RHEL-111630)
-- dbus: stash the subscriber list when we disconenct from the bus (RHEL-111630)
-- manager: s/deserialized_subscribed/subscribed_as_strv (RHEL-111630)
-- bus-util: do not reset the count returned by sd_bus_track_count_name() (RHEL-111630)
-- core/manager: restore bus track deserialization cleanup in manager_reload() (RHEL-111630)
-- core/manager: drop duplicate bus track deserialization (RHEL-111630)
-- sd-bus/bus-track: use install_callback in sd_bus_track_add_name() (RHEL-111630)
+* Tue Sep 16 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-57
+- Revert "boot: Use EFI_BOOT_MANAGER_POLICY_PROTOCOL to connect console devices" (RHEL-108596)
+- boot: Use correct memory type for allocations (RHEL-108555)
+- meson: /etc/systemd/network is also used by udevd (RHEL-109096)
+- sd-bus: make bus_add_match_full accept timeout (RHEL-31756)
+- core/unit: add get_timeout_start_usec in UnitVTable and define it for service (RHEL-31756)
+- core/unit: increase the NameOwnerChanged/GetNameOwner timeout to the unit's start timeout (RHEL-31756)
+- core,sd-bus: drop empty lines between function call and error check (RHEL-31756)
+- core: do not disconnect from bus when failed to install signal match (RHEL-31756)
+- dbus: stash the subscriber list when we disconenct from the bus (RHEL-31756)
+- manager: s/deserialized_subscribed/subscribed_as_strv (RHEL-31756)
+- bus-util: do not reset the count returned by sd_bus_track_count_name() (RHEL-31756)
+- core/manager: restore bus track deserialization cleanup in manager_reload() (RHEL-31756)
+- core/manager: drop duplicate bus track deserialization (RHEL-31756)
+- sd-bus/bus-track: use install_callback in sd_bus_track_add_name() (RHEL-31756)
+- shell completion: add kernel-identify/inspect verbs for bootctl (RHEL-108576)
+- test: add tests for format_timestamp() and parse_timestamp() with various timezone (RHEL-109488)
+- test-time-util: disable failing tests (RHEL-109488)
+- test: test parse_timestamp() in various timezone (RHEL-109488)
+- systemctl: logind: add missing asserts (RHEL-109488)
+- systemctl: logind: make logind_schedule_shutdown accept action as param (RHEL-109488)
+- systemctl: add option --when for scheduled shutdown (RHEL-109488)
+- test-time-util: add test cases to invalidate "show" and "cancel" (RHEL-109488)
+- Introduce RET_GATHER and use it in src/shared/ (RHEL-108598)
+- fd-util: don't eat up errors in fd_cloexec_many (RHEL-108598)
+- sd-bus: refuse to send messages with an invalid string (RHEL-108584)
+- test: check if we correctly handle invalid UTF-8 in mount stuff (RHEL-108584)
+- test: fix a typo in the cleanup stuff (RHEL-108584)
+- test: explicitly specify a UTF-8 locale for UTF-8 shenanigans (RHEL-108584)
+- test: use the correct file name when restoring the original fstab (RHEL-108584)
+- core: escape UTF-8 in mount unit Where field before sending to clients (RHEL-108584)
+- Revert "test-time-util: disable failing tests" (RHEL-109488)
+- test: use get_timezones() to iterate all known timezones (RHEL-109488)
+- test-time-util: do not fail on DST change (RHEL-109488)
+- test-time-util: suppress timestamp conversion failures for Africa/Khartoum timezone (RHEL-109488)
+- test-time-util: do more suppression of time zone checks (RHEL-109488)
+- test-time-util: fix truncation of usec to sec (RHEL-109488)
+- test: unset TZ before timezone-sensitive unit tests are run (RHEL-109488)
+- meson: extend timeout for test-time-util (RHEL-109488)
+- time-util: use DEFINE_STRING_TABLE_LOOKUP_TO_STRING() macro (RHEL-109488)
+- time-util: align string table (RHEL-109488)
+- time-util: rename variables (RHEL-109488)
+- time-util: add assertions (RHEL-109488)
+- time-util: drop redundant else (RHEL-109488)
+- time-util: do not use strdupa() (RHEL-109488)
+- time-util: use result from startswith_no_case() (RHEL-109488)
+- time-util: use usec_add() and usec_sub_unsigned() (RHEL-109488)
+- time-util: shorten code a bit (RHEL-109488)
+- time-util: rename variables (RHEL-109488)
+- time-util: drop unnecessary assignment of timezone name (RHEL-109488)
+- time-util: make parse_timestamp() use the RFC-822/ISO 8601 standard timezone spec (RHEL-109488)
+- time-util: fix typo (RHEL-109488)
+- ci: bump the tools tree to F42 (RHEL-109488)
+- journald: extend STDOUT_STREAMS_MAX to 64k (RHEL-111065)
+- Revert "Revert "udev-builtin-net_id: use firmware_node/sun for ID_NET_NAME_SLOT"" (RHEL-50103)
+- udev-builtin-net_id: ignore firmware_node/sun == 0 (RHEL-50103)
+- fundamental: fix compile check for explicit_bzero (RHEL-108568)
+- time-util: make USEC_TIMESTAMP_FORMATTABLE_MAX for 32bit system off by one day (RHEL-109488)
 
 * Fri Aug 15 2025 systemd maintenance team <systemd-maint@redhat.com> - 252-55
 - tree-wide: check more log message format in log_struct() and friends (RHEL-100353)

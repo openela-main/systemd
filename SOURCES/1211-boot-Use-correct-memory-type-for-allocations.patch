@@ -1,0 +1,38 @@
+From bcb456e590fd6994a6b38e9b2d89e3ef0417d402 Mon Sep 17 00:00:00 2001
+From: Jan Janssen <medhefgo@web.de>
+Date: Tue, 2 May 2023 19:41:58 +0200
+Subject: [PATCH] boot: Use correct memory type for allocations
+
+We were using the wrong memory type when allocating pool memory. This
+does not seem to cause a problem on x86, but the kernel will fail to
+boot at least on ARM in QEMU.
+
+This is caused by mixing different allocation types which ended up
+breaking the kernel or EDK2 during boot services exit. Commit
+2f3c3b0bee5534f2338439f04b0aa517479f8b76 appears to fix this boot
+failure because it was replacing the gnu-efi xpool_print with xasprintf
+thereby unifying the allocation type.
+But this same issue can also happen without this fix somehow when the
+random-seed logic is in use.
+
+Fixes: #27371
+(cherry picked from commit ec232e4abd7aebfec06b4814b30129532b2bcefd)
+
+Resolves: RHEL-108555
+---
+ src/boot/efi/util.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/boot/efi/util.h b/src/boot/efi/util.h
+index f7452e3cf5..16c9fcc3e1 100644
+--- a/src/boot/efi/util.h
++++ b/src/boot/efi/util.h
+@@ -47,7 +47,7 @@ static inline void freep(void *p) {
+ _malloc_ _alloc_(1) _returns_nonnull_ _warn_unused_result_
+ static inline void *xmalloc(size_t size) {
+         void *p;
+-        assert_se(BS->AllocatePool(EfiBootServicesData, size, &p) == EFI_SUCCESS);
++        assert_se(BS->AllocatePool(EfiLoaderData, size, &p) == EFI_SUCCESS);
+         return p;
+ }
+ 

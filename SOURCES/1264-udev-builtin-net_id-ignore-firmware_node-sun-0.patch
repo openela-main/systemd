@@ -1,0 +1,43 @@
+From 743c0fbd5ea56f926b36d6bbfc2d609bacd4353e Mon Sep 17 00:00:00 2001
+From: Etienne Champetier <e.champetier@ateme.com>
+Date: Thu, 22 Aug 2024 16:30:56 -0400
+Subject: [PATCH] udev-builtin-net_id: ignore firmware_node/sun == 0
+
+Since ID_NET_NAME_SLOT was introduced we ignore slot == 0
+https://github.com/systemd/systemd/blob/0035597a30d120f70df2dd7da3d6128fb8ba6051/src/udev/udev-builtin-net_id.c#L139
+
+Qemu sets _SUN to PCI_SLOT() for all NICs, so _SUN is not unique.
+https://gitlab.com/qemu-project/qemu/-/issues/2530
+
+In my tests with libvirt I can only set 'slot="0x00"' in interface definition,
+so all NICs end up with _SUN == 0, and this commit is enough to avoid the issue.
+
+Fixes 0a4ecc54cb9f2d3418b970c51bfadb69c34ae9eb
+
+(cherry picked from commit 448f9f81fd32f8658449101ada2eadd853f6b06b)
+
+Resolves: RHEL-50103
+---
+ src/udev/udev-builtin-net_id.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/src/udev/udev-builtin-net_id.c b/src/udev/udev-builtin-net_id.c
+index 291fb4ba36..e1895a38c0 100644
+--- a/src/udev/udev-builtin-net_id.c
++++ b/src/udev/udev-builtin-net_id.c
+@@ -453,10 +453,14 @@ static int get_device_firmware_node_sun(sd_device *dev, uint32_t *ret) {
+         if (r < 0)
+                 return log_device_debug_errno(dev, r, "Failed to read firmware_node/sun, ignoring: %m");
+ 
+-        r = safe_atou32(attr, ret);
++        uint32_t sun;
++        r = safe_atou32(attr, &sun);
+         if (r < 0)
+                 return log_device_warning_errno(dev, r, "Failed to parse firmware_node/sun '%s', ignoring: %m", attr);
++        if (sun == 0)
++                return log_device_debug_errno(dev, SYNTHETIC_ERRNO(EINVAL), "firmware_node/sun == 0, ignoring: %m");
+ 
++        *ret = sun;
+         return 0;
+ }
+ 

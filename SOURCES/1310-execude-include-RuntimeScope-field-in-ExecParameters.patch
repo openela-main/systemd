@@ -1,0 +1,91 @@
+From 186ec2bf76640d5250809827625cb6f2a1f8f09f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Jun 2023 22:34:25 +0200
+Subject: [PATCH] execude: include RuntimeScope field in ExecParameters
+
+Let's decouple execute.c a bit from the Manager object, let's pass the
+runtime scope (i.e. the enum that discern invocation for user or system
+context) as part of ExecParameters. This makes the scope available in
+various functions without having to pass the Manager object in.
+
+(cherry picked from commit 170d978b2f85aa0ea5c994d7821dfbf6870cffb9)
+
+Related: RHEL-137252
+---
+ src/core/execute.c | 9 ++++++---
+ src/core/execute.h | 3 +++
+ src/core/unit.c    | 2 ++
+ 3 files changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 35f8ccf770..404ca9fe94 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -3621,7 +3621,7 @@ static int apply_mount_namespace(
+                 }
+         }
+ 
+-        if (MANAGER_IS_SYSTEM(u->manager)) {
++        if (params->runtime_scope == RUNTIME_SCOPE_SYSTEM) {
+                 propagate_dir = path_join("/run/systemd/propagate/", u->id);
+                 if (!propagate_dir) {
+                         r = -ENOMEM;
+@@ -3639,11 +3639,14 @@ static int apply_mount_namespace(
+                         r = -ENOMEM;
+                         goto finalize;
+                 }
+-        } else
++        } else {
++                assert(params->runtime_scope == RUNTIME_SCOPE_USER);
++
+                 if (asprintf(&extension_dir, "/run/user/" UID_FMT "/systemd/unit-extensions", geteuid()) < 0) {
+                         r = -ENOMEM;
+                         goto finalize;
+                 }
++        }
+ 
+         r = setup_namespace(root_dir, root_image, context->root_image_options,
+                             &ns_info, context->read_write_paths,
+@@ -4261,7 +4264,7 @@ static int exec_child(
+          * invocations themselves. Also note that while we'll only invoke NSS modules involved in user management they
+          * might internally call into other NSS modules that are involved in hostname resolution, we never know. */
+         if (setenv("SYSTEMD_ACTIVATION_UNIT", unit->id, true) != 0 ||
+-            setenv("SYSTEMD_ACTIVATION_SCOPE", runtime_scope_to_string(unit->manager->runtime_scope), true) != 0) {
++            setenv("SYSTEMD_ACTIVATION_SCOPE", runtime_scope_to_string(params->runtime_scope), true) != 0) {
+                 *exit_status = EXIT_MEMORY;
+                 return log_unit_error_errno(unit, errno, "Failed to update environment: %m");
+         }
+diff --git a/src/core/execute.h b/src/core/execute.h
+index 4c54422073..fc0e138029 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -24,6 +24,7 @@ typedef struct Manager Manager;
+ #include "nsflags.h"
+ #include "numa-util.h"
+ #include "path-util.h"
++#include "runtime-scope.h"
+ #include "time-util.h"
+ 
+ #define EXEC_STDIN_DATA_MAX (64U*1024U*1024U)
+@@ -393,6 +394,8 @@ typedef enum ExecFlags {
+ /* Parameters for a specific invocation of a command. This structure is put together right before a command is
+  * executed. */
+ struct ExecParameters {
++        RuntimeScope runtime_scope;
++
+         char **environment;
+ 
+         int *fds;
+diff --git a/src/core/unit.c b/src/core/unit.c
+index e90b51d8c4..7f321c911d 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -5203,6 +5203,8 @@ int unit_set_exec_params(Unit *u, ExecParameters *p) {
+         if (r < 0)
+                 return r;
+ 
++        p->runtime_scope = u->manager->runtime_scope;
++
+         p->confirm_spawn = manager_get_confirm_spawn(u->manager);
+         p->cgroup_supported = u->manager->cgroup_supported;
+         p->prefix = u->manager->prefix;

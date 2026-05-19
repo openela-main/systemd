@@ -1,0 +1,63 @@
+From 8e0da3f5c5518350215a7186dfa748207ba921e8 Mon Sep 17 00:00:00 2001
+From: Luca Boccassi <bluca@debian.org>
+Date: Mon, 5 Dec 2022 21:05:54 +0000
+Subject: [PATCH] pid1: add env var to override default mount rate limit burst
+
+I am hitting the rate limit on a busy system with low resources, and
+it stalls the boot process which is Very Bad (TM).
+
+(cherry picked from commit 24a4542cfa674ee80b54afcc223f2490a011966b)
+
+Related: RHEL-129153
+---
+ docs/ENVIRONMENT.md |  7 +++++++
+ src/core/mount.c    | 11 ++++++++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/docs/ENVIRONMENT.md b/docs/ENVIRONMENT.md
+index 54b779d312..88e6f5b372 100644
+--- a/docs/ENVIRONMENT.md
++++ b/docs/ENVIRONMENT.md
+@@ -281,6 +281,13 @@ All tools:
+   type as unsupported may not prevent loading some units of that type if they
+   are referenced by other units of another supported type.
+ 
++* `$SYSTEMD_DEFAULT_MOUNT_RATE_LIMIT_BURST` — can be set to override the mount
++  units burst rate limit for parsing `/proc/self/mountinfo`. On a system with
++  few resources but many mounts the rate limit may be hit, which will cause the
++  processing of mount units to stall. The burst limit may be adjusted when the
++  default is not appropriate for a given system. Defaults to `5`, accepts
++  positive integers.
++
+ `systemd-remount-fs`:
+ 
+ * `$SYSTEMD_REMOUNT_ROOT_RW=1` — if set and no entry for the root directory
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 79772fb6f1..a8e101aa64 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1910,6 +1910,7 @@ static void mount_enumerate(Manager *m) {
+         mnt_init_debug(0);
+ 
+         if (!m->mount_monitor) {
++                unsigned mount_rate_limit_burst = 5;
+                 int fd;
+ 
+                 m->mount_monitor = mnt_new_monitor();
+@@ -1949,7 +1950,15 @@ static void mount_enumerate(Manager *m) {
+                         goto fail;
+                 }
+ 
+-                r = sd_event_source_set_ratelimit(m->mount_event_source, 1 * USEC_PER_SEC, 5);
++                /* Let users override the default (5 in 1s), as it stalls the boot sequence on busy systems. */
++                const char *e = secure_getenv("SYSTEMD_DEFAULT_MOUNT_RATE_LIMIT_BURST");
++                if (e) {
++                        r = safe_atou(e, &mount_rate_limit_burst);
++                        if (r < 0)
++                                log_debug("Invalid value in $SYSTEMD_DEFAULT_MOUNT_RATE_LIMIT_BURST, ignoring: %s", e);
++                }
++
++                r = sd_event_source_set_ratelimit(m->mount_event_source, 1 * USEC_PER_SEC, mount_rate_limit_burst);
+                 if (r < 0) {
+                         log_error_errno(r, "Failed to enable rate limit for mount events: %m");
+                         goto fail;

@@ -1,0 +1,28 @@
+From de696eb8fc5caf5d5ad0a314fa21f8ca78bf8071 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Tue, 9 May 2023 00:21:20 +0900
+Subject: [PATCH] core/service: fix error cause in the log
+
+Fixes a bug caused by a5648b809457d120500b2acb18b31e2168a4817a.
+Fixes #27575.
+
+(cherry picked from commit f86a388de339bc9fd3bc90df7de0d9693b52369f)
+
+Resolves: RHEL-138414
+---
+ src/core/service.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 305f3b7170..9c938aee91 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -989,7 +989,7 @@ static int service_load_pid_file(Service *s, bool may_warn) {
+                 r = chase_symlinks(s->pid_file, NULL, 0, NULL, &fd);
+         }
+         if (r < 0)
+-                return log_unit_full_errno(UNIT(s), prio, fd,
++                return log_unit_full_errno(UNIT(s), prio, r,
+                                            "Can't open PID file %s (yet?) after %s: %m", s->pid_file, service_state_to_string(s->state));
+ 
+         /* Let's read the PID file now that we chased it down. But we need to convert the O_PATH fd

@@ -1,0 +1,130 @@
+From 01826a6ded513adea1dabeccc6b860baee277482 Mon Sep 17 00:00:00 2001
+From: David Tardon <dtardon@redhat.com>
+Date: Thu, 30 May 2024 10:44:36 +0200
+Subject: [PATCH] cryptsetup-generator: refactor add_crypttab_devices()
+
+Move the processing of a crypttab entry to a separate function.
+
+No functional changes, just refactoring.
+
+(cherry picked from commit a07cb7d404582f9c0bfaedb9dd07f93848aa91c6)
+
+Related: RHEL-127859
+---
+ src/cryptsetup/cryptsetup-generator.c | 87 +++++++++++++++------------
+ 1 file changed, 49 insertions(+), 38 deletions(-)
+
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index 9e8e7e746f..6ab3b85b6b 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -779,6 +779,52 @@ static int parse_proc_cmdline_item(const char *key, const char *value, void *dat
+         return 0;
+ }
+ 
++static int add_crypttab_device(const char *name, const char *device,  const char *keyspec, const char *options) {
++        _cleanup_free_ char *keyfile = NULL, *keydev = NULL, *headerdev = NULL, *filtered_header = NULL;
++        crypto_device *d = NULL;
++        char *uuid;
++        int r;
++
++        uuid = startswith(device, "UUID=");
++        if (!uuid)
++                uuid = path_startswith(device, "/dev/disk/by-uuid/");
++        if (!uuid)
++                uuid = startswith(name, "luks-");
++        if (uuid)
++                d = hashmap_get(arg_disks, uuid);
++
++        if (arg_allow_list && !d) {
++                log_info("Not creating device '%s' because it was not specified on the kernel command line.", name);
++                return 0;
++        }
++
++        r = split_locationspec(keyspec, &keyfile, &keydev);
++        if (r < 0)
++                return r;
++
++        if (options && (!d || !d->options)) {
++                r = filter_header_device(options, &headerdev, &filtered_header);
++                if (r < 0)
++                        return r;
++                options = filtered_header;
++        }
++
++        r = create_disk(name,
++                        device,
++                        keyfile,
++                        keydev,
++                        (d && d->options) ? d->headerdev : headerdev,
++                        (d && d->options) ? d->options : options,
++                        arg_crypttab);
++        if (r < 0)
++                return r;
++
++        if (d)
++                d->create = false;
++
++        return 0;
++}
++
+ static int add_crypttab_devices(void) {
+         _cleanup_fclose_ FILE *f = NULL;
+         unsigned crypttab_line = 0;
+@@ -795,10 +841,8 @@ static int add_crypttab_devices(void) {
+         }
+ 
+         for (;;) {
+-                _cleanup_free_ char *line = NULL, *name = NULL, *device = NULL, *keyspec = NULL, *options = NULL,
+-                                    *keyfile = NULL, *keydev = NULL, *headerdev = NULL, *filtered_header = NULL;
+-                crypto_device *d = NULL;
+-                char *l, *uuid;
++                _cleanup_free_ char *line = NULL, *name = NULL, *device = NULL, *keyspec = NULL, *options = NULL;
++                char *l;
+                 int k;
+ 
+                 r = read_line(f, LONG_LINE_MAX, &line);
+@@ -819,42 +863,9 @@ static int add_crypttab_devices(void) {
+                         continue;
+                 }
+ 
+-                uuid = startswith(device, "UUID=");
+-                if (!uuid)
+-                        uuid = path_startswith(device, "/dev/disk/by-uuid/");
+-                if (!uuid)
+-                        uuid = startswith(name, "luks-");
+-                if (uuid)
+-                        d = hashmap_get(arg_disks, uuid);
+-
+-                if (arg_allow_list && !d) {
+-                        log_info("Not creating device '%s' because it was not specified on the kernel command line.", name);
+-                        continue;
+-                }
+-
+-                r = split_locationspec(keyspec, &keyfile, &keydev);
++                r = add_crypttab_device(name, device, keyspec, options);
+                 if (r < 0)
+                         return r;
+-
+-                if (options && (!d || !d->options)) {
+-                        r = filter_header_device(options, &headerdev, &filtered_header);
+-                        if (r < 0)
+-                                return r;
+-                        free_and_replace(options, filtered_header);
+-                }
+-
+-                r = create_disk(name,
+-                                device,
+-                                keyfile,
+-                                keydev,
+-                                (d && d->options) ? d->headerdev : headerdev,
+-                                (d && d->options) ? d->options : options,
+-                                arg_crypttab);
+-                if (r < 0)
+-                        return r;
+-
+-                if (d)
+-                        d->create = false;
+         }
+ 
+         return 0;

@@ -1,0 +1,134 @@
+From b280191167ddc52a77da5b4047297d288f9ce73b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 20 Jun 2025 13:16:10 +0200
+Subject: [PATCH] core: escape UTF-8 in mount unit Where field before sending
+ to clients
+
+Followup for: 4804da58536ab7ad46178a03f4d2da49fd8e4ba2 #27541
+
+Fixes: #36206
+(cherry picked from commit 222b0b05ce9ac29283cd89cf98444c4da3373568)
+
+Resolves: RHEL-108584
+---
+ src/core/dbus-mount.c                         | 23 ++++++++++++++++++-
+ src/core/mount.c                              | 16 ++++++++++++-
+ src/core/mount.h                              |  2 ++
+ .../units/testsuite-07.mount-invalid-chars.sh |  5 ++--
+ 4 files changed, 42 insertions(+), 4 deletions(-)
+
+diff --git a/src/core/dbus-mount.c b/src/core/dbus-mount.c
+index 55ad4f2c98..7006ebbbba 100644
+--- a/src/core/dbus-mount.c
++++ b/src/core/dbus-mount.c
+@@ -11,6 +11,27 @@
+ #include "unit.h"
+ #include "utf8.h"
+ 
++static int property_get_where(
++                sd_bus *bus,
++                const char *path,
++                const char *interface,
++                const char *property,
++                sd_bus_message *reply,
++                void *userdata,
++                sd_bus_error *error) {
++
++        Mount *m = ASSERT_PTR(userdata);
++
++        assert(bus);
++        assert(reply);
++
++        _cleanup_free_ char *escaped = mount_get_where_escaped(m);
++        if (!escaped)
++                return -ENOMEM;
++
++        return sd_bus_message_append_basic(reply, 's', escaped);
++}
++
+ static int property_get_what(
+                 sd_bus *bus,
+                 const char *path,
+@@ -84,7 +105,7 @@ static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_result, mount_result, MountResu
+ 
+ const sd_bus_vtable bus_mount_vtable[] = {
+         SD_BUS_VTABLE_START(0),
+-        SD_BUS_PROPERTY("Where", "s", NULL, offsetof(Mount, where), SD_BUS_VTABLE_PROPERTY_CONST),
++        SD_BUS_PROPERTY("Where", "s", property_get_where, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("What", "s", property_get_what, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("Options","s", property_get_options, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("Type", "s", property_get_type, 0, SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+diff --git a/src/core/mount.c b/src/core/mount.c
+index cfe3f40302..79772fb6f1 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -31,6 +31,7 @@
+ #include "strv.h"
+ #include "unit-name.h"
+ #include "unit.h"
++#include "utf8.h"
+ 
+ #define RETRY_UMOUNT_MAX 32
+ 
+@@ -657,7 +658,11 @@ static int mount_add_extras(Mount *m) {
+         path_simplify(m->where);
+ 
+         if (!u->description) {
+-                r = unit_set_description(u, m->where);
++                _cleanup_free_ char *w = mount_get_where_escaped(m);
++                if (!w)
++                        return log_oom();
++
++                r = unit_set_description(u, w);
+                 if (r < 0)
+                         return r;
+         }
+@@ -2207,6 +2212,15 @@ static int mount_can_start(Unit *u) {
+         return 1;
+ }
+ 
++char* mount_get_where_escaped(const Mount *m) {
++        assert(m);
++
++        if (!m->where)
++                return strdup("");
++
++        return utf8_escape_invalid(m->where);
++}
++
+ static const char* const mount_exec_command_table[_MOUNT_EXEC_COMMAND_MAX] = {
+         [MOUNT_EXEC_MOUNT]   = "ExecMount",
+         [MOUNT_EXEC_UNMOUNT] = "ExecUnmount",
+diff --git a/src/core/mount.h b/src/core/mount.h
+index 1a0d9fc5e5..db4a915202 100644
+--- a/src/core/mount.h
++++ b/src/core/mount.h
+@@ -93,6 +93,8 @@ extern const UnitVTable mount_vtable;
+ 
+ void mount_fd_event(Manager *m, int events);
+ 
++char* mount_get_where_escaped(const Mount *m);
++
+ const char* mount_exec_command_to_string(MountExecCommand i) _const_;
+ MountExecCommand mount_exec_command_from_string(const char *s) _pure_;
+ 
+diff --git a/test/units/testsuite-07.mount-invalid-chars.sh b/test/units/testsuite-07.mount-invalid-chars.sh
+index a879334869..cd2ca78fdf 100755
+--- a/test/units/testsuite-07.mount-invalid-chars.sh
++++ b/test/units/testsuite-07.mount-invalid-chars.sh
+@@ -23,12 +23,13 @@ TMP_MOUNTINFO="$(mktemp)"
+ 
+ cp /proc/1/mountinfo "$TMP_MOUNTINFO"
+ # Add a mount entry with a "Unicode non-character" in it
+-LANG="C.UTF-8" printf '69 1 252:2 / /foo/mountinfo rw,relatime shared:1 - cifs //foo\ufffebar rw,seclabel\n' >>"$TMP_MOUNTINFO"
++LANG="C.UTF-8" printf '69 1 252:2 / /foo/mount\ufffeinfo rw,relatime shared:1 - cifs //foo\ufffebar rw,seclabel\n' >>"$TMP_MOUNTINFO"
+ mount --bind "$TMP_MOUNTINFO" /proc/1/mountinfo
+ systemctl daemon-reload
+ # On affected versions this would throw an error:
+ #   Failed to get properties: Bad message
+-systemctl status foo-mountinfo.mount
++systemctl list-units -t mount
++systemctl status foo-mount\\xef\\xbf\\xbeinfo.mount
+ 
+ umount /proc/1/mountinfo
+ systemctl daemon-reload

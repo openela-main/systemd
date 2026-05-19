@@ -1,0 +1,43 @@
+From 238dadc16fb2bb6ad2fef5602dac5cd2c9aa31ed Mon Sep 17 00:00:00 2001
+From: David Tardon <dtardon@redhat.com>
+Date: Thu, 30 May 2024 10:46:13 +0200
+Subject: [PATCH] cryptsetup-generator: continue parsing after error
+
+Let's make the crypttab parser more robust and continue even if parsing
+of a line failed.
+
+(cherry picked from commit 83813bae7ae471862ff84b038b5e4eaefae41c98)
+
+Resolves: RHEL-127859
+---
+ src/cryptsetup/cryptsetup-generator.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index 6ab3b85b6b..924a403ee5 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -828,7 +828,7 @@ static int add_crypttab_device(const char *name, const char *device,  const char
+ static int add_crypttab_devices(void) {
+         _cleanup_fclose_ FILE *f = NULL;
+         unsigned crypttab_line = 0;
+-        int r;
++        int r, ret = 0;
+ 
+         if (!arg_read_crypttab)
+                 return 0;
+@@ -863,12 +863,10 @@ static int add_crypttab_devices(void) {
+                         continue;
+                 }
+ 
+-                r = add_crypttab_device(name, device, keyspec, options);
+-                if (r < 0)
+-                        return r;
++                RET_GATHER(ret, add_crypttab_device(name, device, keyspec, options));
+         }
+ 
+-        return 0;
++        return ret;
+ }
+ 
+ static int add_proc_cmdline_devices(void) {

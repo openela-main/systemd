@@ -1,0 +1,38 @@
+From 9f940102616443911fff789aae63546c1da3138e Mon Sep 17 00:00:00 2001
+From: Luca Boccassi <luca.boccassi@gmail.com>
+Date: Tue, 18 Feb 2025 21:15:08 +0000
+Subject: [PATCH] shell completion: add kernel-identify/inspect verbs for
+ bootctl
+
+Follow-up for a05255981ba5b04f1cf54ea656fbce1dfd9c3a68
+Follow-up for 3e0a3a0259324b4c40a9a62c8506fe683cd0273b
+
+(cherry picked from commit 6a6d4c3f3c123a1cbb6770f1cae8c130a48333e1)
+
+Resolves: RHEL-108576
+---
+ shell-completion/bash/bootctl | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/shell-completion/bash/bootctl b/shell-completion/bash/bootctl
+index 0b7cef7871..328289e0cf 100644
+--- a/shell-completion/bash/bootctl
++++ b/shell-completion/bash/bootctl
+@@ -70,6 +70,7 @@ _bootctl() {
+         [STANDALONE]='help status install update remove is-installed random-seed systemd-efi-options list set-timeout set-timeout-oneshot'
+         [BOOTENTRY]='set-default set-oneshot'
+         [BOOLEAN]='reboot-to-firmware'
++        [FILE]='kernel-identify kernel-inspect'
+     )
+ 
+     for ((i=0; i < COMP_CWORD; i++)); do
+@@ -100,6 +101,9 @@ _bootctl() {
+         fi
+     elif __contains_word "$verb" ${VERBS[BOOLEAN]}; then
+         comps="yes no"
++    elif __contains_word "$verb" ${VERBS[FILE]}; then
++        comps=$( compgen -A file -- "$cur" )
++        compopt -o filenames
+     fi
+ 
+     COMPREPLY=( $(compgen -W '$comps' -- "$cur") )

@@ -1,0 +1,25 @@
+From 60180ce9e6f78cfaf20bb3b3f08c3395f11908a3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Jun 2023 18:55:52 +0200
+Subject: [PATCH] path tool: add some basic ansi highlighing
+
+(cherry picked from commit 17f06e97e4d07448b579086b2e0217f84236d634)
+
+Related: RHEL-137252
+---
+ src/path/path.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/path/path.c b/src/path/path.c
+index 6762e2c553..77361b43af 100644
+--- a/src/path/path.c
++++ b/src/path/path.c
+@@ -108,7 +108,7 @@ static int list_homes(void) {
+                         continue;
+                 }
+ 
+-                printf("%s: %s\n", path_table[i], p);
++                printf("%s%s:%s %s\n", ansi_highlight(), path_table[i], ansi_normal(), p);
+         }
+ 
+         return r;

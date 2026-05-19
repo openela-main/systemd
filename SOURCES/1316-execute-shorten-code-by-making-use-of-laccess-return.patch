@@ -1,0 +1,26 @@
+From f252ea93dbc029704c7c8fe408a60ee7effdc242 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 27 Jun 2023 11:19:31 +0200
+Subject: [PATCH] execute: shorten code by making use of laccess() return code
+ properly
+
+(cherry picked from commit b93d24e07d903d5860f20ec97849760091348d98)
+
+Related: RHEL-137252
+---
+ src/core/execute.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index b1f7eeca8a..0ae4640382 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -2447,7 +2447,7 @@ static int setup_exec_directory(
+                                 goto fail;
+ 
+                         if (is_dir(p, false) > 0 &&
+-                            (laccess(pp, F_OK) < 0 && errno == ENOENT)) {
++                            (laccess(pp, F_OK) == -ENOENT)) {
+ 
+                                 /* Hmm, the private directory doesn't exist yet, but the normal one exists? If so, move
+                                  * it over. Most likely the service has been upgraded from one that didn't use

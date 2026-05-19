@@ -1,0 +1,36 @@
+From c14ed0d0bf700b9959359004d5eef50d4d2db951 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 10 Jan 2023 14:08:41 +0100
+Subject: [PATCH] fundamental: fix compile check for explicit_bzero
+
+Our HAVE_* variables are defined to 0 or 1, so '#if defined(HAVE_*)' is always true.
+The variable is not defined when compiling for EFI though, so we need the
+additional guard.
+
+Fixup for 3f92dc2fd4070b213e6bc85263a9bef06ec9a486.
+
+(I don't want to do something like add -DHAVE_EXPLICIT_BZERO=0 to the commandline
+in src/efi/boot/meson.build, because this quite verbose. Our compilation commandlines
+are very long already. Let's instead keep this localized in this one spot in the
+source file.)x
+
+(cherry picked from commit 5deb391c6e6d2b8fd7b94234efea49cd6bee0d76)
+
+Resolves: RHEL-108568
+---
+ src/fundamental/memory-util-fundamental.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/fundamental/memory-util-fundamental.h b/src/fundamental/memory-util-fundamental.h
+index 8f50d8b8e1..e0ae33dc0d 100644
+--- a/src/fundamental/memory-util-fundamental.h
++++ b/src/fundamental/memory-util-fundamental.h
+@@ -11,7 +11,7 @@
+ 
+ #include "macro-fundamental.h"
+ 
+-#if defined(HAVE_EXPLICIT_BZERO)
++#if !defined(SD_BOOT) && HAVE_EXPLICIT_BZERO
+ static inline void *explicit_bzero_safe(void *p, size_t l) {
+         if (p && l > 0)
+                 explicit_bzero(p, l);

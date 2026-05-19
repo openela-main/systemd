@@ -1,0 +1,25 @@
+From c59f57077d76e7d21abfaa28fdeefb4bcfffba5d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Jun 2023 22:36:31 +0200
+Subject: [PATCH] execute: remove redundant assignment
+
+(cherry picked from commit d9e5137185e53ad7b8ec2ebbf23f0f990e23b4cb)
+
+Related: RHEL-137252
+---
+ src/core/execute.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/execute.h b/src/core/execute.h
+index fc0e138029..97666b0832 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -124,7 +124,7 @@ struct ExecRuntime {
+ };
+ 
+ typedef enum ExecDirectoryType {
+-        EXEC_DIRECTORY_RUNTIME = 0,
++        EXEC_DIRECTORY_RUNTIME,
+         EXEC_DIRECTORY_STATE,
+         EXEC_DIRECTORY_CACHE,
+         EXEC_DIRECTORY_LOGS,

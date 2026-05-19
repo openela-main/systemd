@@ -1,0 +1,79 @@
+From cf623677c7a565d1dc9ae1790a0bbfa63407e790 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 27 Jun 2023 11:09:03 +0200
+Subject: [PATCH] execute: when recursively chowning StateDirectory= when
+ spawning services, follow initial symlink
+
+It should be OK to allow one level of symlink for the various types of
+directories like StateDirectory=, LogsDirectory= and such.
+
+(cherry picked from commit d5602c16324ec545c82bb59a3d60a349da7c370c)
+
+Related: RHEL-137252
+---
+ src/core/execute.c           | 2 +-
+ src/shared/chown-recursive.c | 7 +++++--
+ src/shared/chown-recursive.h | 2 +-
+ src/test/test-chown-rec.c    | 2 +-
+ 4 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 404ca9fe94..913802dfc0 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -2521,7 +2521,7 @@ static int setup_exec_directory(
+                 /* Then, change the ownership of the whole tree, if necessary. When dynamic users are used we
+                  * drop the suid/sgid bits, since we really don't want SUID/SGID files for dynamic UID/GID
+                  * assignments to exist. */
+-                r = path_chown_recursive(pp ?: p, uid, gid, context->dynamic_user ? 01777 : 07777);
++                r = path_chown_recursive(pp ?: p, uid, gid, context->dynamic_user ? 01777 : 07777, AT_SYMLINK_FOLLOW);
+                 if (r < 0)
+                         goto fail;
+         }
+diff --git a/src/shared/chown-recursive.c b/src/shared/chown-recursive.c
+index bbc270d34b..eda0ebf554 100644
+--- a/src/shared/chown-recursive.c
++++ b/src/shared/chown-recursive.c
+@@ -111,12 +111,15 @@ int path_chown_recursive(
+                 const char *path,
+                 uid_t uid,
+                 gid_t gid,
+-                mode_t mask) {
++                mode_t mask,
++                int flags) {
+ 
+         _cleanup_close_ int fd = -1;
+         struct stat st;
+ 
+-        fd = open(path, O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NOATIME);
++        assert((flags & ~AT_SYMLINK_FOLLOW) == 0);
++
++        fd = open(path, O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOATIME|(FLAGS_SET(flags, AT_SYMLINK_FOLLOW) ? 0 : O_NOFOLLOW));
+         if (fd < 0)
+                 return -errno;
+ 
+diff --git a/src/shared/chown-recursive.h b/src/shared/chown-recursive.h
+index 00038c3b32..2aab8e7414 100644
+--- a/src/shared/chown-recursive.h
++++ b/src/shared/chown-recursive.h
+@@ -3,6 +3,6 @@
+ 
+ #include <sys/types.h>
+ 
+-int path_chown_recursive(const char *path, uid_t uid, gid_t gid, mode_t mask);
++int path_chown_recursive(const char *path, uid_t uid, gid_t gid, mode_t mask, int flags);
+ 
+ int fd_chown_recursive(int fd, uid_t uid, gid_t gid, mode_t mask);
+diff --git a/src/test/test-chown-rec.c b/src/test/test-chown-rec.c
+index 801b49f7b7..dcff17efec 100644
+--- a/src/test/test-chown-rec.c
++++ b/src/test/test-chown-rec.c
+@@ -104,7 +104,7 @@ TEST(chown_recursive) {
+         assert_se(st.st_gid == gid);
+         assert_se(has_xattr(p));
+ 
+-        assert_se(path_chown_recursive(t, 1, 2, 07777) >= 0);
++        assert_se(path_chown_recursive(t, 1, 2, 07777, 0) >= 0);
+ 
+         p = strjoina(t, "/dir");
+         assert_se(lstat(p, &st) >= 0);

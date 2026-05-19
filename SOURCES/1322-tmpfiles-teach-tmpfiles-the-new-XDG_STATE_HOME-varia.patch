@@ -1,0 +1,51 @@
+From cf207cd9f09bbab5482c88d6032119ac7ca19b10 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 27 Jun 2023 13:14:17 +0200
+Subject: [PATCH] tmpfiles: teach tmpfiles the new XDG_STATE_HOME variable too
+
+(cherry picked from commit b50aadaff22f9b3ad3bbcbfd2edd661456a5b4bf)
+
+Resolves: RHEL-137252
+---
+ man/tmpfiles.d.xml      | 4 ++--
+ src/tmpfiles/tmpfiles.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
+index 595b9f6934..d3aa4c4d86 100644
+--- a/man/tmpfiles.d.xml
++++ b/man/tmpfiles.d.xml
+@@ -722,7 +722,7 @@ d /tmp/foo/bar - - - bmA:1h -</programlisting></para>
+             <row>
+               <entry><literal>%L</literal></entry>
+               <entry>System or user log directory</entry>
+-              <entry>In <option>--user</option> mode, this is the same as <varname>$XDG_CONFIG_HOME</varname> with <filename index="false">/log</filename> appended, and <filename>/var/log</filename> otherwise.</entry>
++              <entry>In <option>--user</option> mode, this is the same as <varname>$XDG_STATE_HOME</varname> with <filename index="false">/log</filename> appended, and <filename>/var/log</filename> otherwise.</entry>
+             </row>
+             <xi:include href="standard-specifiers.xml" xpointer="m"/>
+             <xi:include href="standard-specifiers.xml" xpointer="M"/>
+@@ -730,7 +730,7 @@ d /tmp/foo/bar - - - bmA:1h -</programlisting></para>
+             <row>
+               <entry><literal>%S</literal></entry>
+               <entry>System or user state directory</entry>
+-              <entry>In <option>--user</option> mode, this is the same as <varname>$XDG_CONFIG_HOME</varname>, and <filename>/var/lib</filename> otherwise.</entry>
++              <entry>In <option>--user</option> mode, this is the same as <varname>$XDG_STATE_HOME</varname>, and <filename>/var/lib</filename> otherwise.</entry>
+             </row>
+             <row>
+               <entry><literal>%t</literal></entry>
+diff --git a/src/tmpfiles/tmpfiles.c b/src/tmpfiles/tmpfiles.c
+index 101e1a41a7..510440efb6 100644
+--- a/src/tmpfiles/tmpfiles.c
++++ b/src/tmpfiles/tmpfiles.c
+@@ -249,9 +249,9 @@ static int specifier_directory(char specifier, const void *data, const char *roo
+ 
+         static const struct table_entry paths_user[] = {
+                 [DIRECTORY_RUNTIME] = { SD_PATH_USER_RUNTIME              },
+-                [DIRECTORY_STATE] =   { SD_PATH_USER_CONFIGURATION        },
++                [DIRECTORY_STATE] =   { SD_PATH_USER_STATE_PRIVATE        },
+                 [DIRECTORY_CACHE] =   { SD_PATH_USER_STATE_CACHE          },
+-                [DIRECTORY_LOGS] =    { SD_PATH_USER_CONFIGURATION, "log" },
++                [DIRECTORY_LOGS] =    { SD_PATH_USER_STATE_PRIVATE, "log" },
+         };
+ 
+         const struct table_entry *paths;

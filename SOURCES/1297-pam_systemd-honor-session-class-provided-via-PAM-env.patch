@@ -1,0 +1,118 @@
+From d5d08290cf66a0c491a875345902d5c3bfeb6c5a Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Mon, 25 Aug 2025 15:09:36 +0200
+Subject: [PATCH] pam_systemd: honor session class provided via PAM environment
+
+Replaces #38638
+
+Co-authored-by: Lennart Poettering <lennart@poettering.net>
+(cherry picked from commit cf2630acaa87ded5ad99ea30ed4bd895e71ca503)
+
+Resolves: RHEL-109833
+
+[msekleta: this is absolutely minimal version of the ideas implemented in
+https://github.com/systemd/systemd/pull/30884. At this point I want to avoid
+big/risky backports and what I am proposing here should suffice.]
+---
+ man/pam_systemd.xml        | 11 ++++++++++-
+ src/login/logind-session.c |  5 +++--
+ src/login/logind-user.c    | 16 +++++++++++++++-
+ src/login/pam_systemd.c    |  6 ++++--
+ 4 files changed, 32 insertions(+), 6 deletions(-)
+
+diff --git a/man/pam_systemd.xml b/man/pam_systemd.xml
+index 60b8577822..55239ea3d7 100644
+--- a/man/pam_systemd.xml
++++ b/man/pam_systemd.xml
+@@ -95,8 +95,17 @@
+         <literal>lock-screen</literal> or <literal>background</literal>. See
+         <citerefentry><refentrytitle>sd_session_get_class</refentrytitle><manvolnum>3</manvolnum></citerefentry> for
+         details about the session class.</para></listitem>
+-      </varlistentry>
+ 
++        <para>If no session class is specified via either the PAM module option or via the
++        <varname>$XDG_SESSION_CLASS</varname> environment variable, the class is automatically chosen, depending on
++        various session parameters, such as the session type (if known), whether the session has a TTY or X11
++        display, and the user disposition. Note that various tools allow setting the session class for newly
++        allocated PAM sessions explicitly by means of the <varname>$XDG_SESSION_CLASS</varname> environment variable.
++        For example, classic UNIX cronjobs support environment variable assignments (see
++        <citerefentry project='man-pages'><refentrytitle>crontab</refentrytitle><manvolnum>5</manvolnum></citerefentry>),
++        which may be used to choose between the <constant>background</constant> and
++        <constant>background-light</constant> session class individually per cronjob.</para>
++      </varlistentry>
+       <varlistentry>
+         <term><varname>type=</varname></term>
+ 
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 5ba1e690ac..2ad05e3798 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -680,8 +680,9 @@ static int session_start_scope(Session *s, sd_bus_message *properties, sd_bus_er
+                                 s->user->slice,
+                                 description,
+                                 /* These two have StopWhenUnneeded= set, hence add a dep towards them */
+-                                STRV_MAKE(s->user->runtime_dir_service,
+-                                          s->user->service),
++                                s->class == SESSION_BACKGROUND_LIGHT ?
++                                STRV_MAKE(s->user->runtime_dir_service) :
++                                STRV_MAKE(s->user->runtime_dir_service, s->user->service),
+                                 after,
+                                 user_record_home_directory(s->user->user_record),
+                                 properties,
+diff --git a/src/login/logind-user.c b/src/login/logind-user.c
+index e02ad754ee..ffa32c6ce5 100644
+--- a/src/login/logind-user.c
++++ b/src/login/logind-user.c
+@@ -441,6 +441,19 @@ static int user_update_slice(User *u) {
+         return 0;
+ }
+ 
++static bool user_wants_service_manager(User *u) {
++        assert(u);
++
++        LIST_FOREACH(sessions_by_user, s, u->sessions)
++                if (s->class != SESSION_BACKGROUND_LIGHT)
++                        return true;
++
++        if (user_check_linger_file(u) > 0)
++                return true;
++
++        return false;
++}
++
+ int user_start(User *u) {
+         assert(u);
+ 
+@@ -464,7 +477,8 @@ int user_start(User *u) {
+         (void) user_update_slice(u);
+ 
+         /* Start user@UID.service */
+-        user_start_service(u);
++        if (user_wants_service_manager(u))
++                user_start_service(u);
+ 
+         if (!u->started) {
+                 if (!dual_timestamp_is_set(&u->timestamp))
+diff --git a/src/login/pam_systemd.c b/src/login/pam_systemd.c
+index a288b3602a..c7377e21a8 100644
+--- a/src/login/pam_systemd.c
++++ b/src/login/pam_systemd.c
+@@ -753,14 +753,16 @@ _public_ PAM_EXTERN int pam_sm_open_session(
+                  * (as they otherwise even try to update it!) — but cron doesn't actually allocate a TTY for its forked
+                  * off processes.) */
+                 type = "unspecified";
+-                class = "background";
++                if (isempty(class))
++                        class = "background";
+                 tty = NULL;
+ 
+         } else if (streq(tty, "ssh")) {
+                 /* ssh has been setting PAM_TTY to "ssh" (for the same reason as cron does this, see above. For further
+                  * details look for "PAM_TTY_KLUDGE" in the openssh sources). */
+                 type ="tty";
+-                class = "user";
++                if (isempty(class))
++                        class = "user";
+                 tty = NULL; /* This one is particularly sad, as this means that ssh sessions — even though usually
+                              * associated with a pty — won't be tracked by their tty in logind. This is because ssh
+                              * does the PAM session registration early for new connections, and registers a pty only

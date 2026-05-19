@@ -1,0 +1,39 @@
+From 25a4e8e1d411f56fcee5b53d1620c42f3bba16e6 Mon Sep 17 00:00:00 2001
+From: David Tardon <dtardon@redhat.com>
+Date: Thu, 30 May 2024 13:32:20 +0200
+Subject: [PATCH] cryptsetup-generator: parse all cmdline devices too
+
+(cherry picked from commit 47c703d949e84997d11d657fade68064c04a46c8)
+
+Related: RHEL-127859
+---
+ src/cryptsetup/cryptsetup-generator.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index 924a403ee5..1136f5aed7 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -870,7 +870,7 @@ static int add_crypttab_devices(void) {
+ }
+ 
+ static int add_proc_cmdline_devices(void) {
+-        int r;
++        int r, ret = 0;
+         crypto_device *d;
+ 
+         HASHMAP_FOREACH(d, arg_disks) {
+@@ -896,11 +896,10 @@ static int add_proc_cmdline_devices(void) {
+                                 d->headerdev,
+                                 d->options ?: arg_default_options,
+                                 "/proc/cmdline");
+-                if (r < 0)
+-                        return r;
++                RET_GATHER(ret, r);
+         }
+ 
+-        return 0;
++        return ret;
+ }
+ 
+ DEFINE_PRIVATE_HASH_OPS_WITH_VALUE_DESTRUCTOR(crypt_device_hash_ops, char, string_hash_func, string_compare_func,

@@ -1,0 +1,26 @@
+From 15ad0f0a0145640ee290d805030338f8c01051f4 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Wed, 23 Aug 2023 15:10:23 +0200
+Subject: [PATCH] test: use the correct file name when restoring the original
+ fstab
+
+(cherry picked from commit 9541addff028b56724df79fcf5b88e1544403957)
+
+Resolves: RHEL-108584
+---
+ test/units/testsuite-07.mount-invalid-chars.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/units/testsuite-07.mount-invalid-chars.sh b/test/units/testsuite-07.mount-invalid-chars.sh
+index 5a07d14d04..a879334869 100755
+--- a/test/units/testsuite-07.mount-invalid-chars.sh
++++ b/test/units/testsuite-07.mount-invalid-chars.sh
+@@ -52,7 +52,7 @@ systemctl daemon-reload
+ [[ "$(systemctl show -P UnitFileState foo-fstab-opt.mount)" == bad ]]
+ rm -f /etc/fstab
+ 
+-[[ -e /tmp/fstab.bak ]] && mv -f /tmp/fstab /etc/fstab
++[[ -e /tmp/fstab.bak ]] && mv -f /tmp/fstab.bak /etc/fstab
+ systemctl daemon-reload
+ 
+ # c) Mount unit

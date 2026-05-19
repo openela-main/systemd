@@ -1,0 +1,50 @@
+From c2dc44abd4014f13a40dde350af92e2d74201359 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Fri, 29 Dec 2023 17:57:59 +0800
+Subject: [PATCH] fd-util: don't eat up errors in fd_cloexec_many
+
+Follow-up for ed18c22c989495aab36512f03449222cfcf79aa7
+
+Before this commit, a successful fd_cloexec() call would
+discard all previously gathered errors.
+
+(cherry picked from commit 6b9cac874c33f4fa27aa4b4b5b980f60c28ee043)
+
+Resolves: RHEL-108598
+---
+ src/basic/fd-util.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/src/basic/fd-util.c b/src/basic/fd-util.c
+index 66bb7569bb..932c5a8d80 100644
+--- a/src/basic/fd-util.c
++++ b/src/basic/fd-util.c
+@@ -175,7 +175,7 @@ int fd_cloexec(int fd, bool cloexec) {
+ }
+ 
+ int fd_cloexec_many(const int fds[], size_t n_fds, bool cloexec) {
+-        int ret = 0, r;
++        int r = 0;
+ 
+         assert(n_fds == 0 || fds);
+ 
+@@ -183,14 +183,13 @@ int fd_cloexec_many(const int fds[], size_t n_fds, bool cloexec) {
+                 if (fds[i] < 0) /* Skip gracefully over already invalidated fds */
+                         continue;
+ 
+-                r = fd_cloexec(fds[i], cloexec);
+-                if (r < 0 && ret >= 0) /* Continue going, but return first error */
+-                        ret = r;
+-                else
+-                        ret = 1; /* report if we did anything */
++                RET_GATHER(r, fd_cloexec(fds[i], cloexec));
++
++                if (r >= 0)
++                        r = 1; /* report if we did anything */
+         }
+ 
+-        return ret;
++        return r;
+ }
+ 
+ _pure_ static bool fd_in_set(int fd, const int fdset[], size_t n_fdset) {

@@ -1,0 +1,52 @@
+From 762a8dc0c328e256847b111249bbff8e70f98942 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Fri, 19 May 2023 04:33:39 +0900
+Subject: [PATCH] sd-bus: refuse to send messages with an invalid string
+
+Prompted by aaf7b0e41105d7b7cf30912cdac32820f011a219 and
+4804da58536ab7ad46178a03f4d2da49fd8e4ba2.
+
+(cherry picked from commit 26a9dd6f55bb757e0033995cbb16bca12986b7cd)
+
+Resolves: RHEL-108584
+---
+ src/libsystemd/sd-bus/bus-message.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/src/libsystemd/sd-bus/bus-message.c b/src/libsystemd/sd-bus/bus-message.c
+index 213b276e33..c51af56dda 100644
+--- a/src/libsystemd/sd-bus/bus-message.c
++++ b/src/libsystemd/sd-bus/bus-message.c
+@@ -1324,12 +1324,21 @@ int message_append_basic(sd_bus_message *m, char type, const void *p, const void
+                  * into the empty string */
+                 p = strempty(p);
+ 
+-                _fallthrough_;
++                if (!utf8_is_valid(p))
++                        return -EINVAL;
++
++                align = 4;
++                sz = 4 + strlen(p) + 1;
++                break;
++
+         case SD_BUS_TYPE_OBJECT_PATH:
+ 
+                 if (!p)
+                         return -EINVAL;
+ 
++                if (!object_path_is_valid(p))
++                        return -EINVAL;
++
+                 align = 4;
+                 sz = 4 + strlen(p) + 1;
+                 break;
+@@ -1338,6 +1347,9 @@ int message_append_basic(sd_bus_message *m, char type, const void *p, const void
+ 
+                 p = strempty(p);
+ 
++                if (!signature_is_valid(p, /* allow_dict_entry = */ true))
++                        return -EINVAL;
++
+                 align = 1;
+                 sz = 1 + strlen(p) + 1;
+                 break;

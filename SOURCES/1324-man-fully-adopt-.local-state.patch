@@ -1,0 +1,41 @@
+From 7923e6b42174e74f01e6a41734783cf4fb4e85d2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 3 Jul 2024 10:18:37 +0200
+Subject: [PATCH] man: fully adopt ~/.local/state/
+
+The XDG base dir spec adopted ~/.local/state/ as a thing a while back,
+and we updated our docs in b4d6bc63e602048188896110a585aa7de1c70c9b, but
+forgot to to update the table at the bottom to fully reflect the update.
+Fix that.
+
+(cherry picked from commit 72a6296b16a75d4e26eec972f2999e69c9967b9d)
+
+Related: RHEL-137252
+---
+ man/file-hierarchy.xml | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/man/file-hierarchy.xml b/man/file-hierarchy.xml
+index 6104324519..7e059f1273 100644
+--- a/man/file-hierarchy.xml
++++ b/man/file-hierarchy.xml
+@@ -804,7 +804,7 @@
+         <tbody>
+           <row>
+       <entry><filename>~/.config/<replaceable>package</replaceable>/</filename></entry>
+-      <entry>User-specific configuration and state for the package. It is required to default to safe fallbacks if this configuration is missing.</entry>
++      <entry>User-specific configuration for the package. It is required to default to safe fallbacks if this configuration is missing.</entry>
+           </row>
+           <row>
+       <entry><filename><varname>$XDG_RUNTIME_DIR</varname>/<replaceable>package</replaceable>/</filename></entry>
+@@ -814,6 +814,10 @@
+       <entry><filename>~/.cache/<replaceable>package</replaceable>/</filename></entry>
+       <entry>Persistent cache data of the package. If this directory is flushed, the application should work correctly on next invocation, though possibly slowed down due to the need to rebuild any local cache files. The application must be capable of recreating this directory should it be missing and necessary.</entry>
+           </row>
++          <row>
++      <entry><filename>~/.local/state/<replaceable>package</replaceable>/</filename></entry>
++      <entry>Persistent state data of the package.</entry>
++          </row>
+         </tbody>
+       </tgroup>
+     </table>

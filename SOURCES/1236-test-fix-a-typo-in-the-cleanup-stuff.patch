@@ -1,0 +1,25 @@
+From e882eabc5c9115413db1e6d83f4542ad618fec23 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Mon, 22 May 2023 12:06:16 +0200
+Subject: [PATCH] test: fix a typo in the cleanup stuff
+
+(cherry picked from commit 7942811255f3d6973b246ebf6b26b690bbceab37)
+
+Resolves: RHEL-108584
+---
+ test/units/testsuite-07.mount-invalid-chars.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/units/testsuite-07.mount-invalid-chars.sh b/test/units/testsuite-07.mount-invalid-chars.sh
+index 617ea697c8..b70e621126 100755
+--- a/test/units/testsuite-07.mount-invalid-chars.sh
++++ b/test/units/testsuite-07.mount-invalid-chars.sh
+@@ -7,7 +7,7 @@ set -o pipefail
+ 
+ at_exit() {
+     mountpoint -q /proc/1/mountinfo && umount /proc/1/mountinfo
+-    [[ -e /tmp/fstab.bak ]] && mv -f /tmp/fstab /etc/fstab
++    [[ -e /tmp/fstab.bak ]] && mv -f /tmp/fstab.bak /etc/fstab
+     rm -f /run/systemd/system/foo-*.mount
+     systemctl daemon-reload
+ }

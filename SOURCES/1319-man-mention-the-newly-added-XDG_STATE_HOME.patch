@@ -1,0 +1,54 @@
+From 8ff3fbaf94ef1d179171d528a2d595ba9a2015e4 Mon Sep 17 00:00:00 2001
+From: Franklin Yu <franklinyu@google.com>
+Date: Thu, 25 May 2023 22:06:54 -0700
+Subject: [PATCH] man: mention the newly-added XDG_STATE_HOME
+
+The description is copied from config-home.
+
+Taken from: #27795
+
+(cherry picked from commit b4d6bc63e602048188896110a585aa7de1c70c9b)
+
+Related: RHEL-137252
+---
+ man/file-hierarchy.xml | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/man/file-hierarchy.xml b/man/file-hierarchy.xml
+index 4961f019f0..6943f386bc 100644
+--- a/man/file-hierarchy.xml
++++ b/man/file-hierarchy.xml
+@@ -518,13 +518,10 @@
+       <varlistentry>
+         <term><filename>~/.config/</filename></term>
+ 
+-        <listitem><para>Application configuration and state. When a
+-        new user is created, this directory will be empty or not exist
+-        at all. Applications should fall back to defaults should their
+-        configuration or state in this directory be missing. If an
+-        application finds <varname>$XDG_CONFIG_HOME</varname> set, it
+-        should use the directory specified in it instead of this
+-        directory.</para></listitem>
++        <listitem><para>Application configuration. When a new user is created, this directory will be empty
++        or not exist at all. Applications should fall back to defaults should their configuration in this
++        directory be missing. If an application finds <varname>$XDG_CONFIG_HOME</varname> set, it should use
++        the directory specified in it instead of this directory.</para></listitem>
+       </varlistentry>
+ 
+       <varlistentry>
+@@ -570,6 +567,15 @@
+         directory.</para></listitem>
+       </varlistentry>
+ 
++      <varlistentry>
++        <term><filename>~/.local/state/</filename></term>
++
++        <listitem><para>Application state. When a new user is created, this directory will be empty or not
++        exist at all. Applications should fall back to defaults should their state in this directory be
++        missing. If an application finds <varname>$XDG_STATE_HOME</varname> set, it should use the directory
++        specified in it instead of this directory.</para></listitem>
++      </varlistentry>
++
+     </variablelist>
+   </refsect1>
+ 

@@ -1,0 +1,57 @@
+From c5a486e8816778e6b3c6c9b02e1fb57d24f60252 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 26 Jun 2023 18:55:39 +0200
+Subject: [PATCH] sd-path: bring spacing in sd-path.h and systemd-path tool in
+ sync
+
+(cherry picked from commit 4bbfc9eac53a9bd1d239312e2572ad352e418d20)
+
+Related: RHEL-137252
+---
+ src/path/path.c       | 12 ++++++++----
+ src/systemd/sd-path.h |  1 +
+ 2 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/src/path/path.c b/src/path/path.c
+index 9d9b24d5e2..6762e2c553 100644
+--- a/src/path/path.c
++++ b/src/path/path.c
+@@ -62,18 +62,22 @@ static const char* const path_table[_SD_PATH_MAX] = {
+         [SD_PATH_SEARCH_CONFIGURATION]            = "search-configuration",
+ 
+         [SD_PATH_SYSTEMD_UTIL]                    = "systemd-util",
++
+         [SD_PATH_SYSTEMD_SYSTEM_UNIT]             = "systemd-system-unit",
+         [SD_PATH_SYSTEMD_SYSTEM_PRESET]           = "systemd-system-preset",
+         [SD_PATH_SYSTEMD_SYSTEM_CONF]             = "systemd-system-conf",
+-        [SD_PATH_SYSTEMD_SEARCH_SYSTEM_UNIT]      = "systemd-search-system-unit",
+-        [SD_PATH_SYSTEMD_SYSTEM_GENERATOR]        = "systemd-system-generator",
+-        [SD_PATH_SYSTEMD_SEARCH_SYSTEM_GENERATOR] = "systemd-search-system-generator",
+         [SD_PATH_SYSTEMD_USER_UNIT]               = "systemd-user-unit",
+         [SD_PATH_SYSTEMD_USER_PRESET]             = "systemd-user-preset",
+         [SD_PATH_SYSTEMD_USER_CONF]               = "systemd-user-conf",
++
++        [SD_PATH_SYSTEMD_SEARCH_SYSTEM_UNIT]      = "systemd-search-system-unit",
+         [SD_PATH_SYSTEMD_SEARCH_USER_UNIT]        = "systemd-search-user-unit",
+-        [SD_PATH_SYSTEMD_SEARCH_USER_GENERATOR]   = "systemd-search-user-generator",
++
++        [SD_PATH_SYSTEMD_SYSTEM_GENERATOR]        = "systemd-system-generator",
+         [SD_PATH_SYSTEMD_USER_GENERATOR]          = "systemd-user-generator",
++        [SD_PATH_SYSTEMD_SEARCH_SYSTEM_GENERATOR] = "systemd-search-system-generator",
++        [SD_PATH_SYSTEMD_SEARCH_USER_GENERATOR]   = "systemd-search-user-generator",
++
+         [SD_PATH_SYSTEMD_SLEEP]                   = "systemd-sleep",
+         [SD_PATH_SYSTEMD_SHUTDOWN]                = "systemd-shutdown",
+ 
+diff --git a/src/systemd/sd-path.h b/src/systemd/sd-path.h
+index 0c04e7c22e..a187cd6aee 100644
+--- a/src/systemd/sd-path.h
++++ b/src/systemd/sd-path.h
+@@ -83,6 +83,7 @@ enum {
+          * replaces "path" by "search"), since this API is about dirs/paths anyway, and contains "path"
+          * already in the prefix */
+         SD_PATH_SYSTEMD_UTIL,
++
+         SD_PATH_SYSTEMD_SYSTEM_UNIT,
+         SD_PATH_SYSTEMD_SYSTEM_PRESET,
+         SD_PATH_SYSTEMD_SYSTEM_CONF,
