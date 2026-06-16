@@ -1,0 +1,72 @@
+From cd6e9c951e745fce3e1b8bf5ddae551276ea564c Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 11 Dec 2018 11:59:39 +0100
+Subject: [PATCH] core: when a unit state changes only propagate to jobs after
+ reloading is complete
+
+Previously, we'd immediately propagate unit state changes into any jobs
+pending for them, always. With this we only do this if the manager is
+out of the "reload" state. This fixes the problem #8803 tried to
+address, by simply not completing jobs until after the reload (and thus
+reestablishment of the dbus connection) is complete.
+
+Note that there's no need to later on explicitly catch up with the
+missed job state changes (i.e. there's no need to call
+unit_process_job() later one explicitly). That's because for jobs in
+JOB_WAITING state on deserialization all jobs are requeued into the run
+queue anyway, and thus checked again if they can complete now. And for
+JOB_RUNNING jobs unit_catchup() phase is going to trigger missed out
+state changes *after* the reload complete anyway (after all that's what
+distinguishes from unit_coldplug()).
+
+Replaces: #8803
+(cherry picked from commit a1c7334b619de28ec20392628db3a0f46b5f0bdc)
+
+Related: RHEL-168671
+---
+ src/core/unit.c | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 9dada18378..29dea1f6db 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2379,7 +2379,6 @@ static bool unit_process_job(Job *j, UnitActiveState ns, UnitNotifyFlags flags)
+ }
+ 
+ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, UnitNotifyFlags flags) {
+-        bool unexpected;
+         Manager *m;
+ 
+         assert(u);
+@@ -2418,20 +2417,18 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, UnitNotifyFlag
+ 
+         unit_update_on_console(u);
+ 
+-        /* Let's propagate state changes to the job */
+-        if (u->job)
+-                unexpected = unit_process_job(u->job, ns, flags);
+-        else
+-                unexpected = true;
+-
+         if (!MANAGER_IS_RELOADING(m)) {
++                bool unexpected;
++
++                /* Let's propagate state changes to the job */
++                if (u->job)
++                        unexpected = unit_process_job(u->job, ns, flags);
++                else
++                        unexpected = true;
+ 
+-                /* If this state change happened without being
+-                 * requested by a job, then let's retroactively start
+-                 * or stop dependencies. We skip that step when
+-                 * deserializing, since we don't want to create any
+-                 * additional jobs just because something is already
+-                 * activated. */
++                /* If this state change happened without being requested by a job, then let's retroactively start or
++                 * stop dependencies. We skip that step when deserializing, since we don't want to create any
++                 * additional jobs just because something is already activated. */
+ 
+                 if (unexpected) {
+                         if (UNIT_IS_INACTIVE_OR_FAILED(os) && UNIT_IS_ACTIVE_OR_ACTIVATING(ns))

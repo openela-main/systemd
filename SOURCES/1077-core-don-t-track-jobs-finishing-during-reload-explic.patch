@@ -1,0 +1,135 @@
+From c9a7e899240de5af6c5756065b7c8ba38719bfd9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 10 Dec 2018 18:52:28 +0100
+Subject: [PATCH] core: don't track jobs-finishing-during-reload explicitly
+
+Memory management is borked for this, and moreover this is unnecessary
+since f0831ed2a03, i.e. since coldplug() and catchup() are two different
+concepts: the former restoring the state from before a reload, the
+latter than adjusting it again to the actual status in effect after the
+reload.
+
+Fixes: #10716
+Mostly reverts: #8803
+
+(cherry picked from commit 4a53080be637f6dad91515fc896d9f77fbc17f0c)
+
+Related: RHEL-168671
+---
+ src/core/job.c     | 21 +--------------------
+ src/core/job.h     |  1 -
+ src/core/manager.c | 14 --------------
+ src/core/manager.h |  3 ---
+ 4 files changed, 1 insertion(+), 38 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 9e6756caa2..30a0c8cd68 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -39,7 +39,6 @@ Job* job_new_raw(Unit *unit) {
+         j->manager = unit->manager;
+         j->unit = unit;
+         j->type = _JOB_TYPE_INVALID;
+-        j->reloaded = false;
+ 
+         return j;
+ }
+@@ -255,7 +254,6 @@ int job_install_deserialized(Job *j) {
+ 
+         *pj = j;
+         j->installed = true;
+-        j->reloaded = true;
+ 
+         if (j->state == JOB_RUNNING)
+                 j->unit->manager->n_running_jobs++;
+@@ -959,19 +957,6 @@ static void job_fail_dependencies(Unit *u, UnitDependency d) {
+         }
+ }
+ 
+-static int job_save_pending_finished_job(Job *j) {
+-        int r;
+-
+-        assert(j);
+-
+-        r = set_ensure_allocated(&j->manager->pending_finished_jobs, NULL);
+-        if (r < 0)
+-                return r;
+-
+-        job_unlink(j);
+-        return set_put(j->manager->pending_finished_jobs, j);
+-}
+-
+ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive, bool already) {
+         Unit *u;
+         Unit *other;
+@@ -1011,11 +996,7 @@ int job_finish_and_invalidate(Job *j, JobResult result, bool recursive, bool alr
+                 j->manager->n_failed_jobs++;
+ 
+         job_uninstall(j);
+-        /* Keep jobs started before the reload to send singal later, free all others */
+-        if (!MANAGER_IS_RELOADING(j->manager) ||
+-            !j->reloaded ||
+-            job_save_pending_finished_job(j) < 0)
+-                job_free(j);
++        job_free(j);
+ 
+         /* Fail depending jobs on failure */
+         if (result != JOB_DONE && recursive) {
+diff --git a/src/core/job.h b/src/core/job.h
+index 7b4d2e7317..f40010f38d 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -156,7 +156,6 @@ struct Job {
+         bool irreversible:1;
+         bool in_gc_queue:1;
+         bool ref_by_private_bus:1;
+-        bool reloaded:1;
+ };
+ 
+ Job* job_new(Unit *unit, JobType type);
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 51325f0212..f242f0cc00 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3450,17 +3450,6 @@ finish:
+         return r;
+ }
+ 
+-static void manager_flush_finished_jobs(Manager *m) {
+-        Job *j;
+-
+-        while ((j = set_steal_first(m->pending_finished_jobs))) {
+-                bus_job_send_removed_signal(j);
+-                job_free(j);
+-        }
+-
+-        m->pending_finished_jobs = set_free(m->pending_finished_jobs);
+-}
+-
+ int manager_reload(Manager *m) {
+         int r, q;
+         _cleanup_fclose_ FILE *f = NULL;
+@@ -3582,9 +3571,6 @@ int manager_reload(Manager *m) {
+         if (q < 0 && r >= 0)
+                 r = q;
+ 
+-        if (!MANAGER_IS_RELOADING(m))
+-                manager_flush_finished_jobs(m);
+-
+         m->send_reloading_done = true;
+ 
+         return r;
+diff --git a/src/core/manager.h b/src/core/manager.h
+index e713250238..a043a469a2 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -310,9 +310,6 @@ struct Manager {
+ 
+         /* non-zero if we are reloading or reexecuting, */
+         int n_reloading;
+-        /* A set which contains all jobs that started before reload and finished
+-         * during it */
+-        Set *pending_finished_jobs;
+ 
+         unsigned n_installed_jobs;
+         unsigned n_failed_jobs;

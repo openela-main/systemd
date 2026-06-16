@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.16
+Release:        82%{?dist}.17
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1125,6 +1125,12 @@ Patch1072: 1072-udev-check-for-invalid-chars-in-various-fields-recei.patch
 Patch1073: 1073-udev-fix-review-mixup.patch
 Patch1074: 1074-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
 Patch1075: 1075-core-manager-fix-memory-leak.patch
+Patch1076: 1076-job-update-job_free-to-follow-our-usual-return-NULL-.patch
+Patch1077: 1077-core-don-t-track-jobs-finishing-during-reload-explic.patch
+Patch1078: 1078-job-be-more-careful-when-removing-job-object-from-jo.patch
+Patch1079: 1079-core-rework-how-we-deserialize-jobs.patch
+Patch1080: 1080-core-when-a-unit-state-changes-only-propagate-to-job.patch
+Patch1081: 1081-core-extend-comments-regarding-coldplug-vs.-catchup.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1751,6 +1757,14 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Mon May 25 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.17
+- job: update job_free() to follow our usual return-NULL style (RHEL-168671)
+- core: don't track jobs-finishing-during-reload explicitly (RHEL-168671)
+- job: be more careful when removing job object from jobs hash table (RHEL-168671)
+- core: rework how we deserialize jobs (RHEL-168671)
+- core: when a unit state changes only propagate to jobs after reloading is complete (RHEL-168671)
+- core: extend comments regarding coldplug() vs. catchup() (RHEL-168671)
+
 * Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.16
 - core: validate input cgroup path more prudently (RHEL-152085)
 - nspawn: normalize pivot_root paths (RHEL-163868)

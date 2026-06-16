@@ -1,0 +1,142 @@
+From 2710b77aad881e18166dac0899431506cf364ca3 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 10 Dec 2018 19:40:37 +0100
+Subject: [PATCH] core: rework how we deserialize jobs
+
+Let's add a helper call unit_deserialize_job() for this purpose, and
+let's move registration in the global jobs hash table into
+job_install_deserialized() so that it it is done after all superficial
+checks are done, and before transitioning into installed states, so that
+rollback code is not necessary anymore.
+
+(cherry picked from commit b17c9620c87a1d8117da72b30a2e096df02a2bb5)
+
+Related: RHEL-168671
+---
+ src/core/job.c  | 22 +++++++++++++--------
+ src/core/job.h  |  2 ++
+ src/core/unit.c | 52 +++++++++++++++++++++++++------------------------
+ 3 files changed, 43 insertions(+), 33 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 9f9396312f..9b0c260f4f 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -238,19 +238,25 @@ Job* job_install(Job *j) {
+ 
+ int job_install_deserialized(Job *j) {
+         Job **pj;
++        int r;
+ 
+         assert(!j->installed);
+ 
+-        if (j->type < 0 || j->type >= _JOB_TYPE_MAX_IN_TRANSACTION) {
+-                log_debug("Invalid job type %s in deserialization.", strna(job_type_to_string(j->type)));
+-                return -EINVAL;
+-        }
++        if (j->type < 0 || j->type >= _JOB_TYPE_MAX_IN_TRANSACTION)
++                return log_unit_debug_errno(j->unit, -EINVAL,
++                                       "Invalid job type %s in deserialization.",
++                                       strna(job_type_to_string(j->type)));
+ 
+         pj = (j->type == JOB_NOP) ? &j->unit->nop_job : &j->unit->job;
+-        if (*pj) {
+-                log_unit_debug(j->unit, "Unit already has a job installed. Not installing deserialized job.");
+-                return -EEXIST;
+-        }
++        if (*pj)
++                return log_unit_debug_errno(j->unit, -EEXIST,
++                                            "Unit already has a job installed. Not installing deserialized job.");
++
++        r = hashmap_put(j->manager->jobs, UINT32_TO_PTR(j->id), j);
++        if (r == -EEXIST)
++                return log_unit_debug_errno(j->unit, r, "Job ID %" PRIu32 " already used, cannot deserialize job.", j->id);
++        if (r < 0)
++                return log_unit_debug_errno(j->unit, r, "Failed to insert job into jobs hash table: %m");
+ 
+         *pj = j;
+         j->installed = true;
+diff --git a/src/core/job.h b/src/core/job.h
+index f40010f38d..0dccc4225b 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -222,6 +222,8 @@ void job_add_to_gc_queue(Job *j);
+ int job_get_before(Job *j, Job*** ret);
+ int job_get_after(Job *j, Job*** ret);
+ 
++DEFINE_TRIVIAL_CLEANUP_FUNC(Job*, job_free);
++
+ const char* job_type_to_string(JobType t) _const_;
+ JobType job_type_from_string(const char *s) _pure_;
+ 
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 70e1d68ea4..9dada18378 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -3440,6 +3440,29 @@ void unit_serialize_item_format(Unit *u, FILE *f, const char *key, const char *f
+         fputc('\n', f);
+ }
+ 
++static int unit_deserialize_job(Unit *u, FILE *f) {
++        _cleanup_(job_freep) Job *j = NULL;
++        int r;
++
++        assert(u);
++        assert(f);
++
++        j = job_new_raw(u);
++        if (!j)
++                return log_oom();
++
++        r = job_deserialize(j, f);
++        if (r < 0)
++                return r;
++
++        r = job_install_deserialized(j);
++        if (r < 0)
++                return r;
++
++        TAKE_PTR(j);
++        return 0;
++}
++
+ int unit_deserialize(Unit *u, FILE *f, FDSet *fds) {
+         int r;
+ 
+@@ -3473,32 +3496,11 @@ int unit_deserialize(Unit *u, FILE *f, FDSet *fds) {
+ 
+                 if (streq(l, "job")) {
+                         if (v[0] == '\0') {
+-                                /* new-style serialized job */
+-                                Job *j;
+-
+-                                j = job_new_raw(u);
+-                                if (!j)
+-                                        return log_oom();
+-
+-                                r = job_deserialize(j, f);
+-                                if (r < 0) {
+-                                        job_free(j);
+-                                        return r;
+-                                }
+-
+-                                r = hashmap_put(u->manager->jobs, UINT32_TO_PTR(j->id), j);
+-                                if (r < 0) {
+-                                        job_free(j);
+-                                        return r;
+-                                }
+-
+-                                r = job_install_deserialized(j);
+-                                if (r < 0) {
+-                                        hashmap_remove(u->manager->jobs, UINT32_TO_PTR(j->id));
+-                                        job_free(j);
++                                /* New-style serialized job */
++                                r = unit_deserialize_job(u, f);
++                                if (r < 0)
+                                         return r;
+-                                }
+-                        } else  /* legacy for pre-44 */
++                        } else  /* Legacy for pre-44 */
+                                 log_unit_warning(u, "Update from too old systemd versions are unsupported, cannot deserialize job: %s", v);
+                         continue;
+                 } else if (streq(l, "state-change-timestamp")) {

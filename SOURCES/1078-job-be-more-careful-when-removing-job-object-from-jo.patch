@@ -1,0 +1,34 @@
+From ee856def59ca099ed0477d66538493ccfed51f46 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 10 Dec 2018 19:38:38 +0100
+Subject: [PATCH] job: be more careful when removing job object from jobs hash
+ table
+
+Let's validate that the ID is actually allocated to us before remove a
+job.
+
+This is relevant as various bits of code will call job_free() on
+partially set up Job objects, and we really shouldn't remove another job
+object accidentally from the hash table, when the set up didn't
+complete.
+
+(cherry picked from commit 48235ad6b7ef168e029d48701a08b62b616bcdd2)
+
+Related: RHEL-168671
+---
+ src/core/job.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 30a0c8cd68..9f9396312f 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -148,7 +148,7 @@ void job_uninstall(Job *j) {
+ 
+         unit_add_to_gc_queue(j->unit);
+ 
+-        hashmap_remove(j->manager->jobs, UINT32_TO_PTR(j->id));
++        hashmap_remove_value(j->manager->jobs, UINT32_TO_PTR(j->id), j);
+         j->installed = false;
+ }
+ 

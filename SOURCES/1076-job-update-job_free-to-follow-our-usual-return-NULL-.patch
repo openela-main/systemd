@@ -1,0 +1,48 @@
+From a403a9f149773b8c7900e9b32f72949e023b8e99 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 10 Dec 2018 18:52:11 +0100
+Subject: [PATCH] job: update job_free() to follow our usual return-NULL style
+
+(cherry picked from commit 728ba51e98959dfd9ad9f70cf6526b0a84b529a0)
+
+Related: RHEL-168671
+---
+ src/core/job.c | 4 ++--
+ src/core/job.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/job.c b/src/core/job.c
+index 55f36b928f..9e6756caa2 100644
+--- a/src/core/job.c
++++ b/src/core/job.c
+@@ -87,7 +87,7 @@ void job_unlink(Job *j) {
+         j->timer_event_source = sd_event_source_unref(j->timer_event_source);
+ }
+ 
+-void job_free(Job *j) {
++Job* job_free(Job *j) {
+         assert(j);
+         assert(!j->installed);
+         assert(!j->transaction_prev);
+@@ -100,7 +100,7 @@ void job_free(Job *j) {
+         sd_bus_track_unref(j->bus_track);
+         strv_free(j->deserialized_clients);
+ 
+-        free(j);
++        return mfree(j);
+ }
+ 
+ static void job_set_state(Job *j, JobState state) {
+diff --git a/src/core/job.h b/src/core/job.h
+index 189fea20ca..7b4d2e7317 100644
+--- a/src/core/job.h
++++ b/src/core/job.h
+@@ -162,7 +162,7 @@ struct Job {
+ Job* job_new(Unit *unit, JobType type);
+ Job* job_new_raw(Unit *unit);
+ void job_unlink(Job *job);
+-void job_free(Job *job);
++Job* job_free(Job *job);
+ Job* job_install(Job *j);
+ int job_install_deserialized(Job *j);
+ void job_uninstall(Job *j);
