@@ -1,0 +1,322 @@
+From e9dcdc8a757636eb96e7ae99b3b4f55dab289261 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Tue, 7 Apr 2026 11:16:42 +0200
+Subject: [PATCH] fstab-generator: support swap on network block devices
+
+Teach swap units to support the _netdev option as well, which should
+make swaps on iSCSI possible. This mirrors the logic we already have for
+regular mounts in both the fstab-generator and the core
+(mount.c/swap.c).
+
+Co-developed-by: Claude Opus 4.6 <noreply@anthropic.com>
+(cherry picked from commit 3d5bd67a2259e7a4edc27476d4cae049653c4414)
+
+Resolves: RHEL-166186
+---
+ man/systemd.swap.xml                          | 28 +++++++++--
+ src/core/swap.c                               | 46 ++++++++++++++++---
+ src/fstab-generator/fstab-generator.c         | 16 +++++--
+ src/shared/generator.c                        |  2 +-
+ .../systemd-remount-fs.service                |  0
+ .../sysroot.mount                             |  0
+ .../50-netdev-dependencies.conf               |  5 ++
+ .../dev-sdx1.swap                             | 10 ++++
+ .../systemd-remount-fs.service                |  0
+ .../remote-fs.target.requires/dev-sdx1.swap   |  1 +
+ .../50-netdev-dependencies.conf               |  5 ++
+ .../dev-sdx1.swap                             | 10 ++++
+ .../sysroot.mount                             |  0
+ .../remote-fs.target.requires/dev-sdx1.swap   |  1 +
+ .../test-21-swap-netdev.fstab.input           |  1 +
+ 15 files changed, 111 insertions(+), 14 deletions(-)
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected.container.sysroot/local-fs.target.wants/systemd-remount-fs.service
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected.container/initrd-usr-fs.target.requires/sysroot.mount
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.device.d/50-netdev-dependencies.conf
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.swap
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/local-fs.target.wants/systemd-remount-fs.service
+ create mode 120000 test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/remote-fs.target.requires/dev-sdx1.swap
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.device.d/50-netdev-dependencies.conf
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.swap
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.expected/initrd-usr-fs.target.requires/sysroot.mount
+ create mode 120000 test/test-fstab-generator/test-21-swap-netdev.fstab.expected/remote-fs.target.requires/dev-sdx1.swap
+ create mode 100644 test/test-fstab-generator/test-21-swap-netdev.fstab.input
+
+diff --git a/man/systemd.swap.xml b/man/systemd.swap.xml
+index 8287382eb6..6af8a31021 100644
+--- a/man/systemd.swap.xml
++++ b/man/systemd.swap.xml
+@@ -90,9 +90,15 @@
+       <para>The following dependencies are added unless <varname>DefaultDependencies=no</varname> is set:</para>
+ 
+       <itemizedlist>
+-        <listitem><para>Swap units automatically acquire a <varname>Conflicts=</varname> and a
++        <listitem><para>Local swap units automatically acquire a <varname>Conflicts=</varname> and a
+         <varname>Before=</varname> dependency on <filename>umount.target</filename> so that they are deactivated at
+         shutdown as well as a <varname>Before=swap.target</varname> dependency.</para></listitem>
++
++        <listitem><para>Network swap units (those with <option>_netdev</option> in their options) automatically acquire
++        <varname>After=</varname> dependencies on <filename>remote-fs-pre.target</filename> and
++        <filename>network.target</filename>, plus <varname>After=</varname> and <varname>Wants=</varname> dependencies
++        on <filename>network-online.target</filename>, and a <varname>Before=</varname> dependency on
++        <filename>remote-fs.target</filename> instead of <filename>swap.target</filename>.</para></listitem>
+       </itemizedlist>
+     </refsect2>
+   </refsect1>
+@@ -124,7 +130,8 @@
+ 
+         <listitem><para>With <option>noauto</option>, the swap unit
+         will not be added as a dependency for
+-        <filename>swap.target</filename>. This means that it will not
++        <filename>swap.target</filename> (or <filename>remote-fs.target</filename> for network swap devices,
++        see <option>_netdev</option> below). This means that it will not
+         be activated automatically during boot, unless it is pulled in
+         by some other unit. The <option>auto</option> option has the
+         opposite meaning and is the default.</para>
+@@ -136,8 +143,8 @@
+ 
+         <listitem><para>With <option>nofail</option>, the swap unit
+         will be only wanted, not required by
+-        <filename>swap.target</filename>. This means that the boot
+-        will continue even if this swap device is not activated
++        <filename>swap.target</filename> (or <filename>remote-fs.target</filename> for network swap
++        devices). This means that the boot will continue even if this swap device is not activated
+         successfully.</para>
+         </listitem>
+       </varlistentry>
+@@ -161,6 +168,19 @@
+         in <citerefentry><refentrytitle>systemd.mount</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
+         </para></listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><option>_netdev</option></term>
++
++        <listitem><para>Marks this swap device as requiring network access. This is useful for swap on
++        network block devices (e.g. iSCSI).</para>
++
++        <para>Network swap units are ordered between <filename>remote-fs-pre.target</filename> and
++        <filename>remote-fs.target</filename>, instead of being ordered before
++        <filename>swap.target</filename>. They also pull in <filename>network-online.target</filename> and
++        are ordered after it and <filename>network.target</filename>.</para>
++        </listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 5c83c4780f..10743d4b9d 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -253,6 +253,7 @@ static int swap_add_device_dependencies(Swap *s) {
+ }
+ 
+ static int swap_add_default_dependencies(Swap *s) {
++        SwapParameters *p;
+         int r;
+ 
+         assert(s);
+@@ -266,13 +267,46 @@ static int swap_add_default_dependencies(Swap *s) {
+         if (detect_container() > 0)
+                 return 0;
+ 
+-        /* swap units generated for the swap dev links are missing the
+-         * ordering dep against the swap target. */
+-        r = unit_add_dependency_by_name(UNIT(s), UNIT_BEFORE, SPECIAL_SWAP_TARGET, true, UNIT_DEPENDENCY_DEFAULT);
+-        if (r < 0)
+-                return r;
++        p = swap_get_parameters(s);
++
++        if (p && fstab_test_option(p->options, "_netdev\0")) {
++                /* Network swap devices (those with _netdev in options) are routed through
++                 * remote-fs.target instead of swap.target, mirroring how network mounts use
++                 * remote-fs.target instead of local-fs.target. This avoids an ordering cycle:
++                 * swap.target is pulled in at sysinit.target time, but network-online.target
++                 * only comes after basic.target which is after sysinit.target. */
++                r = unit_add_dependency_by_name(UNIT(s), UNIT_AFTER, SPECIAL_REMOTE_FS_PRE_TARGET,
++                                                /* add_reference= */ true, UNIT_DEPENDENCY_DEFAULT);
++                if (r < 0)
++                        return r;
++
++                r = unit_add_dependency_by_name(UNIT(s), UNIT_BEFORE, SPECIAL_REMOTE_FS_TARGET,
++                                                /* add_reference= */ true, UNIT_DEPENDENCY_DEFAULT);
++                if (r < 0)
++                        return r;
++
++                /* Pull in and order after network-online.target, analogous to
++                 * mount_add_default_network_dependencies() for network mounts. */
++                r = unit_add_dependency_by_name(UNIT(s), UNIT_AFTER, SPECIAL_NETWORK_TARGET,
++                                                /* add_reference= */ true, UNIT_DEPENDENCY_DEFAULT);
++                if (r < 0)
++                        return r;
++
++                r = unit_add_two_dependencies_by_name(UNIT(s), UNIT_WANTS, UNIT_AFTER, SPECIAL_NETWORK_ONLINE_TARGET,
++                                                      /* add_reference= */ true, UNIT_DEPENDENCY_DEFAULT);
++                if (r < 0)
++                        return r;
++        } else {
++                /* swap units generated for the swap dev links are missing the
++                 * ordering dep against the swap target. */
++                r = unit_add_dependency_by_name(UNIT(s), UNIT_BEFORE, SPECIAL_SWAP_TARGET,
++                                                /* add_reference= */ true, UNIT_DEPENDENCY_DEFAULT);
++                if (r < 0)
++                        return r;
++        }
+ 
+-        return unit_add_two_dependencies_by_name(UNIT(s), UNIT_BEFORE, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET, true, UNIT_DEPENDENCY_DEFAULT);
++        return unit_add_two_dependencies_by_name(UNIT(s), UNIT_BEFORE, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET,
++                                                 /* add_reference= */ true, UNIT_DEPENDENCY_DEFAULT);
+ }
+ 
+ static int swap_verify(Swap *s) {
+diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
+index 28677a2f39..7b417dd2d1 100644
+--- a/src/fstab-generator/fstab-generator.c
++++ b/src/fstab-generator/fstab-generator.c
+@@ -208,6 +208,7 @@ static int add_swap(
+ 
+         _cleanup_free_ char *name = NULL;
+         _cleanup_fclose_ FILE *f = NULL;
++        bool is_network;
+         int r;
+ 
+         assert(what);
+@@ -227,10 +228,12 @@ static int add_swap(
+                 return true;
+         }
+ 
+-        log_debug("Found swap entry what=%s makefs=%s growfs=%s pcrfs=%s noauto=%s nofail=%s",
++        is_network = fstab_test_option(options, "_netdev\0");
++
++        log_debug("Found swap entry what=%s makefs=%s growfs=%s pcrfs=%s noauto=%s nofail=%s netdev=%s",
+                   what,
+                   yes_no(flags & MOUNT_MAKEFS), yes_no(flags & MOUNT_GROWFS), yes_no(flags & MOUNT_PCRFS),
+-                  yes_no(flags & MOUNT_NOAUTO), yes_no(flags & MOUNT_NOFAIL));
++                  yes_no(flags & MOUNT_NOAUTO), yes_no(flags & MOUNT_NOFAIL), yes_no(is_network));
+ 
+         r = unit_name_from_path(what, ".swap", &name);
+         if (r < 0)
+@@ -271,6 +274,12 @@ static int add_swap(
+         if (r < 0)
+                 return r;
+ 
++        if (is_network) {
++                r = generator_write_device_deps(arg_dest, what, /* where= */ NULL, options);
++                if (r < 0)
++                        return r;
++        }
++
+         if (flags & MOUNT_MAKEFS) {
+                 r = generator_hook_up_mkswap(arg_dest, what);
+                 if (r < 0)
+@@ -284,7 +293,8 @@ static int add_swap(
+                 log_warning("%s: measuring swap devices is currently unsupported.", what);
+ 
+         if (!(flags & MOUNT_NOAUTO)) {
+-                r = generator_add_symlink(arg_dest, SPECIAL_SWAP_TARGET,
++                const char *target = is_network ? SPECIAL_REMOTE_FS_TARGET : SPECIAL_SWAP_TARGET;
++                r = generator_add_symlink(arg_dest, target,
+                                           (flags & MOUNT_NOFAIL) ? "wants" : "requires", name);
+                 if (r < 0)
+                         return r;
+diff --git a/src/shared/generator.c b/src/shared/generator.c
+index a688ba446c..5dc103400b 100644
+--- a/src/shared/generator.c
++++ b/src/shared/generator.c
+@@ -428,7 +428,7 @@ int generator_write_device_deps(
+         _cleanup_free_ char *node = NULL, *unit = NULL;
+         int r;
+ 
+-        if (fstab_is_extrinsic(where, opts))
++        if (where && fstab_is_extrinsic(where, opts))
+                 return 0;
+ 
+         if (!fstab_test_option(opts, "_netdev\0"))
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.container.sysroot/local-fs.target.wants/systemd-remount-fs.service b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.container.sysroot/local-fs.target.wants/systemd-remount-fs.service
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.container/initrd-usr-fs.target.requires/sysroot.mount b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.container/initrd-usr-fs.target.requires/sysroot.mount
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.device.d/50-netdev-dependencies.conf b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.device.d/50-netdev-dependencies.conf
+new file mode 100644
+index 0000000000..33d814c275
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.device.d/50-netdev-dependencies.conf
+@@ -0,0 +1,5 @@
++# Automatically generated by systemd-fstab-generator
++
++[Unit]
++After=network-online.target network.target
++Wants=network-online.target
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.swap b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.swap
+new file mode 100644
+index 0000000000..32f276c9e1
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/dev-sdx1.swap
+@@ -0,0 +1,10 @@
++# Automatically generated by systemd-fstab-generator
++
++[Unit]
++Documentation=man:fstab(5) man:systemd-fstab-generator(8)
++SourcePath=/etc/fstab
++After=blockdev@dev-sdx1.target
++
++[Swap]
++What=/dev/sdx1
++Options=_netdev
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/local-fs.target.wants/systemd-remount-fs.service b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/local-fs.target.wants/systemd-remount-fs.service
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/remote-fs.target.requires/dev-sdx1.swap b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/remote-fs.target.requires/dev-sdx1.swap
+new file mode 120000
+index 0000000000..00f0c5ce66
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected.sysroot/remote-fs.target.requires/dev-sdx1.swap
+@@ -0,0 +1 @@
++../dev-sdx1.swap
+\ No newline at end of file
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.device.d/50-netdev-dependencies.conf b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.device.d/50-netdev-dependencies.conf
+new file mode 100644
+index 0000000000..33d814c275
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.device.d/50-netdev-dependencies.conf
+@@ -0,0 +1,5 @@
++# Automatically generated by systemd-fstab-generator
++
++[Unit]
++After=network-online.target network.target
++Wants=network-online.target
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.swap b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.swap
+new file mode 100644
+index 0000000000..32f276c9e1
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/dev-sdx1.swap
+@@ -0,0 +1,10 @@
++# Automatically generated by systemd-fstab-generator
++
++[Unit]
++Documentation=man:fstab(5) man:systemd-fstab-generator(8)
++SourcePath=/etc/fstab
++After=blockdev@dev-sdx1.target
++
++[Swap]
++What=/dev/sdx1
++Options=_netdev
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/initrd-usr-fs.target.requires/sysroot.mount b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/initrd-usr-fs.target.requires/sysroot.mount
+new file mode 100644
+index 0000000000..e69de29bb2
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/remote-fs.target.requires/dev-sdx1.swap b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/remote-fs.target.requires/dev-sdx1.swap
+new file mode 120000
+index 0000000000..00f0c5ce66
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.expected/remote-fs.target.requires/dev-sdx1.swap
+@@ -0,0 +1 @@
++../dev-sdx1.swap
+\ No newline at end of file
+diff --git a/test/test-fstab-generator/test-21-swap-netdev.fstab.input b/test/test-fstab-generator/test-21-swap-netdev.fstab.input
+new file mode 100644
+index 0000000000..5f719a4202
+--- /dev/null
++++ b/test/test-fstab-generator/test-21-swap-netdev.fstab.input
+@@ -0,0 +1 @@
++/dev/sdx1  none  swap  _netdev  0 0

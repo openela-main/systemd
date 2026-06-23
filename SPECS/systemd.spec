@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        67%{?dist}.2
+Release:        67%{?dist}.4
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1410,6 +1410,12 @@ Patch1324: 1324-man-fully-adopt-.local-state.patch
 Patch1325: 1325-core-only-activate-transaction-that-contain-useful-j.patch
 Patch1326: 1326-manager-fix-scope-for-environment-generators.patch
 Patch1327: 1327-core-validate-input-cgroup-path-more-prudently.patch
+Patch1328: 1328-nspawn-apply-BindUser-Ephemeral-from-settings-file-o.patch
+Patch1329: 1329-nspawn-normalize-pivot_root-paths.patch
+Patch1330: 1330-udev-check-for-invalid-chars-in-various-fields-recei.patch
+Patch1331: 1331-udev-fix-review-mixup.patch
+Patch1332: 1332-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
+Patch1333: 1333-fstab-generator-support-swap-on-network-block-device.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2287,6 +2293,16 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Tue May 12 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.4
+- fstab-generator: support swap on network block devices (RHEL-166186)
+
+* Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.3
+- nspawn: apply BindUser/Ephemeral from settings file only if trusted (RHEL-163870)
+- nspawn: normalize pivot_root paths (RHEL-163870)
+- udev: check for invalid chars in various fields received from the kernel (RHEL-163876)
+- udev: fix review mixup (RHEL-163876)
+- udev/scsi-id: check for invalid chars in various fields received from the kernel (RHEL-163876)
+
 * Thu Apr 02 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.2
 - core: validate input cgroup path more prudently (RHEL-152082)
 
