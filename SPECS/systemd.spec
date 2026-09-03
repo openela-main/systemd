@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.17
+Release:        82%{?dist}.19
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1131,6 +1131,10 @@ Patch1078: 1078-job-be-more-careful-when-removing-job-object-from-jo.patch
 Patch1079: 1079-core-rework-how-we-deserialize-jobs.patch
 Patch1080: 1080-core-when-a-unit-state-changes-only-propagate-to-job.patch
 Patch1081: 1081-core-extend-comments-regarding-coldplug-vs.-catchup.patch
+Patch1082: 1082-execute-make-sure-to-call-into-PAM-after-initializin.patch
+Patch1083: 1083-pager-also-check-for-SUDO_UID.patch
+Patch1084: 1084-user-sessions-do-not-remove-etc-nologin.patch
+Patch1085: 1085-core-allow-manager_serialize-to-fail-correctly.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1757,6 +1761,14 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Mon Jul 27 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.19
+- user-sessions: do not remove /etc/nologin (RHEL-85520)
+- core: allow manager_serialize() to fail correctly (RHEL-112550)
+
+* Tue Jul 21 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.18
+- execute: make sure to call into PAM after initializing resource limits (RHEL-5986)
+- pager: also check for $SUDO_UID (RHEL-102942)
+
 * Mon May 25 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.17
 - job: update job_free() to follow our usual return-NULL style (RHEL-168671)
 - core: don't track jobs-finishing-during-reload explicitly (RHEL-168671)

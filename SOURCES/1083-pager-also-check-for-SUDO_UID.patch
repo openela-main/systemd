@@ -1,0 +1,129 @@
+From 0d84ad9bbb97007f0c998c873db7bc53f8413826 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 17 Jun 2026 15:55:56 +0200
+Subject: [PATCH] pager: also check for $SUDO_UID
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This returns to the original approach proposed in
+https://github.com/systemd/systemd/pull/17270. After review, the approach was
+changed to use sd_pid_get_owner_uid() instead. Back then, when running in a
+typical graphical session, sd_pid_get_owner_uid() would usually return the user
+UID, and when running under sudo, geteuid() would return 0, so we'd trigger the
+secure path.
+
+sudo may allocate a new session if is invoked outside of a session (depending
+on the PAM config). Since nowadays desktop environments usually start the user
+shell through user units, the typical shell in a terminal emulator is not part
+of a session, and when sudo is invoked, a new session is allocated, and
+sd_pid_get_owner_uid() returns 0 too. Technically, the code still works as
+documented in the man page, but in the common case, it doesn't do the expected
+thing.
+
+$ build/test-sd-login |& rg 'get_(owner_uid|cgroup|session)'
+sd_pid_get_session(0) → No data available
+sd_pid_get_owner_uid(0) → 1000
+sd_pid_get_cgroup(0) → /user.slice/user-1000.slice/user@1000.service/app.slice/app-ghostty-transient-5088.scope/surfaces/556FAF50BA40.scope
+
+$ sudo build/test-sd-login |& rg 'get_(owner_uid|cgroup|session)'
+sd_pid_get_session(0) → c289
+sd_pid_get_owner_uid(0) → 0
+sd_pid_get_cgroup(0) → /user.slice/user-0.slice/session-c289.scope
+
+I think it's worth checking for sudo because it is a common case used by users.
+There obviously are other mechanims, so the man page is extended to say that
+only some common mechanisms are supported, and to (again) recommend setting
+SYSTEMD_LESSSECURE explicitly. The other option would be to set "secure mode"
+by default. But this would create an inconvenience for users doing the right
+thing, running systemctl and other tools directly, because then they can't run
+privileged commands from the pager, e.g. to save the output to a file. (Or the
+user would need to explicitly set SYSTEMD_LESSSECURE. One option would be to
+set it always in the environment and to rely on sudo and other tools stripping
+it from the environment before running privileged code. But that is also fairly
+fragile and it obviously relies on the user doing a complicated setup to
+support a fairly common use case. I think this decreases usability of the
+system quite a bit. I don't think we should build solutions that work in
+priniciple, but are painfully inconvenient in common cases.)
+
+Fixes https://yeswehack.com/vulnerability-center/reports/346802.
+
+Also see https://github.com/polkit-org/polkit/pull/562, which adds support for
+$SUDO_UID/$SUDO_GID to pkexec.
+
+(cherry picked from commit cd93478af8b9dc69478d5667f113b67d175090fa)
+
+Resolves: RHEL-102942
+---
+ man/less-variables.xml |  9 +++++++--
+ src/basic/pager.c      | 29 +++++++++++++++++++----------
+ 2 files changed, 26 insertions(+), 12 deletions(-)
+
+diff --git a/man/less-variables.xml b/man/less-variables.xml
+index 5f3a53c8dd..e9f1fa0350 100644
+--- a/man/less-variables.xml
++++ b/man/less-variables.xml
+@@ -43,9 +43,14 @@
+       false, disabled. If <varname>$SYSTEMD_PAGERSECURE</varname> is not set at all, secure mode is enabled
+       if the effective UID is not the same as the owner of the login session, see <citerefentry
+       project='man-pages'><refentrytitle>geteuid</refentrytitle><manvolnum>2</manvolnum></citerefentry> and
+-      <citerefentry><refentrytitle>sd_pid_get_owner_uid</refentrytitle><manvolnum>3</manvolnum></citerefentry>.
++      <citerefentry><refentrytitle>sd_pid_get_owner_uid</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
++      or when running under
++      <citerefentry><refentrytitle>sudo</refentrytitle><manvolnum>8</manvolnum></citerefentry> or similar
++      tools (<varname>$SUDO_UID</varname> is set).
+       In secure mode, <option>LESSSECURE=1</option> will be set when invoking the pager, and the pager shall
+-      disable commands that open or create new files or start new subprocesses. When
++      disable commands that open or create new files or start new subprocesses. Note that this autodetection
++      only covers the most common mechanisms to elevate privileges and is intended as convenience. It is
++      recommended to explicitly set <varname>$SYSTEMD_PAGERSECURE</varname> or disable the pager. When
+       <varname>$SYSTEMD_PAGERSECURE</varname> is not set at all, pagers which are not known to implement
+       secure mode will not be used. (Currently only
+       <citerefentry><refentrytitle>less</refentrytitle><manvolnum>1</manvolnum></citerefentry> implements
+diff --git a/src/basic/pager.c b/src/basic/pager.c
+index c7e101235d..bea139a80a 100644
+--- a/src/basic/pager.c
++++ b/src/basic/pager.c
+@@ -44,6 +44,22 @@ _noreturn_ static void pager_fallback(void) {
+         _exit(EXIT_SUCCESS);
+ }
+ 
++static bool running_with_escalated_privileges(void) {
++        int r;
++
++        if (getenv("SUDO_UID"))
++                return true;
++
++        uid_t uid;
++        r = sd_pid_get_owner_uid(0, &uid);
++        if (r < 0) {
++                log_debug_errno(r, "sd_pid_get_owner_uid() failed, enabling pager secure mode: %m");
++                return true;
++        }
++
++        return uid != geteuid();
++}
++
+ int pager_open(bool no_pager, bool jump_to_end) {
+         _cleanup_close_pair_ int fd[2] = { -1, -1 };
+         const char *pager;
+@@ -113,16 +129,9 @@ int pager_open(bool no_pager, bool jump_to_end) {
+                  * know to be good. */
+                 int use_secure_mode = getenv_bool("SYSTEMD_PAGERSECURE");
+                 bool trust_pager = use_secure_mode >= 0;
+-                if (use_secure_mode == -ENXIO) {
+-                        uid_t uid;
+-
+-                        r = sd_pid_get_owner_uid(0, &uid);
+-                        if (r < 0)
+-                                log_debug_errno(r, "sd_pid_get_owner_uid() failed, enabling pager secure mode: %m");
+-
+-                        use_secure_mode = r < 0 || uid != geteuid();
+-
+-                } else if (use_secure_mode < 0) {
++                if (use_secure_mode == -ENXIO)
++                        use_secure_mode = running_with_escalated_privileges();
++                else if (use_secure_mode < 0) {
+                         log_warning_errno(use_secure_mode, "Unable to parse $SYSTEMD_PAGERSECURE, assuming true: %m");
+                         use_secure_mode = true;
+                 }

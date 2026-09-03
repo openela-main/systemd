@@ -1,0 +1,134 @@
+From d489e6c6315d20f695d6ed269de15fb3c204d082 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 9 Oct 2018 16:45:33 +0200
+Subject: [PATCH] core: allow manager_serialize() to fail correctly
+
+If manager_serialize() fails in the middle (which it hopefully doesn't)
+make sure to fix up m->n_reloading correctly again so that we don't
+leave it > 0 when it really shouldn't be.
+
+(cherry picked from commit 4daf832afaeac471085e56445a05218217bf5107)
+
+Resolves: RHEL-112550
+---
+ src/core/manager.c | 56 +++++++++++++++++++++++++++++-----------------
+ 1 file changed, 35 insertions(+), 21 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index f242f0cc00..406dad07b2 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3099,7 +3099,12 @@ int manager_open_serialization(Manager *m, FILE **_f) {
+         return 0;
+ }
+ 
+-int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
++int manager_serialize(
++                Manager *m,
++                FILE *f,
++                FDSet *fds,
++                bool switching_root) {
++
+         ManagerTimestamp q;
+         const char *t;
+         Iterator i;
+@@ -3145,8 +3150,10 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
+                 int copy;
+ 
+                 copy = fdset_put_dup(fds, m->notify_fd);
+-                if (copy < 0)
+-                        return copy;
++                if (copy < 0) {
++                        r = copy;
++                        goto finish;
++                }
+ 
+                 fprintf(f, "notify-fd=%i\n", copy);
+                 fprintf(f, "notify-socket=%s\n", m->notify_socket);
+@@ -3156,8 +3163,10 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
+                 int copy;
+ 
+                 copy = fdset_put_dup(fds, m->cgroups_agent_fd);
+-                if (copy < 0)
+-                        return copy;
++                if (copy < 0) {
++                        r = copy;
++                        goto finish;
++                }
+ 
+                 fprintf(f, "cgroups-agent-fd=%i\n", copy);
+         }
+@@ -3166,12 +3175,16 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
+                 int copy0, copy1;
+ 
+                 copy0 = fdset_put_dup(fds, m->user_lookup_fds[0]);
+-                if (copy0 < 0)
+-                        return copy0;
++                if (copy0 < 0) {
++                        r = copy0;
++                        goto finish;
++                }
+ 
+                 copy1 = fdset_put_dup(fds, m->user_lookup_fds[1]);
+-                if (copy1 < 0)
+-                        return copy1;
++                if (copy1 < 0) {
++                        r = copy1;
++                        goto finish;
++                }
+ 
+                 fprintf(f, "user-lookup=%i %i\n", copy0, copy1);
+         }
+@@ -3180,14 +3193,14 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
+ 
+         r = dynamic_user_serialize(m, f, fds);
+         if (r < 0)
+-                return r;
++                goto finish;
+ 
+         manager_serialize_uid_refs(m, f);
+         manager_serialize_gid_refs(m, f);
+ 
+         r = exec_runtime_serialize(m, f, fds);
+         if (r < 0)
+-                return r;
++                goto finish;
+ 
+         (void) fputc('\n', f);
+ 
+@@ -3200,24 +3213,25 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
+                 fputc('\n', f);
+ 
+                 r = unit_serialize(u, f, fds, !switching_root);
+-                if (r < 0) {
+-                        m->n_reloading--;
+-                        return r;
+-                }
++                if (r < 0)
++                        goto finish;
+         }
+ 
+-        assert(m->n_reloading > 0);
+-        m->n_reloading--;
+-
+         r = fflush_and_check(f);
+         if (r < 0)
+-                return r;
++                goto finish;
+ 
+         r = bus_fdset_add_all(m, fds);
+         if (r < 0)
+-                return r;
++                goto finish;
+ 
+-        return 0;
++        r = 0;
++
++finish:
++        assert(m->n_reloading > 0);
++        m->n_reloading--;
++
++        return r;
+ }
+ 
+ int manager_deserialize(Manager *m, FILE *f, FDSet *fds) {
