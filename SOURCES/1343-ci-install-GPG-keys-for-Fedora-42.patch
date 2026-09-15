@@ -1,0 +1,37 @@
+From cda6d4b858e72a5afc8241d7d3260f059196e28f Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Wed, 19 Aug 2026 12:24:43 +0200
+Subject: [PATCH] ci: install GPG keys for Fedora 42
+
+Fedora 42 is EOL and the official keyring doesn't have its keys anymore.
+This, in combination with a pretty old version of mkosi means we have to
+improvise a bit to get the old keys at the correct place, so we can
+bootstrap the tools tree with the old Fedora release.
+
+rhel-only: ci
+Related: RHEL-212086
+---
+ .github/workflows/mkosi.yml | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/.github/workflows/mkosi.yml b/.github/workflows/mkosi.yml
+index 0fa3141b5f..23375bdb13 100644
+--- a/.github/workflows/mkosi.yml
++++ b/.github/workflows/mkosi.yml
+@@ -66,6 +66,16 @@ jobs:
+     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+     - uses: systemd/mkosi@857838464970f1092cc0107f4b1df714d0744990
+ 
++    - name: Install GPG keys for Fedora 42
++      run: |
++        sudo mkdir -p /usr/share/distribution-gpg-keys
++        sudo apt-get install -y curl cpio rpm2cpio
++        tmpdir=$(mktemp -d)
++        curl -sL https://archives.fedoraproject.org/pub/archive/fedora/linux/releases/42/Server/x86_64/os/Packages/f/fedora-gpg-keys-42-1.noarch.rpm |
++          rpm2cpio | cpio -idmv -D "$tmpdir"
++        sudo mv "$tmpdir/etc/pki/rpm-gpg" /usr/share/distribution-gpg-keys/fedora
++        rm -rf "$tmpdir"
++
+     - name: Configure
+       run: |
+         tee mkosi.local.conf <<EOF

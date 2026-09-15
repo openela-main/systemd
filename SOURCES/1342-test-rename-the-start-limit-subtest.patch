@@ -1,0 +1,37 @@
+From 98d2d13e452da79efd40bff17143cbb6b8b9af81 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Wed, 19 Aug 2026 09:56:52 +0200
+Subject: [PATCH] test: rename the start limit subtest
+
+It uses the current upstream naming, unfortunately in RHEL 9 we still
+use the previous one, so the test was not picked up by the
+TEST-07-PID1's main test script.
+
+Also, unmask & enable the systemd-resolved service, as the old testing
+framework masks it by default.
+
+rhel-only: ci
+Related: RHEL-212086
+
+Follow-up for f18478c89e0f88eab88bb7f79ac021b6ebd28cb4.
+---
+ ...{TEST-07-PID1.start-limit.sh => testsuite-07.start-limit.sh} | 2 ++
+ 1 file changed, 2 insertions(+)
+ rename test/units/{TEST-07-PID1.start-limit.sh => testsuite-07.start-limit.sh} (93%)
+
+diff --git a/test/units/TEST-07-PID1.start-limit.sh b/test/units/testsuite-07.start-limit.sh
+similarity index 93%
+rename from test/units/TEST-07-PID1.start-limit.sh
+rename to test/units/testsuite-07.start-limit.sh
+index 93447452da..ebd8ac50ac 100755
+--- a/test/units/TEST-07-PID1.start-limit.sh
++++ b/test/units/testsuite-07.start-limit.sh
+@@ -15,6 +15,8 @@ at_exit() {
+ 
+ trap at_exit EXIT
+ 
++systemctl unmask systemd-resolved.service
++systemctl enable systemd-resolved.service
+ mkdir -p /run/systemd/system/systemd-resolved.service.d/
+ cat >/run/systemd/system/systemd-resolved.service.d/99-start-limit.conf <<EOF
+ [Unit]

@@ -1,0 +1,33 @@
+From 6135f5e91f0ee267c6210303a30b189e7bab6e83 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Tue, 3 Feb 2026 08:59:38 +0900
+Subject: [PATCH] github/linter: disable
+ ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT for super-linter
+
+Since super-linter 8.4.0, it is enabled by default and requires GITHUB_TOKEN.
+We do not provide GITHUB_TOKEN for the action, then it fails with the following:
+```
+Failed to get [GITHUB_TOKEN]. Terminating because status reports were explicitly enabled,
+but GITHUB_TOKEN was not provided.
+```
+
+Also, even if GITHUB_TOKEN is set, the feature provides annoying
+messages in each PR. See https://github.com/super-linter/super-linter/issues/7458
+So, let's disable the feature.
+
+(cherry picked from commit 90c71778d2bcccbdc70e740a8d706dadd49b8e69)
+
+Related: RHEL-212086
+---
+ .github/workflows/linter.yml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.github/workflows/linter.yml b/.github/workflows/linter.yml
+index a7749149ad..213eee9094 100644
+--- a/.github/workflows/linter.yml
++++ b/.github/workflows/linter.yml
+@@ -35,3 +35,4 @@ jobs:
+           MULTI_STATUS: false
+           VALIDATE_ALL_CODEBASE: false
+           VALIDATE_GITHUB_ACTIONS: true
++          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false

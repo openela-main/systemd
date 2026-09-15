@@ -1,0 +1,65 @@
+From 062b73944961fec7143b2c6ff596404043faed3f Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Mon, 20 Jul 2026 18:00:42 +0200
+Subject: [PATCH] ci: bump the mkosi job to Ubuntu Noble
+
+This should help with the missing pacman-package-manager package in the
+mkosi job.
+
+rhel-only: ci
+
+Related: RHEL-212086
+---
+ .github/workflows/mkosi.yml    | 4 ++--
+ mkosi.images/initrd/mkosi.conf | 2 +-
+ mkosi.images/system/mkosi.conf | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.github/workflows/mkosi.yml b/.github/workflows/mkosi.yml
+index 2694ba14ec..0fa3141b5f 100644
+--- a/.github/workflows/mkosi.yml
++++ b/.github/workflows/mkosi.yml
+@@ -48,7 +48,7 @@ permissions:
+ 
+ jobs:
+   ci:
+-    runs-on: ubuntu-22.04
++    runs-on: ubuntu-24.04
+     concurrency:
+       group: ${{ github.workflow }}-${{ matrix.distro }}-${{ matrix.release }}-${{ github.ref }}
+       cancel-in-progress: true
+@@ -64,7 +64,7 @@ jobs:
+ 
+     steps:
+     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+-    - uses: systemd/mkosi@070528fec478fc93af7ec057a5d2fd0045123c99
++    - uses: systemd/mkosi@857838464970f1092cc0107f4b1df714d0744990
+ 
+     - name: Configure
+       run: |
+diff --git a/mkosi.images/initrd/mkosi.conf b/mkosi.images/initrd/mkosi.conf
+index 8e38dc1b78..628a13fe37 100644
+--- a/mkosi.images/initrd/mkosi.conf
++++ b/mkosi.images/initrd/mkosi.conf
+@@ -8,7 +8,7 @@ Format=cpio
+ 
+ [Content]
+ BaseTrees=../../mkosi.output/base
+-ExtraTrees=../../mkosi.output/base-systemd
++ExtraTrees=../../mkosi.output/systemd
+ MakeInitrd=yes
+ Bootable=no
+ BuildPackages=
+diff --git a/mkosi.images/system/mkosi.conf b/mkosi.images/system/mkosi.conf
+index 9646bbefde..a28ba930e3 100644
+--- a/mkosi.images/system/mkosi.conf
++++ b/mkosi.images/system/mkosi.conf
+@@ -9,7 +9,7 @@ Dependencies=base
+ [Content]
+ Autologin=yes
+ BaseTrees=../../mkosi.output/base
+-ExtraTrees=../../mkosi.output/base-systemd
++ExtraTrees=../../mkosi.output/systemd
+ Packages=
+         acl
+         bash-completion

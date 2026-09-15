@@ -1,0 +1,29 @@
+From 1bc496b69c93fd05a822f37f9355fb92479caeb6 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Thu, 2 May 2024 09:45:02 +0200
+Subject: [PATCH] ci: explicitly disable multi status for Super-Linter
+
+The multi status feature requires $GITHUB_TOKEN, and since [0] it
+defaults to true. Since we don't need it, let's explicitly disable the
+feature.
+
+[0] https://github.com/super-linter/super-linter/commit/e6e6e1fa5f60e15d7e9b89248bb0809bea1c17e9
+
+(cherry picked from commit b160ac9c126d904358a83a18542e0a37d9ca0d5c)
+
+Related: RHEL-212086
+---
+ .github/workflows/linter.yml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.github/workflows/linter.yml b/.github/workflows/linter.yml
+index 31c7d790b1..a7749149ad 100644
+--- a/.github/workflows/linter.yml
++++ b/.github/workflows/linter.yml
+@@ -32,5 +32,6 @@ jobs:
+         uses: github/super-linter/slim@4ce20838b8ab83717e78138c5b3a1407148e0918
+         env:
+           DEFAULT_BRANCH: main
++          MULTI_STATUS: false
+           VALIDATE_ALL_CODEBASE: false
+           VALIDATE_GITHUB_ACTIONS: true

@@ -1,0 +1,29 @@
+From 3e4c712b1f9c36c83698117c4016d91e5a8341b5 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Mon, 20 Jul 2026 19:10:23 +0200
+Subject: [PATCH] ci: bump super-linter to v8.7.0
+
+So it recognizes the ubuntu-24.04 label.
+
+Taken from systemd/systemd@b82af8adcf4bdb27f35bc357e200dc3af4171bc7.
+
+rhel-only: ci
+
+Related: RHEL-212086
+---
+ .github/workflows/linter.yml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.github/workflows/linter.yml b/.github/workflows/linter.yml
+index 8dd3b075ad..31c7d790b1 100644
+--- a/.github/workflows/linter.yml
++++ b/.github/workflows/linter.yml
+@@ -29,7 +29,7 @@ jobs:
+           fetch-depth: 0
+ 
+       - name: Lint Code Base
+-        uses: github/super-linter/slim@01d3218744765b55c3b5ffbb27e50961e50c33c5
++        uses: github/super-linter/slim@4ce20838b8ab83717e78138c5b3a1407148e0918
+         env:
+           DEFAULT_BRANCH: main
+           VALIDATE_ALL_CODEBASE: false

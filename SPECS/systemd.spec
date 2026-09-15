@@ -21,7 +21,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        67%{?dist}.4
+Release:        67%{?dist}.6
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1416,6 +1416,16 @@ Patch1330: 1330-udev-check-for-invalid-chars-in-various-fields-recei.patch
 Patch1331: 1331-udev-fix-review-mixup.patch
 Patch1332: 1332-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
 Patch1333: 1333-fstab-generator-support-swap-on-network-block-device.patch
+Patch1334: 1334-core-increment-start-limit-counter-only-when-we-can-.patch
+Patch1335: 1335-TEST-07-PID1-wait-for-systemd-resolved-being-stopped.patch
+Patch1336: 1336-test-extend-start-limit-interval.patch
+Patch1337: 1337-ci-bump-the-mkosi-job-to-Ubuntu-Noble.patch
+Patch1338: 1338-ci-bump-super-linter-to-v8.7.0.patch
+Patch1339: 1339-ci-explicitly-disable-multi-status-for-Super-Linter.patch
+Patch1340: 1340-github-linter-disable-ENABLE_GITHUB_PULL_REQUEST_SUM.patch
+Patch1341: 1341-test-install-iscsi-gen-initiatorname-from-iscsi-init.patch
+Patch1342: 1342-test-rename-the-start-limit-subtest.patch
+Patch1343: 1343-ci-install-GPG-keys-for-Fedora-42.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2293,6 +2303,20 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Wed Aug 19 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.6
+- test: rename the start limit subtest (RHEL-212086)
+- ci: install GPG keys for Fedora 42 (RHEL-212086)
+
+* Mon Aug 03 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.5
+- core: increment start limit counter only when we can start the unit (RHEL-212086)
+- TEST-07-PID1: wait for systemd-resolved being stopped (RHEL-212086)
+- test: extend start limit interval (RHEL-212086)
+- ci: bump the mkosi job to Ubuntu Noble (RHEL-212086)
+- ci: bump super-linter to v8.7.0 (RHEL-212086)
+- ci: explicitly disable multi status for Super-Linter (RHEL-212086)
+- github/linter: disable ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT for super-linter (RHEL-212086)
+- test: install iscsi-gen-initiatorname from iscsi-initiator-utils (RHEL-212086)
+
 * Tue May 12 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.4
 - fstab-generator: support swap on network block devices (RHEL-166186)
 

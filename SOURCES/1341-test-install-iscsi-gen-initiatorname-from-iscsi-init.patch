@@ -1,0 +1,32 @@
+From 5681e5a191f194d7c984b3f27b10c9e3285c8582 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Mon, 20 Jul 2026 20:17:23 +0200
+Subject: [PATCH] test: install iscsi-gen-initiatorname from
+ iscsi-initiator-utils
+
+The iscsi-init.service started quite recently [0] depending on an
+external script instead of using an inline one. Let's install it into
+the test image to make the iSCSI-related tests happy again.
+
+[0] https://gitlab.com/redhat/centos-stream/rpms/iscsi-initiator-utils/-/commit/d864f8c6e2acda4e6131e334771c9c9d987dc0dc
+
+rhel-only: ci
+
+Related: RHEL-212086
+---
+ test/test-functions | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/test-functions b/test/test-functions
+index 52eff07510..76fc1f5437 100644
+--- a/test/test-functions
++++ b/test/test-functions
+@@ -1036,7 +1036,7 @@ install_iscsi() {
+     # Install client-side stuff ("initiator" in iSCSI jargon) - Open-iSCSI in this case
+     # (open-iscsi on Debian, iscsi-initiator-utils on Fedora, etc.)
+     if [[ -z "$inst" || "$inst" =~ (client|initiator) ]]; then
+-        image_install iscsi-iname iscsiadm iscsid iscsistart
++        image_install iscsi-iname iscsiadm iscsid iscsistart iscsi-gen-initiatorname
+         image_install -o "${ROOTLIBDIR:?}"/system/iscsi-{init,onboot,shutdown}.service
+         image_install "${ROOTLIBDIR:?}"/system/iscsid.{service,socket}
+         image_install "${ROOTLIBDIR:?}"/system/iscsi.service
