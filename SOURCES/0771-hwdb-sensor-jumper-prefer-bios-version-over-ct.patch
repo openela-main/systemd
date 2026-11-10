@@ -1,0 +1,41 @@
+From db92174cafe1836c25f0483ed1b7fe2701bf8f87 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 16:02:14 +0100
+Subject: [PATCH] hwdb: sensor: jumper prefer bios version over ct
+
+(cherry picked from commit d60181d2355c6f6d19e5e4e3acbfe17cb17f3d26)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 8ce4654440..5fc33da6c1 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -601,20 +601,17 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svniOTA:pnIOTA2210:*    # 360
+ # Jumper
+ #########################################
+ 
+-# EZpad mini 3
+-sensor:modalias:acpi:BOSC0200*:dmi:bvnINSYDECorp.:bvrjumperx.T87.KFBNEE:*
++sensor:modalias:acpi:BOSC0200:*:dmi:bvnINSYDECorp.:bvrjumperx.T87.KFBNEE:*                # EZpad mini 3
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+-# EZpad 6 Pro
+-sensor:modalias:acpi:BOSC0200*:dmi:*:svnJumper:pnEZpad:*:rvr.A006:*
++sensor:modalias:acpi:BOSC0200:*:dmi:*:svnJumper:pnEZpad:*:rvr.A006:*                      # EZpad 6 Pro
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+-# EZpad 7
+-sensor:modalias:acpi:KIOX0009*:dmi:*:bvrJumper12x.WJ2012.bsBKRCP*:svnJumper:pnEZpad:*
++sensor:modalias:acpi:KIOX0009:*:dmi:*:bvrJumper12x.WJ2012.bsBKRCP*:svnJumper:pnEZpad:*    # EZpad 7
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ # EZpad Go
+-sensor:modalias:acpi:KIOX000A*:dmi:bvnAmericanMegatrendsInc.:*:svnjumper:pnEZpad:*:ct31:*
++sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvrZB-BI-11.6-SF133AR200-059-J:*:svnjumper:pnEZpad:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################

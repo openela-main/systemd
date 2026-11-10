@@ -1,0 +1,32 @@
+From d7f062a04e4734f167948c63a1f1151bae31485d Mon Sep 17 00:00:00 2001
+From: Thomas Kopp <thomas.kopp@microchip.com>
+Date: Wed, 5 Aug 2026 21:06:56 +0200
+Subject: [PATCH] hwdb: Add accelerometer matrix for SHIFTbook 1
+
+Fixes autorotation on the SHIFTbook 1
+
+(cherry picked from commit a01c001bf3b61923a441cf64eecfa38eb2213231)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 8d6e5213eb..b1034182e4 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -1001,6 +1001,13 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svnRCA:pnW101SA23T1:*    # W101SA23T1
+ sensor:modalias:acpi:BOSC0200*:dmi:bvnAmericanMegatrendsInc.:bvrSCH12i.WJ210Z.KtBJRCA*:*    # SCT101CTM
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
++#########################################
++# Shift
++#########################################
++
++sensor:modalias:acpi:SMOCF00:*:dmi:*:svnSHIFT:pnSHIFT13mi:*    # SHIFTbook 1
++ ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
++
+ #########################################
+ # Teclast
+ #########################################

@@ -1,0 +1,30 @@
+From 984103a72dfc3e8ccdcdc7767ca4529f791fc98c Mon Sep 17 00:00:00 2001
+From: RiskoZS <riskozoslovenska+git@gmail.com>
+Date: Sun, 17 May 2026 16:28:52 -0400
+Subject: [PATCH] hwdb: Add keymap for Lenovo 15IRX9 (#42141)
+
+This adds a mapping for the Fn+F9 key (used to launch Lenovo Vantage
+on Windows) on the Lenovo LOQ 15IRX9 gaming laptop.
+
+(cherry picked from commit 4b2a88fe07123fe394fcaa251bf132802914d3b3)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index fa3e4fb154..fedf9dcc5a 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1197,6 +1197,10 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO:pn21LG:pvr*
+  KEYBOARD_KEY_0a=!9
+  KEYBOARD_KEY_0b=!0
+ 
++# Lenovo LOQ 15IRX9 (83DV)
++evdev:atkbd:dmi:*:svnLENOVO:pn*:pvrLOQ15IRX9:*
++ KEYBOARD_KEY_81=prog1 # Fn+F9; Lenovo Vantage key
++
+ # Lenovo Legion Go Translated
+ evdev:name:AT Translated Set 2 keyboard:dmi:*:svnLENOVO:pn83E1:*
+ # Lenovo Legion Go S Translated

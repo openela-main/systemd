@@ -1,0 +1,28 @@
+From 3e1a9b3e8a1b566e135f357aa4302c25e3d645fd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 02:50:15 +0100
+Subject: [PATCH] hwdb: sensor: purism in-line comment
+
+(cherry picked from commit 7e1f8ba2e3b359725881eba927696847ea79202a)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index a2bc66fe57..85ed6fced8 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -950,9 +950,8 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnProwise:pnPT301:*    # PT301
+ # Purism
+ #########################################
+ 
+-# Librem 11 (SeaBIOS + PureBoot)
+-sensor:modalias:acpi:MXC6655*:dmi:*:svnPurism:pnLibrem11:*
+-sensor:modalias:acpi:MXC6655*:dmi:*:svnPurism:pnlibrem_11:*
++sensor:modalias:acpi:MXC6655:*:dmi:*:svnPurism:pnLibrem11:*     # Librem 11 (with SeaBIOS)
++sensor:modalias:acpi:MXC6655:*:dmi:*:svnPurism:pnlibrem_11:*    # Librem 11 (with PureBoot)
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, -1
+ 
+ #########################################

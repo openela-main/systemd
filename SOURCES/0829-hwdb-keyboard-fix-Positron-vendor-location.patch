@@ -1,0 +1,46 @@
+From 95129aa9fb802d6a17dc13a757e9788d5030f1e0 Mon Sep 17 00:00:00 2001
+From: Mikhail Novosyolov <m.novosyolov@rosalinux.ru>
+Date: Wed, 11 Mar 2026 22:27:58 +0300
+Subject: [PATCH] hwdb/keyboard: fix Positron vendor location
+
+Move lines without changing them.
+Fixes: 9aad3336f ("hwdb/keyboard: Map FN key on Positron Proxima 15")
+(https://github.com/systemd/systemd/pull/40929)
+
+(cherry picked from commit 43cca8348a90409a3c3b8125ed6356b15fbd1e3b)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index bd2e07788f..59aeef6b6f 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1810,6 +1810,14 @@ evdev:input:b0003v258Ap001E*
+  KEYBOARD_KEY_700a6=brightnessup
+  KEYBOARD_KEY_70066=sleep
+ 
++###########################################################
++# Positron
++###########################################################
++
++# Positron Proxima 15 (G1569)
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svn*Positron*:pnG1569*:*
++ KEYBOARD_KEY_6e=fn
++
+ ###########################################################
+ # Purism
+ ###########################################################
+@@ -2135,10 +2143,6 @@ evdev:atkbd:dmi:*:svnTUXEDO:*:rvnNB02:*
+ evdev:atkbd:dmi:*:svnTUXEDO:*:rnDN50Z-140HC-YD:*
+  KEYBOARD_KEY_6e=fn
+ 
+-# Positron Proxima 15 (G1569)
+-evdev:atkbd:dmi:bvn*:bvr*:bd*:svn*Positron*:pnG1569*:*
+- KEYBOARD_KEY_6e=fn
+-
+ ###########################################################
+ # VIA
+ ###########################################################

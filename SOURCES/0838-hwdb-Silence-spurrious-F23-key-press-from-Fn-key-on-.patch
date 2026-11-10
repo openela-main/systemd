@@ -1,0 +1,33 @@
+From f685e4d5346e71176535f4e98892cac32f94977b Mon Sep 17 00:00:00 2001
+From: Tobias Heider <tobias.heider@canonical.com>
+Date: Wed, 1 Apr 2026 11:17:16 +0200
+Subject: [PATCH] hwdb: Silence spurrious F23 key-press from Fn key on Thinkpad
+ T14s
+
+The Thinkpad T14s Gen 6 (Snapdragon) emits a F23 key press when
+pressing the Fn key. Silence them since the keyboard doesn't
+actually have a F23 key.
+
+(cherry picked from commit 51164fd9fcce758a3597c43d89e56a36bc5a01de)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index ce3750a36a..a83c7e4b94 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1214,6 +1214,11 @@ evdev:name:AT Raw Set 2 keyboard:dmi:*:svnLENOVO:pn83N0:*
+ evdev:name:AT Raw Set 2 keyboard:dmi:*:svnLENOVO:pn83N1:*
+  KEYBOARD_KEY_20=f16 # Power button long press
+ 
++# Lenovo Thinkpad T14s Gen 6 (Snapdragon)
++evdev:name:hid-over-i2c 04F3:000D Keyboard:dmi:bvn*:bvr*:bd*:svnLENOVO:pn21N1*:*
++evdev:name:hid-over-i2c 04F3:000D Keyboard:dmi:bvn*:bvr*:bd*:svnLENOVO:pn21N2*:*
++ KEYBOARD_KEY_70072=unknown # Silence spurious F23 key-press report from Fn key
++
+ ###########################################################
+ # LG
+ ###########################################################

@@ -1,0 +1,45 @@
+From 3b79c376b878330f0dab7f768a8b2ccf6e192788 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jos=C3=A9=20Miguel=20Sarasola?= <alosarjos@gmail.com>
+Date: Tue, 5 May 2026 21:20:59 +0200
+Subject: [PATCH] hwdb: add SOUND_FORM_FACTOR for Edifier M60 and Fractal Scape
+ Dongle
+
+(cherry picked from commit 852fcf5134db04fccc4988decc4c5e8a33914700)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-sound-card.hwdb | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/hwdb.d/70-sound-card.hwdb b/hwdb.d/70-sound-card.hwdb
+index f9ceeacb7d..340e6b54e3 100644
+--- a/hwdb.d/70-sound-card.hwdb
++++ b/hwdb.d/70-sound-card.hwdb
+@@ -20,6 +20,13 @@
+ # Allowed properties are:
+ #   SOUND_FORM_FACTOR
+ 
++###########################################################
++# Bestechnic (Edifier)
++###########################################################
++# Edifier M60
++usb:v2D99pA094*
++ SOUND_FORM_FACTOR=speaker
++
+ ###########################################################
+ # Corsair
+ ###########################################################
+@@ -27,6 +34,13 @@
+ usb:v1B1Cp0A51*
+  SOUND_FORM_FACTOR=headset
+ 
++###########################################################
++# Fractal
++###########################################################
++# Fractal Scape Dongle
++usb:v36BCp0001*
++ SOUND_FORM_FACTOR=headset
++
+ ###########################################################
+ # Microsoft
+ ###########################################################

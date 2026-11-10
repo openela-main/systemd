@@ -1,0 +1,135 @@
+From 73f66207da99d5f577a4be1cbcf34030e5b4a9b4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 28 Mar 2025 18:45:23 +0100
+Subject: [PATCH] test-display-quota: add a little helper binary to show quota
+ on tmpfs
+
+quota from quota project fails:
+$ quota
+quota: Cannot stat() mounted device tmpfs: No such file or directory
+quota: Cannot stat() mounted device tmpfs: No such file or directory
+
+Having this helper helped me understand what is going on with the quotas when
+the tests failed. I think it'd be useful to keep it around for now, even though
+it is not actually connected in the tests.
+
+(cherry picked from commit cb6b1611622ee717d4d6e9251fa41652b8ba8e2f)
+
+Related: RHEL-143028
+---
+ src/test/meson.build          |  4 ++
+ src/test/test-display-quota.c | 90 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 94 insertions(+)
+ create mode 100644 src/test/test-display-quota.c
+
+diff --git a/src/test/meson.build b/src/test/meson.build
+index 5dd9e3b8bd..0f5de6a5d0 100644
+--- a/src/test/meson.build
++++ b/src/test/meson.build
+@@ -277,6 +277,10 @@ executables += [
+                 'dependencies' : lib_openssl_or_gcrypt,
+                 'conditions' : ['HAVE_OPENSSL_OR_GCRYPT'],
+         },
++        test_template + {
++                'sources' : files('test-display-quota.c'),
++                'type' : 'manual',
++        },
+         test_template + {
+                 'sources' : files('test-dlopen-so.c'),
+                 'dependencies' : [
+diff --git a/src/test/test-display-quota.c b/src/test/test-display-quota.c
+new file mode 100644
+index 0000000000..57e8352826
+--- /dev/null
++++ b/src/test/test-display-quota.c
+@@ -0,0 +1,90 @@
++/* SPDX-License-Identifier: LGPL-2.1-or-later */
++
++#include "bitfield.h"
++#include "fd-util.h"
++#include "log.h"
++#include "main-func.h"
++#include "missing_syscall.h"
++#include "quota-util.h"
++#include "strv.h"
++#include "userdb.h"
++#include "user-util.h"
++
++static int show_quota(uid_t uid, const char *path) {
++        int r;
++
++        _cleanup_close_ int fd = open(path, O_DIRECTORY|O_CLOEXEC);
++        if (fd < 0)
++                return log_error_errno(errno, "Failed to open '%s': %m", path);
++
++        struct dqblk req;
++        r = quotactl_fd_with_fallback(fd, QCMD_FIXED(Q_GETQUOTA, USRQUOTA), uid, &req);
++        if (r == -ESRCH) {
++                log_info_errno(r, "No quota set on %s for UID "UID_FMT": %m", path, uid);
++                return 0;
++        }
++        if (ERRNO_IS_NEG_NOT_SUPPORTED(r))
++                return log_warning_errno(r, "No UID quota support on %s: %m", path);
++        if (ERRNO_IS_NEG_PRIVILEGE(r))
++                return log_error_errno(r, "Lacking privileges to query UID quota on %s: %m", path);
++        if (r < 0)
++                return log_error_errno(r, "Failed to query disk quota on %s for UID "UID_FMT": %m", path, uid);
++
++        printf("** Quota on %s for UID "UID_FMT" **\n"
++               "block hardlimit:   %"PRIu64"\n"
++               "block softlimit:   %"PRIu64"\n"
++               "blocks current:    %"PRIu64"\n"
++               "inodes hardlimit:  %"PRIu64"\n"
++               "inodes softlimit:  %"PRIu64"\n"
++               "inodes current:    %"PRIu64"\n"
++               "excess block time: %"PRIu64"\n"
++               "excess inode time: %"PRIu64"\n"
++               "validity mask:     0x%"PRIx32,
++               path, uid,
++               req.dqb_bhardlimit,
++               req.dqb_bsoftlimit,
++               req.dqb_curspace,
++               req.dqb_ihardlimit,
++               req.dqb_isoftlimit,
++               req.dqb_curinodes,
++               req.dqb_btime,
++               req.dqb_itime,
++               req.dqb_valid);
++
++        const char* fields[] = {"BLIMITS", "SPACE", "INODES", "BTIME", "ITIME"};
++        bool first = true;
++        for (size_t i = 0; i < ELEMENTSOF(fields); i++)
++                if (BIT_SET(req.dqb_valid, i)) {
++                        printf("%c%s", first ? ' ' : '|', fields[i]);
++                        first = false;
++                }
++        printf("%s\n", first ? "(none)" : "");
++
++        return 0;
++}
++
++static int run(int argc, char **argv) {
++        int r;
++
++        if (argc < 2)
++                return log_error_errno(SYNTHETIC_ERRNO(EINVAL),
++                                       "This program requires at least one argument\n"
++                                       "syntax: test-display-quota USER PATH…");
++
++        const char *user = argv[1];
++        _cleanup_(user_record_unrefp) UserRecord *ur = NULL;
++        r = userdb_by_name(user, /* match= */ NULL, USERDB_PARSE_NUMERIC|USERDB_SUPPRESS_SHADOW, &ur);
++        if (r < 0)
++                return log_error_errno(r, "Failed to resolve user '%s': %m", user);
++
++        if (!uid_is_valid(ur->uid))
++                return log_error_errno(SYNTHETIC_ERRNO(ENOMSG), "User '%s' lacks UID.", ur->user_name);
++
++        r = 0;
++        STRV_FOREACH(path, strv_skip(argv, 2))
++                RET_GATHER(r, show_quota(ur->uid, *path));
++
++        return r;
++}
++
++DEFINE_MAIN_FUNCTION(run);

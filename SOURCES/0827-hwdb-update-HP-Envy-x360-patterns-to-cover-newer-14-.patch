@@ -1,0 +1,27 @@
+From 55e66af1706fa77a05814dd88759f06fb3abd7b5 Mon Sep 17 00:00:00 2001
+From: Andrii Zora <anaxarsys@gmail.com>
+Date: Sat, 7 Mar 2026 17:24:28 +0200
+Subject: [PATCH] hwdb: update HP Envy x360 patterns to cover newer 14-fc0xxx
+ models
+
+Signed-off-by: Andrii Zora <anaxarsys@gmail.com>
+(cherry picked from commit 42e3801efc05dc8787a473a351c138fa91a29049)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 61f9737fb3..bd2e07788f 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -713,7 +713,7 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnHP*:pnHPENVYx360Convertible13*:*
+ evdev:name:Intel HID events:dmi:bvn*:bvr*:bd*:svnHP*:pn*HP[sS][pP][eE][cC][tT][rR][eE]*x3602-in-1*:*
+ # ENVY x360
+ evdev:name:Intel HID events:dmi:bvn*:bvr*:bd*:svnHP*:pnHPENVYx360Convertible*:*
+-evdev:name:Intel HID events:dmi:bvn*:bvr*:bd*:svnHP*:pnHPENVYx3602-in-1*:*
++evdev:name:Intel HID events:dmi:bvn*:bvr*:bd*:svnHP*:pnHP[eE][nN][vV][yY]x3602-in-1*:*
+  KEYBOARD_KEY_08=unknown                                #  Prevents random airplane mode activation
+ 
+ # HP Elite x2 1013 G3

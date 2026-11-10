@@ -1,0 +1,26 @@
+From 3b5bb427ad451d592bdf6e7271234a39cb6fce96 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:11:01 +0100
+Subject: [PATCH] hwdb: sensor: microtech in-line comment
+
+(cherry picked from commit c53f6f438d224c9cc39414019bac2afe4ecad0ee)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index a448583db6..892eb20606 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -771,8 +771,7 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:rvnMETAPHYUNI:rnMetawillBook01:*    # Meta
+ # Microtech
+ #########################################
+ 
+-# Microtech e-tab Pro
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnMicrotech:pne-tabPro:*
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnMicrotech:pne-tabPro:*    # Microtech e-tab Pro
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

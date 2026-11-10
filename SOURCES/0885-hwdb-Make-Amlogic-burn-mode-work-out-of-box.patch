@@ -1,0 +1,33 @@
+From d63bf6e49a07ab1d229f3f11e1d10849c537667f Mon Sep 17 00:00:00 2001
+From: Nicholas Lim <niclimcy@lineageos.org>
+Date: Sat, 4 Jul 2026 18:06:01 +0800
+Subject: [PATCH] hwdb: Make Amlogic burn mode work out-of-box
+
+(cherry picked from commit 67f72f17653753b1f067a6ed5027b2334b5e7602)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-debug-appliance.hwdb | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/hwdb.d/70-debug-appliance.hwdb b/hwdb.d/70-debug-appliance.hwdb
+index 8f535f750b..701df4b77d 100644
+--- a/hwdb.d/70-debug-appliance.hwdb
++++ b/hwdb.d/70-debug-appliance.hwdb
+@@ -5,6 +5,16 @@
+ # Permitted keys:
+ #   ID_DEBUG_APPLIANCE=?*
+ 
++# Amlogic devices in burn mode
++# Used to interact with devices over Worldcup / ADNL protocol, see:
++# https://wiki.coreelec.org/coreelec:aml_usb_tool
++#
++# The idVendor and idProduct used are documented in source code here:
++# https://github.com/superna9999/pyamlboot/blob/d2857f4371bcdb7a90d885f24987e03b6d647a8a/PROTOCOL.md?plain=1#L17
++usb:v1B8EpC003*
++usb:v1B8EpC004*
++ ID_DEBUG_APPLIANCE=aml_burn_mode
++
+ # Samsung devices in download mode
+ # Used to interact with devices over Odin protocol, see:
+ # https://en.wikipedia.org/wiki/Odin_(firmware_flashing_software)

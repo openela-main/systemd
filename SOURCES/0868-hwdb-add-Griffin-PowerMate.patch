@@ -1,0 +1,30 @@
+From 9198a073a37a0c69d85b1a19066fb4fd933679c2 Mon Sep 17 00:00:00 2001
+From: AsciiWolf <mail@asciiwolf.com>
+Date: Wed, 3 Jun 2026 22:32:08 +0200
+Subject: [PATCH] hwdb: add Griffin PowerMate
+
+(cherry picked from commit 7bce482c355899cea624ecba52629e986b8e880e)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-av-production.hwdb | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb.d/70-av-production.hwdb b/hwdb.d/70-av-production.hwdb
+index 67462a5dc2..6c0fd6104e 100644
+--- a/hwdb.d/70-av-production.hwdb
++++ b/hwdb.d/70-av-production.hwdb
+@@ -122,6 +122,13 @@ usb:v0FD9p0084*
+ usb:v0FD9p0086*
+  ID_AV_PRODUCTION_CONTROLLER=1
+ 
++################
++# Griffin
++################
++# PowerMate
++usb:v077Dp0410*
++ ID_AV_PRODUCTION_CONTROLLER=1
++
+ #############################
+ # Hercules (Guillemot Corp)
+ #############################

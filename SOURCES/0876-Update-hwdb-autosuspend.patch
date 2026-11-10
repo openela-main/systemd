@@ -1,0 +1,59 @@
+From b14abcabdd04c7cd4a72f6069299bedee643bc51 Mon Sep 17 00:00:00 2001
+From: Luca Boccassi <luca.boccassi@gmail.com>
+Date: Tue, 16 Jun 2026 12:31:34 +0100
+Subject: [PATCH] Update hwdb autosuspend
+
+ninja -C build update-hwdb-autosuspend
+
+(cherry picked from commit 9decc099ce04637612a1f32d8eea82224a11ece0)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-autosuspend-fingerprint-reader.hwdb | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/hwdb.d/60-autosuspend-fingerprint-reader.hwdb b/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
+index 32bfa5ad7b..e9d7311fea 100644
+--- a/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
++++ b/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
+@@ -81,6 +81,12 @@ usb:v1C7Ap0571*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 
++# Supported by libfprint driver egis_etu905
++usb:v1C7Ap05AE*
++usb:v1C7Ap9201*
++ ID_AUTOSUSPEND=1
++ ID_PERSIST=0
++
+ # Supported by libfprint driver egismoc
+ usb:v1C7Ap0582*
+ usb:v1C7Ap0583*
+@@ -189,9 +195,11 @@ usb:v2808pA959*
+ usb:v2808pA99A*
+ usb:v2808pA57A*
+ usb:v2808pA78A*
++usb:v2808pA97A*
+ usb:v2808p1579*
+ usb:v2808p077A*
+ usb:v2808p079A*
++usb:v2808p5158*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 
+@@ -245,6 +253,7 @@ usb:v27C6p6512*
+ usb:v27C6p6890*
+ usb:v27C6p689A*
+ usb:v27C6p66A9*
++usb:v27C6p6984*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 
+@@ -291,6 +300,7 @@ usb:v06CBp0174*
+ usb:v06CBp019D*
+ usb:v06CBp019F*
+ usb:v06CBp01A0*
++usb:v06CBp01A4*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 

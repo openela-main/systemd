@@ -1,0 +1,129 @@
+From aa2f389a0844384dc0ecfda291ddb5e4f2afbc40 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 10 Jan 2025 15:31:44 +0100
+Subject: [PATCH] homectl: add support for configuring tmpfs limits
+
+(cherry picked from commit 2b2aebf4dd695d52cf8b6cbd38ba57affdc5a6bb)
+
+Resolves: RHEL-143028
+---
+ man/homectl.xml    | 16 +++++++++++++
+ src/home/homectl.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 73 insertions(+)
+
+diff --git a/man/homectl.xml b/man/homectl.xml
+index d08972c421..adad89c54a 100644
+--- a/man/homectl.xml
++++ b/man/homectl.xml
+@@ -792,6 +792,22 @@
+         <xi:include href="version-info.xml" xpointer="v245"/></listitem>
+       </varlistentry>
+ 
++      <varlistentry>
++        <term><option>--tmp-limit=<replaceable>BYTES</replaceable></option></term>
++        <term><option>--tmp-limit=<replaceable>PERCENT</replaceable></option></term>
++        <term><option>--dev-shm-limit=<replaceable>BYTES</replaceable></option></term>
++        <term><option>--dev-shm-limit=<replaceable>PERCENT</replaceable></option></term>
++
++        <listitem><para>Controls the per-user quota on <filename>/tmp/</filename> and
++        <filename>/dev/shm/</filename> that is applied when the user logs in. Takes either an absolute value
++        in bytes (with the usual K, M, G, T suffixes to the base of 1024), or a percentage. In the latter
++        case the limit is applied relative to the size of the respective file system. This limit is only
++        applied if the relevant file system is <literal>tmpfs</literal> and has no effect otherwise. Note
++        that if these options are not used, a default quota might still be enforced (typically 80%.)</para>
++
++        <xi:include href="version-info.xml" xpointer="v258"/></listitem>
++      </varlistentry>
++
+       <varlistentry>
+         <term><option>--storage=<replaceable>STORAGE</replaceable></option></term>
+ 
+diff --git a/src/home/homectl.c b/src/home/homectl.c
+index 6d5aec1602..c99663ffea 100644
+--- a/src/home/homectl.c
++++ b/src/home/homectl.c
+@@ -2854,6 +2854,9 @@ static int help(int argc, char *argv[], void *userdata) {
+                "     --memory-max=BYTES        Set maximum memory limit\n"
+                "     --cpu-weight=WEIGHT       Set CPU weight\n"
+                "     --io-weight=WEIGHT        Set IO weight\n"
++               "     --tmp-limit=BYTES|PERCENT Set limit on /tmp/\n"
++               "     --dev-shm-limit=BYTES|PERCENT\n"
++               "                               Set limit on /dev/shm/\n"
+                "\n%4$sStorage User Record Properties:%5$s\n"
+                "     --storage=STORAGE         Storage type to use (luks, fscrypt, directory,\n"
+                "                               subvolume, cifs)\n"
+@@ -3002,6 +3005,8 @@ static int parse_argv(int argc, char *argv[]) {
+                 ARG_PROMPT_NEW_USER,
+                 ARG_AVATAR,
+                 ARG_LOGIN_BACKGROUND,
++                ARG_TMP_LIMIT,
++                ARG_DEV_SHM_LIMIT,
+                 ARG_MATCH,
+         };
+ 
+@@ -3103,6 +3108,8 @@ static int parse_argv(int argc, char *argv[]) {
+                 { "blob",                         required_argument, NULL, 'b'                             },
+                 { "avatar",                       required_argument, NULL, ARG_AVATAR                      },
+                 { "login-background",             required_argument, NULL, ARG_LOGIN_BACKGROUND            },
++                { "tmp-limit",                    required_argument, NULL, ARG_TMP_LIMIT                   },
++                { "dev-shm-limit",                required_argument, NULL, ARG_DEV_SHM_LIMIT               },
+                 { "match",                        required_argument, NULL, ARG_MATCH                       },
+                 {}
+         };
+@@ -4541,6 +4548,56 @@ static int parse_argv(int argc, char *argv[]) {
+                         break;
+                 }
+ 
++                case ARG_TMP_LIMIT:
++                case ARG_DEV_SHM_LIMIT: {
++                        const char *field =
++                                    c == ARG_TMP_LIMIT ? "tmpLimit" :
++                                c == ARG_DEV_SHM_LIMIT ? "devShmLimit" : NULL;
++                        const char *field_scale =
++                                    c == ARG_TMP_LIMIT ? "tmpLimitScale" :
++                                c == ARG_DEV_SHM_LIMIT ? "devShmLimitScale" : NULL;
++
++                        assert(field);
++                        assert(field_scale);
++
++                        if (isempty(optarg)) {
++                                r = drop_from_identity(field);
++                                if (r < 0)
++                                        return r;
++                                r = drop_from_identity(field_scale);
++                                if (r < 0)
++                                        return r;
++                                break;
++                        }
++
++                        r = parse_permyriad(optarg);
++                        if (r < 0) {
++                                uint64_t u;
++
++                                r = parse_size(optarg, 1024, &u);
++                                if (r < 0)
++                                        return log_error_errno(r, "Failed to parse %s/%s parameter: %s", field, field_scale, optarg);
++
++                                r = sd_json_variant_set_field_unsigned(&arg_identity_extra, field, u);
++                                if (r < 0)
++                                        return log_error_errno(r, "Failed to set %s field: %m", field);
++
++                                r = drop_from_identity(field_scale);
++                                if (r < 0)
++                                        return r;
++                        } else {
++                                r = sd_json_variant_set_field_unsigned(&arg_identity_extra, field_scale, UINT32_SCALE_FROM_PERMYRIAD(r));
++                                if (r < 0)
++                                        return log_error_errno(r, "Failed to set %s field: %m", field_scale);
++
++                                r = drop_from_identity(field);
++                                if (r < 0)
++                                        return r;
++                        }
++
++                        break;
++                }
++
+                 case ARG_MATCH:
+                         if (streq(optarg, "any"))
+                                 match_identity = &arg_identity_extra;

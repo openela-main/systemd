@@ -1,0 +1,26 @@
+From e193d68be23bb7a9bd12a7bd55d4d35eb891af48 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 02:52:32 +0100
+Subject: [PATCH] hwdb: sensor: rca in-line comment
+
+(cherry picked from commit e86bac6d89a275f5064056be9977e12a6d7fffae)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 14815a3dca..868f0597aa 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -964,7 +964,8 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:rvnReeder:rnA8iW-Rev.A:*    # A8iW-Rev.A
+ #########################################
+ # RCA
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnRCA:pnW101SA23T1:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnRCA:pnW101SA23T1:*    # W101SA23T1
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

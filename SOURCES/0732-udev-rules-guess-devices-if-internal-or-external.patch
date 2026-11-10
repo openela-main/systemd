@@ -1,0 +1,172 @@
+From fba3c68fea1e573aeb4e0be508924cc00290ab63 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Wed, 11 Feb 2026 19:28:02 +0100
+Subject: [PATCH] udev: rules: guess devices if internal or external
+
+Set ID_INTEGRATION variable to hint if a device is internal (inherent
+part of the system) or external otherwise.
+
+(cherry picked from commit a4381cae8bfacb1160967ac499c2919da7ff8c2b)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-joystick.hwdb           | 19 ++++++--------
+ hwdb.d/70-touchpad.hwdb           | 42 ++++++-------------------------
+ rules.d/60-persistent-input.rules |  8 ++++++
+ rules.d/65-integration.rules      | 25 ++++++++++++++++++
+ rules.d/meson.build               |  1 +
+ 5 files changed, 50 insertions(+), 45 deletions(-)
+ create mode 100644 rules.d/65-integration.rules
+
+diff --git a/hwdb.d/70-joystick.hwdb b/hwdb.d/70-joystick.hwdb
+index e2008676e9..ad654478b6 100644
+--- a/hwdb.d/70-joystick.hwdb
++++ b/hwdb.d/70-joystick.hwdb
+@@ -30,15 +30,12 @@
+ #
+ #   If the property is missing, user-space can assume:
+ #   ID_INPUT_JOYSTICK_INTEGRATION=external
++#
++#   By default i8042, i2c, and rmi devices are assumed to be internal,
++#   bluetooth devices are assumed to be external, usb devices are assumed
++#   to be internal when connected to a PCB port and external otherwise.
+ 
+-joystick:bluetooth:*
+- ID_INPUT_JOYSTICK_INTEGRATION=external
+-
+-###########################################################
+-# GPD
+-###########################################################
+-
+-# GPD Win, Classic and XBox 360 compat modes
+-joystick:usb:v11c5p5507*
+-joystick:usb:v045ep028e*
+- ID_INPUT_JOYSTICK_INTEGRATION=internal
++# Example entry; vid: ffff, pid: 0000; both must be lowecase.
++# this will make this usb joystick to behave as internal.
++#joystick:usb:vffffp0000*
++# ID_INPUT_JOYSTICK_INTEGRATION=internal
+diff --git a/hwdb.d/70-touchpad.hwdb b/hwdb.d/70-touchpad.hwdb
+index d5285566f1..ddb06c7642 100644
+--- a/hwdb.d/70-touchpad.hwdb
++++ b/hwdb.d/70-touchpad.hwdb
+@@ -28,44 +28,18 @@
+ # Permitted keys:
+ #   Specify whether a touchpad is a built-in one or external:
+ #   ID_INPUT_TOUCHPAD_INTEGRATION=internal|external
++#
++#   By default i8042, i2c, and rmi devices are assumed to be internal,
++#   bluetooth devices are assumed to be external, usb devices are assumed
++#   to be internal when connected to a PCB port and external otherwise.
+ 
+-touchpad:i8042:*
+-touchpad:rmi:*
+-touchpad:usb:*
+- ID_INPUT_TOUCHPAD_INTEGRATION=internal
+-
+-touchpad:bluetooth:*
+- ID_INPUT_TOUCHPAD_INTEGRATION=external
+-
+-###########################################################
+-# Apple
+-###########################################################
+-# Magic Trackpad (1 and 2)
+-touchpad:usb:v05acp030e:*
+-touchpad:usb:v05acp0265:*
+-touchpad:usb:v05acp0324:*
+- ID_INPUT_TOUCHPAD_INTEGRATION=external
+-
+-###########################################################
+-# HP Elite x2 1013 G3
+-###########################################################
+-touchpad:usb:v044ep1221:*
+- ID_INPUT_TOUCHPAD_INTEGRATION=external
++# Example entry; vid: ffff, pid: 0000; both must be lowecase.
++# this will make this bluetooth touchpad to behave as internal.
++#touchpad:bluetooth:vffffp0000:*
++# ID_INPUT_TOUCHPAD_INTEGRATION=internal
+ 
+ ###########################################################
+ # Lenovo IdeaPad Duet3 10IGL5 (82AT)
+ ###########################################################
+ touchpad:bluetooth:v17efp60fa:*
+  ID_INPUT_TOUCHPAD_INTEGRATION=internal
+-
+-###########################################################
+-# Logitech
+-###########################################################
+-touchpad:usb:v046d*
+- ID_INPUT_TOUCHPAD_INTEGRATION=external
+-
+-###########################################################
+-# Wacom
+-###########################################################
+-touchpad:usb:v056a*
+- ID_INPUT_TOUCHPAD_INTEGRATION=external
+diff --git a/rules.d/60-persistent-input.rules b/rules.d/60-persistent-input.rules
+index d02b46caf0..5ac23c6122 100644
+--- a/rules.d/60-persistent-input.rules
++++ b/rules.d/60-persistent-input.rules
+@@ -5,11 +5,19 @@ SUBSYSTEM!="input", GOTO="persistent_input_end"
+ SUBSYSTEMS=="bluetooth", ENV{ID_BUS}="bluetooth", GOTO="persistent_input_end"
+ # Bluetooth devices don't always have the bluetooth subsystem
+ ATTRS{id/bustype}=="0005", ENV{ID_BUS}="bluetooth", GOTO="persistent_input_end"
++SUBSYSTEMS=="acpi", ENV{ID_BUS}="acpi"
++# platform must be before serio as serio can be child
++SUBSYSTEMS=="platform", ENV{ID_BUS}="platform"
++SUBSYSTEMS=="i2c", ENV{ID_BUS}="i2c"
+ SUBSYSTEMS=="rmi4", ENV{ID_BUS}="rmi"
+ SUBSYSTEMS=="serio", ENV{ID_BUS}="i8042"
+ 
+ SUBSYSTEMS=="usb", ENV{ID_BUS}=="", IMPORT{builtin}="usb_id"
+ 
++# subsystems before (usb, platform, i2c) can be under pci so only set them if we still have no ID_BUS.
++# we could set this the first but will break the ENV{ID_BUS}=="" condition for usb.
++SUBSYSTEMS=="pci", ENV{ID_BUS}=="", ENV{ID_BUS}="pci"
++
+ # determine class name for persistent symlinks
+ ENV{ID_INPUT_KEYBOARD}=="?*", ENV{.INPUT_CLASS}="kbd"
+ ENV{ID_INPUT_MOUSE}=="?*", ENV{.INPUT_CLASS}="mouse"
+diff --git a/rules.d/65-integration.rules b/rules.d/65-integration.rules
+new file mode 100644
+index 0000000000..cd3dfdc783
+--- /dev/null
++++ b/rules.d/65-integration.rules
+@@ -0,0 +1,25 @@
++# do not edit this file, it will be overwritten on update
++
++# ID_INTEGRATION variable tells us if a device is internal (inherent part of the system) or external otherwise.
++# This must be loaded after 60-persistent-*.rules to have ID_BUS.
++
++ACTION=="remove", GOTO="integration_end"
++ENV{ID_BUS}=="", GOTO="integration_end"
++
++# ACPI, platform, PS/2, I2C, RMI and PCI devices: Internal by default.
++ENV{ID_BUS}=="acpi|platform|i8042|i2c|rmi|pci", ENV{ID_INTEGRATION}="internal"
++
++# Bluetooth devices: External by default.
++ENV{ID_BUS}=="bluetooth", ENV{ID_INTEGRATION}="external"
++
++# USB devices: Internal if it's connected to a fixed port, external to a removable or unknown.
++ENV{ID_BUS}=="usb", DRIVERS=="usb", ATTRS{maxchild}=="0", ATTRS{removable}=="fixed", ENV{ID_INTEGRATION}="internal"
++ENV{ID_BUS}=="usb", DRIVERS=="usb", ATTRS{maxchild}=="0", ATTRS{removable}=="removable|unknown", ENV{ID_INTEGRATION}="external"
++
++# libinput compatibility variables, must be loaded before 70-(joystick|touchpad).rules to allow hwdb quirks to override.
++ENV{ID_INPUT}=="", GOTO="integration_libinput_end"
++ENV{ID_INPUT_JOYSTICK}=="1", ENV{ID_INPUT_JOYSTICK_INTEGRATION}="$env{ID_INTEGRATION}"
++ENV{ID_INPUT_TOUCHPAD}=="1", ENV{ID_INPUT_TOUCHPAD_INTEGRATION}="$env{ID_INTEGRATION}"
++LABEL="integration_libinput_end"
++
++LABEL="integration_end"
+diff --git a/rules.d/meson.build b/rules.d/meson.build
+index 09500ca94c..eef3142b96 100644
+--- a/rules.d/meson.build
++++ b/rules.d/meson.build
+@@ -25,6 +25,7 @@ rules = [
+                '60-persistent-v4l.rules',
+                '60-sensor.rules',
+                '60-serial.rules',
++               '65-integration.rules',
+                '70-camera.rules',
+                '70-joystick.rules',
+                '70-mouse.rules',

@@ -1,0 +1,30 @@
+From 9f7f34fb02b96de580d9e0505b4868f236daa21a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 21:53:10 +0100
+Subject: [PATCH] hwdb: sensor: exo add in-line comment
+
+(cherry picked from commit 6fbbe544408ba690274e3427adb97ee4cc4befd5)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 5adafe5da4..824217adee 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -439,11 +439,10 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svnEVE:pnEveV:*    # Eve V
+  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################
+-# Exo
++# EXO
+ #########################################
+ 
+-# EXO Wings 2in1 w1125
+-sensor:modalias:acpi:SMO8500*:dmi:*:svnEXO*:pnWings:*
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnEXO*:pnWings:*    # Wings 2in1 w1125
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

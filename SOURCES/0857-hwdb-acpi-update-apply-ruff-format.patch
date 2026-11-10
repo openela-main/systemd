@@ -1,0 +1,32 @@
+From fc4e6977a1b90775e07c36b73650288457d25a0d Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Fri, 20 Feb 2026 01:47:18 +0900
+Subject: [PATCH] hwdb/acpi-update: apply "ruff format"
+
+(cherry picked from commit a3dc3dc61b3aa019d0f2cf3a5274a73096d3edd6)
+
+Related: RHEL-72703
+---
+ hwdb.d/acpi-update.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/hwdb.d/acpi-update.py b/hwdb.d/acpi-update.py
+index 41670b32bb..66a11d8502 100755
+--- a/hwdb.d/acpi-update.py
++++ b/hwdb.d/acpi-update.py
+@@ -5,6 +5,7 @@ from csv import reader
+ 
+ # pylint: disable=consider-using-with
+ 
++
+ def read_table(filename):
+     table = list(reader(open(filename, newline='')))
+     table = table[1:]  # Skip header
+@@ -15,6 +16,7 @@ def read_table(filename):
+         # a mistake, strip it.
+         print(f'\nacpi:{row[1].strip()}*:\n ID_VENDOR_FROM_DATABASE={row[0].strip()}')
+ 
++
+ print('''\
+ # This file is part of systemd.
+ #

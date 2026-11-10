@@ -1,0 +1,41 @@
+From 1c70a5ef4d8936eb647ad269f87fc8610b09a191 Mon Sep 17 00:00:00 2001
+From: lzwind <100665065+lzwind@users.noreply.github.com>
+Date: Mon, 3 Aug 2026 12:41:02 +0800
+Subject: [PATCH] hwdb: mark Microsoft Surface Type Cover touchpad as internal
+ (#43262)
+
+The Microsoft Surface Type Cover touchpad (USB 045E:09C0) is attached
+through a USB port that firmware reports as removable. Because of that,
+`65-integration.rules` sets `ID_INPUT_TOUCHPAD_INTEGRATION=external`,
+and libinput skips disable-while-typing (DWT) for the device.
+
+The touchpad is physically integrated into the Type Cover, so add a hwdb
+entry in `70-touchpad.hwdb` that overrides
+`ID_INPUT_TOUCHPAD_INTEGRATION=internal`, restoring DWT.
+
+Fixes #43256
+
+(cherry picked from commit d13c07ecd82d11f330762bc1aa54849ca5de3a4e)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-touchpad.hwdb | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/hwdb.d/70-touchpad.hwdb b/hwdb.d/70-touchpad.hwdb
+index 8c166d7013..2d5feb9236 100644
+--- a/hwdb.d/70-touchpad.hwdb
++++ b/hwdb.d/70-touchpad.hwdb
+@@ -43,3 +43,12 @@
+ ###########################################################
+ touchpad:bluetooth:v17efp60fa:*
+  ID_INPUT_TOUCHPAD_INTEGRATION=internal
++
++###########################################################
++# Microsoft Surface Type Cover
++###########################################################
++# The USB port is reported as removable by firmware, so 65-integration.rules
++# classifies the touchpad as external and libinput skips disable-while-typing.
++# The touchpad is physically integrated; mark it internal to enable DWT.
++touchpad:usb:v045ep09c0:name:Microsoft Surface Type Cover Touchpad:*
++ ID_INPUT_TOUCHPAD_INTEGRATION=internal

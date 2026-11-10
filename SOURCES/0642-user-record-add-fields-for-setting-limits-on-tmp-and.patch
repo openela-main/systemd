@@ -1,0 +1,284 @@
+From 34ee2cbe4a0b8bdd1d48c31d6735f9d9b551e524 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 10 Jan 2025 11:33:59 +0100
+Subject: [PATCH] user-record: add fields for setting limits on /tmp/ and
+ /dev/shm/
+
+(cherry picked from commit 72b932aac0fbd818208d78ec01256bb946401881)
+
+Related: RHEL-143028
+---
+ docs/USER_RECORD.md           | 35 ++++++++++++-----
+ src/shared/user-record-show.c | 24 ++++++++++++
+ src/shared/user-record.c      | 71 +++++++++++++++++++++++++++++++++++
+ src/shared/user-record.h      | 17 +++++++++
+ 4 files changed, 138 insertions(+), 9 deletions(-)
+
+diff --git a/docs/USER_RECORD.md b/docs/USER_RECORD.md
+index 90675dd532..689dd4e599 100644
+--- a/docs/USER_RECORD.md
++++ b/docs/USER_RECORD.md
+@@ -626,6 +626,19 @@ is allowed to edit.
+ `selfModifiablePrivileged` →  Similar to `selfModifiableFields`, but it lists fields in
+ the `privileged` section that the user is allowed to edit.
+ 
++`tmpLimit` → A numeric value encoding a disk quota limit in bytes enforced on
++`/tmp/` on login, in case it is backed by volatile file system (such as
++`tmpfs`).
++
++`tmpLimitScale` → Similar, but encodes a relative value, normalized to
++`UINT32_MAX` as 100%. This value is applied relative to the file system
++size. If both `tmpLimit` and `tmpLimitScale` are set, the lower of the two
++should be enforced. If neither field is set the implementation might apply a
++default limit.
++
++`devShmLimit`, `devShmLimitScale` → Similar to the previous two, but apply to
++`/dev/shm/` rather than `/tmp/`.
++
+ `privileged` → An object, which contains the fields of the `privileged` section
+ of the user record, see below.
+ 
+@@ -777,22 +790,26 @@ These four are the only fields specific to this section. All other fields that
+ may be used in this section are identical to the equally named ones in the
+ `regular` section (i.e. at the top-level object). Specifically, these are:
+ 
+-`blobDirectory`, `blobManifest`, `iconName`, `location`, `shell`, `umask`, `environment`, `timeZone`,
+-`preferredLanguage`, `additionalLanguages`, `niceLevel`, `resourceLimits`, `locked`, `notBeforeUSec`,
+-`notAfterUSec`, `storage`, `diskSize`, `diskSizeRelative`, `skeletonDirectory`,
+-`accessMode`, `tasksMax`, `memoryHigh`, `memoryMax`, `cpuWeight`, `ioWeight`,
++`blobDirectory`, `blobManifest`, `iconName`, `location`, `shell`, `umask`,
++`environment`, `timeZone`, `preferredLanguage`, `additionalLanguages`,
++`niceLevel`, `resourceLimits`, `locked`, `notBeforeUSec`, `notAfterUSec`,
++`storage`, `diskSize`, `diskSizeRelative`, `skeletonDirectory`, `accessMode`,
++`tasksMax`, `memoryHigh`, `memoryMax`, `cpuWeight`, `ioWeight`,
+ `mountNoDevices`, `mountNoSuid`, `mountNoExecute`, `cifsDomain`,
+ `cifsUserName`, `cifsService`, `cifsExtraMountOptions`, `imagePath`, `uid`,
+ `gid`, `memberOf`, `fileSystemType`, `partitionUuid`, `luksUuid`,
+ `fileSystemUuid`, `luksDiscard`, `luksOfflineDiscard`, `luksCipher`,
+ `luksCipherMode`, `luksVolumeKeySize`, `luksPbkdfHashAlgorithm`,
+-`luksPbkdfType`, `luksPbkdfForceIterations`, `luksPbkdfTimeCostUSec`, `luksPbkdfMemoryCost`,
+-`luksPbkdfParallelThreads`, `luksSectorSize`, `autoResizeMode`, `rebalanceWeight`,
+-`rateLimitIntervalUSec`, `rateLimitBurst`, `enforcePasswordPolicy`,
+-`autoLogin`, `preferredSessionType`, `preferredSessionLauncher`, `stopDelayUSec`, `killProcesses`,
++`luksPbkdfType`, `luksPbkdfForceIterations`, `luksPbkdfTimeCostUSec`,
++`luksPbkdfMemoryCost`, `luksPbkdfParallelThreads`, `luksSectorSize`,
++`autoResizeMode`, `rebalanceWeight`, `rateLimitIntervalUSec`, `rateLimitBurst`,
++`enforcePasswordPolicy`, `autoLogin`, `preferredSessionType`,
++`preferredSessionLauncher`, `stopDelayUSec`, `killProcesses`,
+ `passwordChangeMinUSec`, `passwordChangeMaxUSec`, `passwordChangeWarnUSec`,
+ `passwordChangeInactiveUSec`, `passwordChangeNow`, `pkcs11TokenUri`,
+-`fido2HmacCredential`, `selfModifiableFields`, `selfModifiableBlobs`, `selfModifiablePrivileged`.
++`fido2HmacCredential`, `selfModifiableFields`, `selfModifiableBlobs`,
++`selfModifiablePrivileged`, `tmpLimit`, `tmpLimitScale`, `devShmLimit`,
++`devShmLimitScale`.
+ 
+ ## Fields in the `binding` section
+ 
+diff --git a/src/shared/user-record-show.c b/src/shared/user-record-show.c
+index dab75d1f79..a6173aabb8 100644
+--- a/src/shared/user-record-show.c
++++ b/src/shared/user-record-show.c
+@@ -7,6 +7,7 @@
+ #include "hashmap.h"
+ #include "hexdecoct.h"
+ #include "path-util.h"
++#include "percent-util.h"
+ #include "pretty-print.h"
+ #include "process-util.h"
+ #include "rlimit-util.h"
+@@ -54,6 +55,26 @@ static void dump_self_modifiable(
+                         printf("%13s %s\n", i == value ? heading : "", *i);
+ }
+ 
++static void show_tmpfs_limit(const char *tmpfs, const TmpfsLimit *limit, uint32_t scale) {
++        assert(tmpfs);
++        assert(limit);
++
++        if (!limit->is_set)
++                return;
++
++        printf("   %s Limit:", tmpfs);
++
++        if (limit->limit != UINT64_MAX)
++                printf(" %s", FORMAT_BYTES(limit->limit));
++        if (limit->limit == UINT64_MAX || limit->limit_scale != UINT32_MAX) {
++                if (limit->limit != UINT64_MAX)
++                        printf(" or");
++
++                printf(" %i%%", UINT32_SCALE_TO_PERCENT(scale));
++        }
++        printf("\n");
++}
++
+ void user_record_show(UserRecord *hr, bool show_full_group_info) {
+         _cleanup_strv_free_ char **langs = NULL;
+         const char *hd, *ip, *shell;
+@@ -371,6 +392,9 @@ void user_record_show(UserRecord *hr, bool show_full_group_info) {
+         if (hr->io_weight != UINT64_MAX)
+                 printf("   IO Weight: %" PRIu64 "\n", hr->io_weight);
+ 
++        show_tmpfs_limit("TMP", &hr->tmp_limit, user_record_tmp_limit_scale(hr));
++        show_tmpfs_limit("SHM", &hr->dev_shm_limit, user_record_dev_shm_limit_scale(hr));
++
+         if (hr->access_mode != MODE_INVALID)
+                 printf(" Access Mode: 0%03o\n", user_record_access_mode(hr));
+ 
+diff --git a/src/shared/user-record.c b/src/shared/user-record.c
+index bfea52427a..6a1813c402 100644
+--- a/src/shared/user-record.c
++++ b/src/shared/user-record.c
+@@ -15,6 +15,7 @@
+ #include "locale-util.h"
+ #include "memory-util.h"
+ #include "path-util.h"
++#include "percent-util.h"
+ #include "pkcs11-util.h"
+ #include "rlimit-util.h"
+ #include "sha256.h"
+@@ -95,6 +96,8 @@ UserRecord* user_record_new(void) {
+                 .drop_caches = -1,
+                 .auto_resize_mode = _AUTO_RESIZE_MODE_INVALID,
+                 .rebalance_weight = REBALANCE_WEIGHT_UNSET,
++                .tmp_limit = TMPFS_LIMIT_NULL,
++                .dev_shm_limit = TMPFS_LIMIT_NULL,
+         };
+ 
+         return h;
+@@ -982,6 +985,40 @@ static int dispatch_rebalance_weight(const char *name, sd_json_variant *variant,
+         return 0;
+ }
+ 
++static int dispatch_tmpfs_limit(const char *name, sd_json_variant *variant, sd_json_dispatch_flags_t flags, void *userdata) {
++        TmpfsLimit *limit = ASSERT_PTR(userdata);
++        int r;
++
++        if (sd_json_variant_is_null(variant)) {
++                *limit = TMPFS_LIMIT_NULL;
++                return 0;
++        }
++
++        r = sd_json_dispatch_uint64(name, variant, flags, &limit->limit);
++        if (r < 0)
++                return r;
++
++        limit->is_set = true;
++        return 0;
++}
++
++static int dispatch_tmpfs_limit_scale(const char *name, sd_json_variant *variant, sd_json_dispatch_flags_t flags, void *userdata) {
++        TmpfsLimit *limit = ASSERT_PTR(userdata);
++        int r;
++
++        if (sd_json_variant_is_null(variant)) {
++                *limit = TMPFS_LIMIT_NULL;
++                return 0;
++        }
++
++        r = sd_json_dispatch_uint32(name, variant, flags, &limit->limit_scale);
++        if (r < 0)
++                return r;
++
++        limit->is_set = true;
++        return 0;
++}
++
+ static int dispatch_privileged(const char *name, sd_json_variant *variant, sd_json_dispatch_flags_t flags, void *userdata) {
+ 
+         static const sd_json_dispatch_field privileged_dispatch_table[] = {
+@@ -1299,6 +1336,10 @@ static int dispatch_per_machine(const char *name, sd_json_variant *variant, sd_j
+                 { "selfModifiableFields",       SD_JSON_VARIANT_ARRAY,         sd_json_dispatch_strv,                offsetof(UserRecord, self_modifiable_fields),        SD_JSON_STRICT },
+                 { "selfModifiableBlobs",        SD_JSON_VARIANT_ARRAY,         sd_json_dispatch_strv,                offsetof(UserRecord, self_modifiable_blobs),         SD_JSON_STRICT },
+                 { "selfModifiablePrivileged",   SD_JSON_VARIANT_ARRAY,         sd_json_dispatch_strv,                offsetof(UserRecord, self_modifiable_privileged),    SD_JSON_STRICT },
++                { "tmpLimit",                   _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit,                 offsetof(UserRecord, tmp_limit),                     0,             },
++                { "tmpLimitScale",              _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit_scale,           offsetof(UserRecord, tmp_limit),                     0,             },
++                { "devShmLimit",                _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit,                 offsetof(UserRecord, dev_shm_limit),                 0,             },
++                { "devShmLimitScale",           _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit_scale,           offsetof(UserRecord, dev_shm_limit),                 0,             },
+                 {},
+         };
+ 
+@@ -1650,6 +1691,10 @@ int user_record_load(UserRecord *h, sd_json_variant *v, UserRecordLoadFlags load
+                 { "selfModifiableFields",       SD_JSON_VARIANT_ARRAY,         sd_json_dispatch_strv,                offsetof(UserRecord, self_modifiable_fields),        SD_JSON_STRICT },
+                 { "selfModifiableBlobs",        SD_JSON_VARIANT_ARRAY,         sd_json_dispatch_strv,                offsetof(UserRecord, self_modifiable_blobs),         SD_JSON_STRICT },
+                 { "selfModifiablePrivileged",   SD_JSON_VARIANT_ARRAY,         sd_json_dispatch_strv,                offsetof(UserRecord, self_modifiable_privileged),    SD_JSON_STRICT },
++                { "tmpLimit",                   _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit,                 offsetof(UserRecord, tmp_limit),                     0,             },
++                { "tmpLimitScale",              _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit_scale,           offsetof(UserRecord, tmp_limit),                     0,             },
++                { "devShmLimit",                _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit,                 offsetof(UserRecord, dev_shm_limit),                 0,             },
++                { "devShmLimitScale",           _SD_JSON_VARIANT_TYPE_INVALID, dispatch_tmpfs_limit_scale,           offsetof(UserRecord, dev_shm_limit),                 0,             },
+ 
+                 { "secret",                     SD_JSON_VARIANT_OBJECT,        dispatch_secret,                      0,                                                   0              },
+                 { "privileged",                 SD_JSON_VARIANT_OBJECT,        dispatch_privileged,                  0,                                                   0              },
+@@ -2163,6 +2208,32 @@ int user_record_languages(UserRecord *h, char ***ret) {
+         return 0;
+ }
+ 
++uint32_t user_record_tmp_limit_scale(UserRecord *h) {
++        assert(h);
++
++        if (h->tmp_limit.is_set)
++                return h->tmp_limit.limit_scale;
++
++        /* By default grant regular users only 80% quota */
++        if (user_record_disposition(h) == USER_REGULAR)
++                return UINT32_SCALE_FROM_PERCENT(80);
++
++        return UINT32_MAX;
++}
++
++uint32_t user_record_dev_shm_limit_scale(UserRecord *h) {
++        assert(h);
++
++        if (h->dev_shm_limit.is_set)
++                return h->dev_shm_limit.limit_scale;
++
++        /* By default grant regular users only 80% quota */
++        if (user_record_disposition(h) == USER_REGULAR)
++                return UINT32_SCALE_FROM_PERCENT(80);
++
++        return UINT32_MAX;
++}
++
+ const char** user_record_self_modifiable_fields(UserRecord *h) {
+         /* As a rule of thumb: a setting is safe if it cannot be used by a
+          * user to give themselves some unfair advantage over other users on
+diff --git a/src/shared/user-record.h b/src/shared/user-record.h
+index a3d8f4eb07..8c709750ae 100644
+--- a/src/shared/user-record.h
++++ b/src/shared/user-record.h
+@@ -232,6 +232,19 @@ typedef enum AutoResizeMode {
+ #define REBALANCE_WEIGHT_MAX UINT64_C(10000)
+ #define REBALANCE_WEIGHT_UNSET UINT64_MAX
+ 
++typedef struct TmpfsLimit {
++        /* Absolute and relative tmpfs limits */
++        uint64_t limit;
++        uint32_t limit_scale;
++        bool is_set;
++} TmpfsLimit;
++
++#define TMPFS_LIMIT_NULL                        \
++        (TmpfsLimit) {                          \
++                .limit = UINT64_MAX,            \
++                .limit_scale = UINT32_MAX,      \
++        }                                       \
++
+ typedef struct UserRecord {
+         /* The following three fields are not part of the JSON record */
+         unsigned n_ref;
+@@ -392,6 +405,8 @@ typedef struct UserRecord {
+         char **self_modifiable_blobs;
+         char **self_modifiable_privileged;
+ 
++        TmpfsLimit tmp_limit, dev_shm_limit;
++
+         sd_json_variant *json;
+ } UserRecord;
+ 
+@@ -439,6 +454,8 @@ uint64_t user_record_rebalance_weight(UserRecord *h);
+ uint64_t user_record_capability_bounding_set(UserRecord *h);
+ uint64_t user_record_capability_ambient_set(UserRecord *h);
+ int user_record_languages(UserRecord *h, char ***ret);
++uint32_t user_record_tmp_limit_scale(UserRecord *h);
++uint32_t user_record_dev_shm_limit_scale(UserRecord *h);
+ 
+ const char **user_record_self_modifiable_fields(UserRecord *h);
+ const char **user_record_self_modifiable_blobs(UserRecord *h);

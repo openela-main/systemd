@@ -1,0 +1,25 @@
+From 9da37815ff97c67a890f2e74893a7e79d45bded9 Mon Sep 17 00:00:00 2001
+From: David Tardon <dtardon@redhat.com>
+Date: Thu, 25 Jun 2026 14:28:48 +0200
+Subject: [PATCH] Revert "units: enable usrquota support on /tmp/"
+
+This reverts commit bc192261e4801ad27a8610fea4e10010d705bfc0.
+
+Reverts: RHEL-143028
+---
+ units/tmp.mount | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/tmp.mount b/units/tmp.mount
+index 373b131211..d7beaa8d14 100644
+--- a/units/tmp.mount
++++ b/units/tmp.mount
+@@ -22,7 +22,7 @@ After=swap.target
+ What=tmpfs
+ Where=/tmp
+ Type=tmpfs
+-Options=mode=1777,strictatime,nosuid,nodev,size=50%%,nr_inodes=1m,x-systemd.graceful-option=usrquota
++Options=mode=1777,strictatime,nosuid,nodev,size=50%%,nr_inodes=1m
+ 
+ # Make 'systemctl enable tmp.mount' work:
+ [Install]

@@ -1,0 +1,31 @@
+From 5b14c68fb00c3d18e4bd3aa4d1120cb82c36d68c Mon Sep 17 00:00:00 2001
+From: mburucuyapy <giovannicaligaris@gmail.com>
+Date: Wed, 10 Jun 2026 10:17:12 -0400
+Subject: [PATCH] Update 60-sensor.hwdb - Add support for Juno Tab 4 (Wifi)
+
+(cherry picked from commit 047dd36e770502f3c7ee8ebe8aaf21585fcff7e5)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 923ac9efb2..a3d707901f 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -625,6 +625,14 @@ sensor:modalias:acpi:KIOX0009:*:dmi:*:bvrJumper12x.WJ2012.bsBKRCP*:svnJumper:pnE
+ sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvrZB-BI-11.6-SF133AR200-059-J:*:svnjumper:pnEZpad:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
++#########################################
++# Juno Computers
++#########################################
++
++# Juno Tablet 4 (Wifi)
++sensor:modalias:acpi:MXC6655*:dmi:bvnAMI:bvr*:svnJunoComputers:pnjunotab4-wifi:*
++ ACCEL_MOUNT_MATRIX=0, -1, 0; 1, 0, 0; 0, 0, 1
++
+ #########################################
+ # Kazam
+ #########################################

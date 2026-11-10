@@ -1,0 +1,40 @@
+From b7d5e93a71ec8918281531382ddd3b439fc7b7c0 Mon Sep 17 00:00:00 2001
+From: Sriman Achanta <achantass25@gmail.com>
+Date: Mon, 13 Apr 2026 20:08:30 -0400
+Subject: [PATCH] hwdb: Add extended SteelSeries Arctis headset device support
+ (#41628)
+
+Add USB device IDs for additional SteelSeries Arctis headset models to
+the sound card hardware database.
+
+Newly added device IDs:
+
+- Arctis Nova 7x v2 (22AD)
+- Arctis Nova 7 Diablo IV (22A9)
+- Arctis Nova 7X (22A4)
+- Arctis Nova 7X (22A5)
+- Arctis Nova 7P V2 (22A7)
+
+(cherry picked from commit 765416cae6129b23ef108e19d0d41f8f59788019)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-sound-card.hwdb | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/hwdb.d/70-sound-card.hwdb b/hwdb.d/70-sound-card.hwdb
+index 4c53a861ec..03a0a5eefc 100644
+--- a/hwdb.d/70-sound-card.hwdb
++++ b/hwdb.d/70-sound-card.hwdb
+@@ -69,6 +69,11 @@ usb:v1038p227A*
+ usb:v1038p22A1*
+ usb:v1038p227E*
+ usb:v1038p229E*
++usb:v1038p22AD*
++usb:v1038p22A9*
++usb:v1038p22A4*
++usb:v1038p22A5*
++usb:v1038p22A7*
+ usb:v1038p12E0*
+ usb:v1038p12E5*
+  SOUND_FORM_FACTOR=headset

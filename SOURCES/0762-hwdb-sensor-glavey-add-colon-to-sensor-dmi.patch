@@ -1,0 +1,25 @@
+From e7d65d381f70bc73cbcda4b2057d238045f4410d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 22:29:00 +0100
+Subject: [PATCH] hwdb: sensor: glavey add colon to sensor dmi
+
+(cherry picked from commit 2e63c9b77f17f804bfcad2fc0be2950fdadbc4f7)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 913308ec69..c63a57436c 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -457,7 +457,7 @@ sensor:modalias:acpi:KIOX010A:*:dmi:*:svnGEO:pnGeoFlex:*    # Geoflex (2018)
+ #########################################
+ 
+ # Glavey TM800A550L
+-sensor:modalias:acpi:KXCJ9000*:dmi:*:bvrZY-8-BI-PX4S70VTR400-X423B-005-D:*:rvnAMICorporation:rnAptioCRB:*
++sensor:modalias:acpi:KXCJ9000:*:dmi:*:bvrZY-8-BI-PX4S70VTR400-X423B-005-D:*:rvnAMICorporation:rnAptioCRB:*
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

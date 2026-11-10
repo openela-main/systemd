@@ -1,0 +1,28 @@
+From ffafa27fb93822950ac4ee6553867b099fc3456c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Luan=20Vitor=20Simi=C3=A3o=20Oliveira?=
+ <luanv.oliveira@outlook.com>
+Date: Wed, 25 Mar 2026 19:11:00 -0300
+Subject: [PATCH] hwdb: Add PXN HB S handbrake
+
+otherwise, it is not classified.
+reports 2 axes and 2 buttons although only 1 is actually used.
+
+(cherry picked from commit 7d320c3a992e71f05816c76e2f7bbb2fc392be4c)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-input-id.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-input-id.hwdb b/hwdb.d/60-input-id.hwdb
+index d32bfedf59..03535884e5 100644
+--- a/hwdb.d/60-input-id.hwdb
++++ b/hwdb.d/60-input-id.hwdb
+@@ -118,3 +118,7 @@ id-input:modalias:input:b0003v26CEp01A2*
+ # Saitek PLC Pro Flight Rudder Pedals
+ id-input:modalias:input:b0003v06A3p0763*
+  ID_INPUT_JOYSTICK=1
++
++# PXN HB S handbrake
++id-input:modalias:input:b0003v11FFpA701*
++ ID_INPUT_JOYSTICK=1

@@ -1,0 +1,34 @@
+From b875a71f71ce20d4fb73ce42cf144c5b4d851e11 Mon Sep 17 00:00:00 2001
+From: sykikxo <xo.sykik@gmail.com>
+Date: Sun, 31 May 2026 11:11:42 +0530
+Subject: [PATCH] hwdb: add Infinix Y3 Max YL-613 touchpad properties
+
+(cherry picked from commit 3bc3b418c855a5718fb0a9cd98f76a92458c4706)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-evdev.hwdb | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/hwdb.d/60-evdev.hwdb b/hwdb.d/60-evdev.hwdb
+index 767b63f835..e1e30700c4 100644
+--- a/hwdb.d/60-evdev.hwdb
++++ b/hwdb.d/60-evdev.hwdb
+@@ -551,6 +551,17 @@ evdev:input:b0003v256Cp006B*
+  EVDEV_ABS_35=::40
+  EVDEV_ABS_36=::42
+ 
++#########################################
++# Infinix
++#########################################
++
++# Infinix Y3 Max YL-613
++evdev:name:SYNA3602:00 093A:35ED Touchpad:dmi:*svnInfinix:*pnY3Max**
++ EVDEV_ABS_00=::12
++ EVDEV_ABS_01=::12
++ EVDEV_ABS_35=::12
++ EVDEV_ABS_36=::12
++
+ #########################################
+ # Lenovo
+ #########################################

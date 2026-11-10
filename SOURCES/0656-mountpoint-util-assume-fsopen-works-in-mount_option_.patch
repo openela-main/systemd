@@ -1,0 +1,48 @@
+From 61d7212e99466780278b2f75be35c5d19cc93087 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Wed, 12 Feb 2025 15:44:13 +0100
+Subject: [PATCH] mountpoint-util: assume fsopen() works in
+ mount_option_supported()
+
+Our baseline includes it now.
+
+(cherry picked from commit c2198d0c3fdbebd30b0653f2e3d148372c5fff31)
+
+Related: RHEL-143028
+---
+ src/basic/mountpoint-util.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/src/basic/mountpoint-util.c b/src/basic/mountpoint-util.c
+index e8471d5974..76f1a6d6b4 100644
+--- a/src/basic/mountpoint-util.c
++++ b/src/basic/mountpoint-util.c
+@@ -803,14 +803,10 @@ int mount_option_supported(const char *fstype, const char *key, const char *valu
+         assert(key);
+ 
+         fd = fsopen(fstype, FSOPEN_CLOEXEC);
+-        if (fd < 0) {
+-                if (ERRNO_IS_NOT_SUPPORTED(errno))
+-                        return -EAGAIN;  /* new mount API not available → don't know */
+-
++        if (fd < 0)
+                 return log_debug_errno(errno, "Failed to open superblock context for '%s': %m", fstype);
+-        }
+ 
+-        /* Various file systems have not been converted to the new mount API yet. For such file systems
++        /* Various file systems support fs context only in recent kernels (e.g. btrfs). For older kernels
+          * fsconfig() with FSCONFIG_SET_STRING/FSCONFIG_SET_FLAG never fail. Which sucks, because we want to
+          * use it for testing support, after all. Let's hence do a check if the file system got converted yet
+          * first. */
+@@ -819,9 +815,9 @@ int mount_option_supported(const char *fstype, const char *key, const char *valu
+                  * the new mount API yet. If it returns EINVAL the mount option doesn't exist, but the fstype
+                  * is converted. */
+                 if (errno == EOPNOTSUPP)
+-                        return -EAGAIN; /* FSCONFIG_SET_FD not supported on the fs, hence not converted to new mount API → don't know */
++                        return -EAGAIN; /* fs not converted to new mount API → don't know */
+                 if (errno != EINVAL)
+-                        return log_debug_errno(errno, "Failed to check if file system has been converted to new mount API: %m");
++                        return log_debug_errno(errno, "Failed to check if file system '%s' has been converted to new mount API: %m", fstype);
+ 
+                 /* So FSCONFIG_SET_FD worked, but the option didn't exist (we got EINVAL), this means the fs
+                  * is converted. Let's now ask the actual question we wonder about. */

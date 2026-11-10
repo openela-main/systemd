@@ -1,0 +1,38 @@
+From ce6bb3b91ddc7f1dff79803356fa32384dcb1b97 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 16:29:26 +0100
+Subject: [PATCH] hwdb: sensor: nuvision refactor
+
+(cherry picked from commit 5ee338bb4fd62940d99bc5994484132051371ffb)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 7d827e20e4..aa6ea33bc8 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -805,18 +805,13 @@ sensor:modalias:acpi:KIOX010A:*:dmi:*:svnCompletElectroServSA:pnMY8312:*    # MY
+ # Nuvision (TMax)
+ #########################################
+ 
+-# Nuvision/TMAX 8 inch Windows signature edition. TM800W560L
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnTMAX:pnTM800W560L:*
++sensor:modalias:acpi:BOSC0200:*:dmi:*:svnNuvision:pnNES11:*     # Encite Split 11. NES11-C432SSA
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnTMAX:pnTM800W560L:*    # 8 inch Windows signature edition. TM800W560L
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+-# Nuvision Solo 10 Draw. TM101W610L
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnTMAX:pnTM101W610L:*
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnTMAX:pnTM101W610L:*    # Solo 10 Draw. TM101W610L
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+-# Nuvision Encite Split 11. NES11-C432SSA
+-sensor:modalias:acpi:BOSC0200*:dmi:*:svnNuvision:pnNES11:*
+- ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+-
+ #########################################
+ # Odys
+ #########################################

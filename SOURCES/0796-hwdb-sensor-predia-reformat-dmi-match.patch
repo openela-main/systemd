@@ -1,0 +1,25 @@
+From d80bd137fe59ca3029c5e1ef71e2733ab5dc7212 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 02:43:44 +0100
+Subject: [PATCH] hwdb: sensor: predia reformat dmi match
+
+(cherry picked from commit b3dea1b1a3b76cd97c268d41c9b0b28719099375)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 9b9d1260ee..dea146a9c7 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -936,7 +936,7 @@ sensor:modalias:acpi:MDA6655:*:dmi:*:svnPositivoTecnologiaSA:*:rnK116J:*     # D
+ #########################################
+ 
+ # Predia Basic tablet, most DMI strings are generic, match on BIOS version
+-sensor:modalias:acpi:BOSC0200*:dmi:bvnINSYDECorp.:bvrMx.WT107.KUBNGEA*svnInsyde:pnCherryTrail:*
++sensor:modalias:acpi:BOSC0200:*:dmi:bvnINSYDECorp.:bvrMx.WT107.KUBNGEA*:*:svnInsyde:pnCherryTrail:*
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

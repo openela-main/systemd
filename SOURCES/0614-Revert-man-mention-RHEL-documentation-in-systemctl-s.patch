@@ -1,0 +1,36 @@
+From 3e597926e21dfbaf2b4a38aa64a4da954815f2b7 Mon Sep 17 00:00:00 2001
+From: Jan Macku <jamacku@redhat.com>
+Date: Mon, 30 Mar 2026 14:48:42 +0200
+Subject: [PATCH] Revert "man: mention RHEL documentation in systemctl's man
+ page"
+
+This reverts commit fdebd2be914ce55ec4244c99adc93fc7f046c08f.
+
+rhel-only: doc
+
+Resolves: RHEL-155805
+---
+ man/systemctl.xml | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/man/systemctl.xml b/man/systemctl.xml
+index 322505e615..fe15bd3722 100644
+--- a/man/systemctl.xml
++++ b/man/systemctl.xml
+@@ -2978,16 +2978,6 @@ EOF
+     </variablelist>
+   </refsect1>
+ 
+-  <refsect1>
+-    <title>Examples</title>
+-    <para>
+-            For examples how to use systemctl in comparison with old service and chkconfig commands please see:
+-            <ulink url="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/using_systemd_unit_files_to_customize_and_optimize_your_system/managing-systemd#managing-system-services-with-systemctl">
+-                    Managing System Services
+-            </ulink>
+-    </para>
+-  </refsect1>
+-
+   <refsect1>
+     <title>See Also</title>
+     <para><simplelist type="inline">

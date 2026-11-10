@@ -1,0 +1,38 @@
+From 28d51337be471fa34135e486ec94fa0f00d9e3b1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 00:52:36 +0100
+Subject: [PATCH] hwdb: sensor: linx in-line comment
+
+(cherry picked from commit 5c1e6da471c5772276208bb9567f151dd060e7b8)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 15d94c519b..215824c33b 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -699,17 +699,14 @@ sensor:modalias:i2c:bmc150_accel:dmi:*:svnLENOVO:*:pvrLenovoYoga300-11IBR:*
+ # LINX
+ #########################################
+ 
+-# Linx 1010B
+-sensor:modalias:acpi:BOSC0200*:dmi:*:svnLINX*:pnLINX1010B:*
++sensor:modalias:acpi:BOSC0200:*:dmi:*:svnLINX:pnLINX1010B:*    # 1010B
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, -1
+ 
+-# Linx 1020
+-sensor:modalias:acpi:MIRAACC*:dmi:*:svnLINX*:pnLINX1020:*
++sensor:modalias:acpi:MIRAACC:*:dmi:*:svnLINX:pnLINX1020:*      # 1020
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, -1
+ 
+-# Linx 12X64, 12V64 and Vision 8
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnLINX*:pnLINX12*64:*
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnLINX:pnVISION004:*
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnLINX:pnLINX12?64:*    # 12X64, 12V64
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnLINX:pnVISION004:*    # Vision 8
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ #########################################

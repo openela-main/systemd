@@ -1,0 +1,26 @@
+From 6b2767c496c5e4035eb9c776edc32a1fb0ba287e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 02:44:56 +0100
+Subject: [PATCH] hwdb: sensor: prowise add comment
+
+(cherry picked from commit 0eca6a16120de08c7c75bc8e774a86ed5e019913)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index dea146a9c7..a2bc66fe57 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -942,7 +942,8 @@ sensor:modalias:acpi:BOSC0200:*:dmi:bvnINSYDECorp.:bvrMx.WT107.KUBNGEA*:*:svnIns
+ #########################################
+ # Prowise
+ #########################################
+-sensor:modalias:acpi:SMO8500*:dmi:*:svnProwise:pnPT301:*
++
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnProwise:pnPT301:*    # PT301
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

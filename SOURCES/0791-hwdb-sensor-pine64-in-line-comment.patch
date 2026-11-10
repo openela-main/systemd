@@ -1,0 +1,27 @@
+From f67d82ae126ae65d8ca4e4286eec352cc1acb0db Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:51:52 +0100
+Subject: [PATCH] hwdb: sensor: pine64 in-line comment
+
+(cherry picked from commit 31434bda83ddd1670899abf94d10530cef3d732a)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index ef1866de89..8729ce7711 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -879,9 +879,7 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnPEAQ:pnPEAQPMMC1010MD99187:*    # MMC101
+ # Pine64
+ #########################################
+ 
+-# PineTab2
+-
+-sensor:modalias:of:NaccelerometerT_null_Csilan,sc7a20:*
++sensor:modalias:of:NaccelerometerT_null_Csilan,sc7a20:*    # PineTab2
+  ACCEL_MOUNT_MATRIX=0, 0, -1; 1, 0, 0; 0, -1, 0
+ 
+ #########################################

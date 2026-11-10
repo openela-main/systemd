@@ -1,0 +1,1376 @@
+From 02bffe9d102a8a276bef8abf1cc473b6a86a1760 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Fri, 6 Mar 2026 17:58:02 +0100
+Subject: [PATCH] fuzz: add a fuzzer for user records
+
+Add a simple fuzzer that verifies our machinery for parsing user records
+from JSON works as intended.
+
+The initial corpus was created with the help of Claude, so we have a
+bunch of valid user records with as much fields as possible for the
+initial corpus.
+
+(cherry picked from commit be0db50cadadb35fdbc117ed68e133f34604b97b)
+
+Related: RHEL-155021
+---
+ src/fuzz/fuzz-user-record.c                   |  46 ++++
+ src/fuzz/meson.build                          |   1 +
+ test/fuzz/fuzz-user-record/auth-fido2.json    |  40 +++
+ test/fuzz/fuzz-user-record/auth-pkcs11.json   |  33 +++
+ test/fuzz/fuzz-user-record/auth-recovery.json |  27 ++
+ .../fuzz-user-record/auto-resize-grow.json    |  14 +
+ .../fuzz-user-record/auto-resize-modes.json   |  14 +
+ .../fuzz-user-record/auto-resize-off.json     |  14 +
+ test/fuzz/fuzz-user-record/basic-regular.json |   9 +
+ test/fuzz/fuzz-user-record/basic-system.json  |   7 +
+ .../fuzz-user-record/capabilities-full.json   |  56 ++++
+ test/fuzz/fuzz-user-record/default-area.json  |  16 ++
+ .../disposition-container.json                |   8 +
+ .../fuzz-user-record/disposition-dynamic.json |   9 +
+ .../fuzz-user-record/disposition-foreign.json |   8 +
+ .../disposition-intrinsic.json                |   8 +
+ .../disposition-reserved.json                 |   9 +
+ .../fuzz-user-record/edge-empty-arrays.json   |  34 +++
+ .../fuzz-user-record/edge-long-strings.json   |  24 ++
+ .../fuzz-user-record/edge-max-values.json     |  41 +++
+ .../fuzz-user-record/edge-min-values.json     |  41 +++
+ .../edge-missing-optionals.json               |   9 +
+ .../fuzz-user-record/edge-null-values.json    |  18 ++
+ .../edge-unicode-strings.json                 |  21 ++
+ test/fuzz/fuzz-user-record/full-featured.json | 245 ++++++++++++++++++
+ test/fuzz/fuzz-user-record/luks-complete.json |  36 +++
+ test/fuzz/fuzz-user-record/minimal.json       |   3 +
+ .../fuzz-user-record/password-policy.json     |  24 ++
+ .../fuzz-user-record/per-machine-complex.json |  58 +++++
+ test/fuzz/fuzz-user-record/rlimits-all.json   |  27 ++
+ test/fuzz/fuzz-user-record/session-prefs.json |  14 +
+ test/fuzz/fuzz-user-record/ssh-keys.json      |  18 ++
+ test/fuzz/fuzz-user-record/storage-cifs.json  |  15 ++
+ .../fuzz-user-record/storage-classic.json     |  10 +
+ .../fuzz-user-record/storage-directory.json   |  13 +
+ .../fuzz-user-record/storage-fscrypt.json     |  14 +
+ .../fuzz-user-record/storage-subvolume.json   |  14 +
+ .../fuzz-user-record/time-constraints.json    |  13 +
+ test/fuzz/fuzz-user-record/tmpfs-limits.json  |  13 +
+ test/fuzz/fuzz-user-record/with-realm.json    |  10 +
+ 40 files changed, 1034 insertions(+)
+ create mode 100644 src/fuzz/fuzz-user-record.c
+ create mode 100644 test/fuzz/fuzz-user-record/auth-fido2.json
+ create mode 100644 test/fuzz/fuzz-user-record/auth-pkcs11.json
+ create mode 100644 test/fuzz/fuzz-user-record/auth-recovery.json
+ create mode 100644 test/fuzz/fuzz-user-record/auto-resize-grow.json
+ create mode 100644 test/fuzz/fuzz-user-record/auto-resize-modes.json
+ create mode 100644 test/fuzz/fuzz-user-record/auto-resize-off.json
+ create mode 100644 test/fuzz/fuzz-user-record/basic-regular.json
+ create mode 100644 test/fuzz/fuzz-user-record/basic-system.json
+ create mode 100644 test/fuzz/fuzz-user-record/capabilities-full.json
+ create mode 100644 test/fuzz/fuzz-user-record/default-area.json
+ create mode 100644 test/fuzz/fuzz-user-record/disposition-container.json
+ create mode 100644 test/fuzz/fuzz-user-record/disposition-dynamic.json
+ create mode 100644 test/fuzz/fuzz-user-record/disposition-foreign.json
+ create mode 100644 test/fuzz/fuzz-user-record/disposition-intrinsic.json
+ create mode 100644 test/fuzz/fuzz-user-record/disposition-reserved.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-empty-arrays.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-long-strings.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-max-values.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-min-values.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-missing-optionals.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-null-values.json
+ create mode 100644 test/fuzz/fuzz-user-record/edge-unicode-strings.json
+ create mode 100644 test/fuzz/fuzz-user-record/full-featured.json
+ create mode 100644 test/fuzz/fuzz-user-record/luks-complete.json
+ create mode 100644 test/fuzz/fuzz-user-record/minimal.json
+ create mode 100644 test/fuzz/fuzz-user-record/password-policy.json
+ create mode 100644 test/fuzz/fuzz-user-record/per-machine-complex.json
+ create mode 100644 test/fuzz/fuzz-user-record/rlimits-all.json
+ create mode 100644 test/fuzz/fuzz-user-record/session-prefs.json
+ create mode 100644 test/fuzz/fuzz-user-record/ssh-keys.json
+ create mode 100644 test/fuzz/fuzz-user-record/storage-cifs.json
+ create mode 100644 test/fuzz/fuzz-user-record/storage-classic.json
+ create mode 100644 test/fuzz/fuzz-user-record/storage-directory.json
+ create mode 100644 test/fuzz/fuzz-user-record/storage-fscrypt.json
+ create mode 100644 test/fuzz/fuzz-user-record/storage-subvolume.json
+ create mode 100644 test/fuzz/fuzz-user-record/time-constraints.json
+ create mode 100644 test/fuzz/fuzz-user-record/tmpfs-limits.json
+ create mode 100644 test/fuzz/fuzz-user-record/with-realm.json
+
+diff --git a/src/fuzz/fuzz-user-record.c b/src/fuzz/fuzz-user-record.c
+new file mode 100644
+index 0000000000..c520e6a03b
+--- /dev/null
++++ b/src/fuzz/fuzz-user-record.c
+@@ -0,0 +1,46 @@
++/* SPDX-License-Identifier: LGPL-2.1-or-later */
++
++#include <stdio.h>
++
++#include "alloc-util.h"
++#include "fuzz.h"
++#include "user-record.h"
++
++#include "sd-json.h"
++
++int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
++        _cleanup_(user_record_unrefp) UserRecord *ur = NULL;
++        _cleanup_(sd_json_variant_unrefp) sd_json_variant *v = NULL;
++        _cleanup_free_ char *str = NULL;
++        unsigned line = 0;
++        int r;
++
++        if (outside_size_range(size, 0, 65536))
++                return 0;
++
++        assert_se(str = memdup_suffix0(data, size));
++        assert_se(ur = user_record_new());
++
++        fuzz_setup_logging();
++
++        r = sd_json_parse(str, 0, &v, &line, /* reterr_column= */ NULL);
++        if (r < 0) {
++                (void) log_syntax(/* unit= */ NULL, LOG_DEBUG, "<stdin>", line, r, "JSON parse failure.");
++                return 0;
++        }
++
++        r = user_record_load(ur, v, USER_RECORD_LOAD_FULL|USER_RECORD_PERMISSIVE);
++        if (r >= 0) {
++                /* We have a valid record, so let's excercise a couple more functions */
++                _cleanup_(user_record_unrefp) UserRecord *cloned = NULL;
++                (void) user_record_clone(ur, USER_RECORD_LOAD_FULL, &cloned);
++
++                (void) user_record_test_blocked(ur);
++                (void) user_record_test_password_change_required(ur);
++                (void) user_record_can_authenticate(ur);
++                (void) user_record_luks_discard(ur);
++                (void) user_record_drop_caches(ur);
++        }
++
++        return 0;
++}
+diff --git a/src/fuzz/meson.build b/src/fuzz/meson.build
+index 8c1b2e91ea..e25c62ea22 100644
+--- a/src/fuzz/meson.build
++++ b/src/fuzz/meson.build
+@@ -11,6 +11,7 @@ simple_fuzzers += files(
+         'fuzz-json.c',
+         'fuzz-time-util.c',
+         'fuzz-udev-database.c',
++        'fuzz-user-record.c',
+         'fuzz-varlink.c',
+         'fuzz-varlink-idl.c',
+ )
+diff --git a/test/fuzz/fuzz-user-record/auth-fido2.json b/test/fuzz/fuzz-user-record/auth-fido2.json
+new file mode 100644
+index 0000000000..cd8282f5bf
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/auth-fido2.json
+@@ -0,0 +1,40 @@
++{
++    "userName": "fido2user",
++    "realName": "FIDO2 Security Key User",
++    "uid": 2002,
++    "gid": 2002,
++    "homeDirectory": "/home/fido2user",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/fido2user.home",
++    "fido2HmacCredential": [
++        "AQIDBAUAAQ==",
++        "BQYHCAkKCw=="
++    ],
++    "privileged": {
++        "fido2HmacSalt": [
++            {
++                "credential": "AQIDBAUAAQ==",
++                "salt": "Zmlyc3RzYWx0Zm9yZmlkbzJ0ZXN0aW5n",
++                "hashedPassword": "$6$fido2salt1$hashedpasswordforfido2credential1",
++                "up": true,
++                "uv": false,
++                "clientPin": false
++            },
++            {
++                "credential": "BQYHCAkKCw==",
++                "salt": "c2Vjb25kc2FsdGZvcmZpZG8ydGVzdA==",
++                "hashedPassword": "$6$fido2salt2$hashedpasswordforfido2credential2",
++                "up": true,
++                "uv": true,
++                "clientPin": true
++            }
++        ]
++    },
++    "secret": {
++        "tokenPin": ["1234"],
++        "fido2UserPresencePermitted": true,
++        "fido2UserVerificationPermitted": true
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/auth-pkcs11.json b/test/fuzz/fuzz-user-record/auth-pkcs11.json
+new file mode 100644
+index 0000000000..d4604e8f0b
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/auth-pkcs11.json
+@@ -0,0 +1,33 @@
++{
++    "userName": "pkcs11user",
++    "realName": "PKCS#11 Token User",
++    "uid": 2001,
++    "gid": 2001,
++    "homeDirectory": "/home/pkcs11user",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/pkcs11user.home",
++    "pkcs11TokenUri": [
++        "pkcs11:model=PKCS%2315%20emulated;manufacturer=piv_II;serial=00000000;token=pkcs11user",
++        "pkcs11:model=YubiKey;manufacturer=Yubico;serial=12345678;token=PIV"
++    ],
++    "privileged": {
++        "pkcs11EncryptedKey": [
++            {
++                "uri": "pkcs11:model=PKCS%2315%20emulated;manufacturer=piv_II;serial=00000000;token=pkcs11user",
++                "data": "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IGVuY3J5cHRlZCBrZXkgZm9yIFBLQ1MjMTEu",
++                "hashedPassword": "$6$pkcs11salt$encryptedkeyhashforpkcs11authentication"
++            },
++            {
++                "uri": "pkcs11:model=YubiKey;manufacturer=Yubico;serial=12345678;token=PIV",
++                "data": "QW5vdGhlciBlbmNyeXB0ZWQga2V5IGZvciBhIGRpZmZlcmVudCB0b2tlbi4=",
++                "hashedPassword": "$6$yubisalt$encryptedkeyhashforyubikey"
++            }
++        ]
++    },
++    "secret": {
++        "tokenPin": ["123456"],
++        "pkcs11ProtectedAuthenticationPathPermitted": true
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/auth-recovery.json b/test/fuzz/fuzz-user-record/auth-recovery.json
+new file mode 100644
+index 0000000000..f704e1ec1c
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/auth-recovery.json
+@@ -0,0 +1,27 @@
++{
++    "userName": "recoveryuser",
++    "realName": "Recovery Key User",
++    "uid": 2003,
++    "gid": 2003,
++    "homeDirectory": "/home/recoveryuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/recoveryuser.home",
++    "recoveryKeyType": ["modhex64", "modhex64"],
++    "privileged": {
++        "hashedPassword": [
++            "$6$mainsalt$mainpasswordhashforrecoveryuser"
++        ],
++        "recoveryKey": [
++            {
++                "type": "modhex64",
++                "hashedPassword": "$6$recovery1$hashedrecoverykey1"
++            },
++            {
++                "type": "modhex64",
++                "hashedPassword": "$6$recovery2$hashedrecoverykey2"
++            }
++        ]
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/auto-resize-grow.json b/test/fuzz/fuzz-user-record/auto-resize-grow.json
+new file mode 100644
+index 0000000000..d72a797a11
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/auto-resize-grow.json
+@@ -0,0 +1,14 @@
++{
++    "userName": "growonly",
++    "realName": "Grow Only User",
++    "uid": 3008,
++    "gid": 3008,
++    "homeDirectory": "/home/growonly",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/growonly.home",
++    "diskSize": 53687091200,
++    "autoResizeMode": "grow",
++    "rebalanceWeight": true
++}
+diff --git a/test/fuzz/fuzz-user-record/auto-resize-modes.json b/test/fuzz/fuzz-user-record/auto-resize-modes.json
+new file mode 100644
+index 0000000000..75d50aed7b
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/auto-resize-modes.json
+@@ -0,0 +1,14 @@
++{
++    "userName": "autoresizeuser",
++    "realName": "Auto Resize Test User",
++    "uid": 3006,
++    "gid": 3006,
++    "homeDirectory": "/home/autoresizeuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/autoresizeuser.home",
++    "diskSize": 53687091200,
++    "autoResizeMode": "shrink-and-grow",
++    "rebalanceWeight": 100
++}
+diff --git a/test/fuzz/fuzz-user-record/auto-resize-off.json b/test/fuzz/fuzz-user-record/auto-resize-off.json
+new file mode 100644
+index 0000000000..8479985aca
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/auto-resize-off.json
+@@ -0,0 +1,14 @@
++{
++    "userName": "noautoresize",
++    "realName": "No Auto Resize User",
++    "uid": 3007,
++    "gid": 3007,
++    "homeDirectory": "/home/noautoresize",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/noautoresize.home",
++    "diskSize": 53687091200,
++    "autoResizeMode": "off",
++    "rebalanceWeight": false
++}
+diff --git a/test/fuzz/fuzz-user-record/basic-regular.json b/test/fuzz/fuzz-user-record/basic-regular.json
+new file mode 100644
+index 0000000000..594f348aae
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/basic-regular.json
+@@ -0,0 +1,9 @@
++{
++    "userName": "testuser",
++    "realName": "Test User",
++    "uid": 1000,
++    "gid": 1000,
++    "homeDirectory": "/home/testuser",
++    "shell": "/bin/bash",
++    "disposition": "regular"
++}
+diff --git a/test/fuzz/fuzz-user-record/basic-system.json b/test/fuzz/fuzz-user-record/basic-system.json
+new file mode 100644
+index 0000000000..9cfb3a2f63
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/basic-system.json
+@@ -0,0 +1,7 @@
++{
++    "userName": "httpd",
++    "uid": 473,
++    "gid": 473,
++    "disposition": "system",
++    "locked": true
++}
+diff --git a/test/fuzz/fuzz-user-record/capabilities-full.json b/test/fuzz/fuzz-user-record/capabilities-full.json
+new file mode 100644
+index 0000000000..08d5f362be
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/capabilities-full.json
+@@ -0,0 +1,56 @@
++{
++    "userName": "capuser",
++    "realName": "Capabilities Test User",
++    "uid": 3010,
++    "gid": 3010,
++    "homeDirectory": "/home/capuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "capabilityBoundingSet": [
++        "CAP_AUDIT_CONTROL",
++        "CAP_AUDIT_READ",
++        "CAP_AUDIT_WRITE",
++        "CAP_BLOCK_SUSPEND",
++        "CAP_BPF",
++        "CAP_CHECKPOINT_RESTORE",
++        "CAP_CHOWN",
++        "CAP_DAC_OVERRIDE",
++        "CAP_DAC_READ_SEARCH",
++        "CAP_FOWNER",
++        "CAP_FSETID",
++        "CAP_IPC_LOCK",
++        "CAP_IPC_OWNER",
++        "CAP_KILL",
++        "CAP_LEASE",
++        "CAP_LINUX_IMMUTABLE",
++        "CAP_MAC_ADMIN",
++        "CAP_MAC_OVERRIDE",
++        "CAP_MKNOD",
++        "CAP_NET_ADMIN",
++        "CAP_NET_BIND_SERVICE",
++        "CAP_NET_BROADCAST",
++        "CAP_NET_RAW",
++        "CAP_PERFMON",
++        "CAP_SETFCAP",
++        "CAP_SETGID",
++        "CAP_SETPCAP",
++        "CAP_SETUID",
++        "CAP_SYS_ADMIN",
++        "CAP_SYS_BOOT",
++        "CAP_SYS_CHROOT",
++        "CAP_SYS_MODULE",
++        "CAP_SYS_NICE",
++        "CAP_SYS_PACCT",
++        "CAP_SYS_PTRACE",
++        "CAP_SYS_RAWIO",
++        "CAP_SYS_RESOURCE",
++        "CAP_SYS_TIME",
++        "CAP_SYS_TTY_CONFIG",
++        "CAP_SYSLOG",
++        "CAP_WAKE_ALARM"
++    ],
++    "capabilityAmbientSet": [
++        "CAP_NET_BIND_SERVICE",
++        "CAP_NET_RAW"
++    ]
++}
+diff --git a/test/fuzz/fuzz-user-record/default-area.json b/test/fuzz/fuzz-user-record/default-area.json
+new file mode 100644
+index 0000000000..b27f40b5d9
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/default-area.json
+@@ -0,0 +1,16 @@
++{
++    "userName": "areauser",
++    "realName": "Default Area Test User",
++    "uid": 3012,
++    "gid": 3012,
++    "homeDirectory": "/home/areauser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "defaultArea": "work",
++    "perMachine": [
++        {
++            "matchHostname": "personal",
++            "defaultArea": "personal"
++        }
++    ]
++}
+diff --git a/test/fuzz/fuzz-user-record/disposition-container.json b/test/fuzz/fuzz-user-record/disposition-container.json
+new file mode 100644
+index 0000000000..67d5995467
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/disposition-container.json
+@@ -0,0 +1,8 @@
++{
++    "userName": "containeruser",
++    "uid": 100000,
++    "gid": 100000,
++    "homeDirectory": "/home/containeruser",
++    "shell": "/bin/sh",
++    "disposition": "container"
++}
+diff --git a/test/fuzz/fuzz-user-record/disposition-dynamic.json b/test/fuzz/fuzz-user-record/disposition-dynamic.json
+new file mode 100644
+index 0000000000..1678d99486
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/disposition-dynamic.json
+@@ -0,0 +1,9 @@
++{
++    "userName": "dynamicuser",
++    "uid": 61234,
++    "gid": 61234,
++    "homeDirectory": "/run/dynamicuser",
++    "shell": "/usr/sbin/nologin",
++    "disposition": "dynamic",
++    "locked": true
++}
+diff --git a/test/fuzz/fuzz-user-record/disposition-foreign.json b/test/fuzz/fuzz-user-record/disposition-foreign.json
+new file mode 100644
+index 0000000000..9f3b2ff18f
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/disposition-foreign.json
+@@ -0,0 +1,8 @@
++{
++    "userName": "foreignuser",
++    "uid": 200000,
++    "gid": 200000,
++    "homeDirectory": "/home/foreign",
++    "shell": "/bin/sh",
++    "disposition": "foreign"
++}
+diff --git a/test/fuzz/fuzz-user-record/disposition-intrinsic.json b/test/fuzz/fuzz-user-record/disposition-intrinsic.json
+new file mode 100644
+index 0000000000..9a66fa1b4f
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/disposition-intrinsic.json
+@@ -0,0 +1,8 @@
++{
++    "userName": "root",
++    "uid": 0,
++    "gid": 0,
++    "homeDirectory": "/root",
++    "shell": "/bin/bash",
++    "disposition": "intrinsic"
++}
+diff --git a/test/fuzz/fuzz-user-record/disposition-reserved.json b/test/fuzz/fuzz-user-record/disposition-reserved.json
+new file mode 100644
+index 0000000000..74cf408546
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/disposition-reserved.json
+@@ -0,0 +1,9 @@
++{
++    "userName": "reserveduser",
++    "uid": 999,
++    "gid": 999,
++    "homeDirectory": "/nonexistent",
++    "shell": "/usr/sbin/nologin",
++    "disposition": "reserved",
++    "locked": true
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-empty-arrays.json b/test/fuzz/fuzz-user-record/edge-empty-arrays.json
+new file mode 100644
+index 0000000000..8e46c3d31e
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-empty-arrays.json
+@@ -0,0 +1,34 @@
++{
++    "userName": "emptyarrays",
++    "realName": "Empty Arrays Test User",
++    "uid": 3001,
++    "gid": 3001,
++    "homeDirectory": "/home/emptyarrays",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "aliases": [],
++    "environment": [],
++    "additionalLanguages": [],
++    "memberOf": [],
++    "capabilityBoundingSet": [],
++    "capabilityAmbientSet": [],
++    "pkcs11TokenUri": [],
++    "fido2HmacCredential": [],
++    "recoveryKeyType": [],
++    "selfModifiableFields": [],
++    "selfModifiableBlobs": [],
++    "selfModifiablePrivileged": [],
++    "privileged": {
++        "hashedPassword": [],
++        "sshAuthorizedKeys": [],
++        "pkcs11EncryptedKey": [],
++        "fido2HmacSalt": [],
++        "recoveryKey": []
++    },
++    "perMachine": [],
++    "signature": [],
++    "secret": {
++        "password": [],
++        "tokenPin": []
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-long-strings.json b/test/fuzz/fuzz-user-record/edge-long-strings.json
+new file mode 100644
+index 0000000000..b7883637e7
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-long-strings.json
+@@ -0,0 +1,24 @@
++{
++    "userName": "longstringsuser",
++    "realName": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
++    "uid": 3004,
++    "gid": 3004,
++    "homeDirectory": "/home/longstringsuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "location": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
++    "environment": [
++        "LONGVAR=CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
++    ],
++    "memberOf": [
++        "group1", "group2", "group3", "group4", "group5",
++        "group6", "group7", "group8", "group9", "group10",
++        "group11", "group12", "group13", "group14", "group15",
++        "group16", "group17", "group18", "group19", "group20"
++    ],
++    "privileged": {
++        "sshAuthorizedKeys": [
++            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVeryLongKeyDataHereThatGoesOnAndOnAndOnForAWhileToTestLongSSHKeysAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA user@host"
++        ]
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-max-values.json b/test/fuzz/fuzz-user-record/edge-max-values.json
+new file mode 100644
+index 0000000000..52a34109f7
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-max-values.json
+@@ -0,0 +1,41 @@
++{
++    "userName": "maxuser",
++    "realName": "Maximum Values Test User",
++    "uid": 4294967294,
++    "gid": 4294967294,
++    "homeDirectory": "/home/maxuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "umask": 511,
++    "niceLevel": 19,
++    "cpuWeight": 10000,
++    "ioWeight": 10000,
++    "diskSize": 18446744073709551615,
++    "diskSizeRelative": 4294967295,
++    "tasksMax": 18446744073709551614,
++    "memoryHigh": 18446744073709551614,
++    "memoryMax": 18446744073709551614,
++    "accessMode": 511,
++    "luksPbkdfForceIterations": 18446744073709551615,
++    "luksPbkdfTimeCostUSec": 18446744073709551615,
++    "luksPbkdfMemoryCost": 18446744073709551615,
++    "luksPbkdfParallelThreads": 18446744073709551615,
++    "luksSectorSize": 4096,
++    "luksVolumeKeySize": 512,
++    "rebalanceWeight": 10000,
++    "rateLimitIntervalUSec": 18446744073709551615,
++    "rateLimitBurst": 18446744073709551615,
++    "stopDelayUSec": 18446744073709551615,
++    "lastChangeUSec": 18446744073709551615,
++    "lastPasswordChangeUSec": 18446744073709551615,
++    "notBeforeUSec": 0,
++    "notAfterUSec": 18446744073709551615,
++    "passwordChangeMinUSec": 0,
++    "passwordChangeMaxUSec": 18446744073709551615,
++    "passwordChangeWarnUSec": 18446744073709551615,
++    "passwordChangeInactiveUSec": 18446744073709551615,
++    "tmpLimit": 18446744073709551615,
++    "tmpLimitScale": 4294967295,
++    "devShmLimit": 18446744073709551615,
++    "devShmLimitScale": 4294967295
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-min-values.json b/test/fuzz/fuzz-user-record/edge-min-values.json
+new file mode 100644
+index 0000000000..b0b569a34e
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-min-values.json
+@@ -0,0 +1,41 @@
++{
++    "userName": "minuser",
++    "realName": "Minimum Values Test User",
++    "uid": 0,
++    "gid": 0,
++    "homeDirectory": "/",
++    "shell": "/",
++    "disposition": "intrinsic",
++    "umask": 0,
++    "niceLevel": -20,
++    "cpuWeight": 1,
++    "ioWeight": 1,
++    "diskSize": 1,
++    "diskSizeRelative": 1,
++    "tasksMax": 1,
++    "memoryHigh": 1,
++    "memoryMax": 1,
++    "accessMode": 0,
++    "luksPbkdfForceIterations": 1,
++    "luksPbkdfTimeCostUSec": 1,
++    "luksPbkdfMemoryCost": 1,
++    "luksPbkdfParallelThreads": 1,
++    "luksSectorSize": 512,
++    "luksVolumeKeySize": 1,
++    "rebalanceWeight": 1,
++    "rateLimitIntervalUSec": 1,
++    "rateLimitBurst": 1,
++    "stopDelayUSec": 0,
++    "lastChangeUSec": 0,
++    "lastPasswordChangeUSec": 0,
++    "notBeforeUSec": 0,
++    "notAfterUSec": 1,
++    "passwordChangeMinUSec": 0,
++    "passwordChangeMaxUSec": 1,
++    "passwordChangeWarnUSec": 0,
++    "passwordChangeInactiveUSec": 0,
++    "tmpLimit": 1,
++    "tmpLimitScale": 1,
++    "devShmLimit": 1,
++    "devShmLimitScale": 1
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-missing-optionals.json b/test/fuzz/fuzz-user-record/edge-missing-optionals.json
+new file mode 100644
+index 0000000000..e06884f976
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-missing-optionals.json
+@@ -0,0 +1,9 @@
++{
++    "userName": "missingoptionals",
++    "realName": "Missing Optional Fields User",
++    "uid": 3002,
++    "gid": 3002,
++    "homeDirectory": "/home/missingoptionals",
++    "shell": "/bin/bash",
++    "disposition": "regular"
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-null-values.json b/test/fuzz/fuzz-user-record/edge-null-values.json
+new file mode 100644
+index 0000000000..cb995f38bd
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-null-values.json
+@@ -0,0 +1,18 @@
++{
++    "userName": "nullvalues",
++    "realName": "Null Values Test User",
++    "uid": 3019,
++    "gid": 3019,
++    "homeDirectory": "/home/nullvalues",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "autoResizeMode": null,
++    "rebalanceWeight": null,
++    "luksDiscard": null,
++    "luksOfflineDiscard": null,
++    "tmpLimit": null,
++    "tmpLimitScale": null,
++    "devShmLimit": null,
++    "devShmLimitScale": null
++}
+diff --git a/test/fuzz/fuzz-user-record/edge-unicode-strings.json b/test/fuzz/fuzz-user-record/edge-unicode-strings.json
+new file mode 100644
+index 0000000000..ce1204d080
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/edge-unicode-strings.json
+@@ -0,0 +1,21 @@
++{
++    "userName": "unicodeuser",
++    "realName": "Ünïcödé Üsér 日本語 中文 العربية",
++    "uid": 3003,
++    "gid": 3003,
++    "homeDirectory": "/home/unicodeuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "emailAddress": "unicode@例え.jp",
++    "location": "東京, 日本 🌸",
++    "environment": [
++        "GREETING=Привет мир",
++        "HELLO=你好世界"
++    ],
++    "preferredLanguage": "ja_JP.UTF-8",
++    "additionalLanguages": ["zh_CN.UTF-8", "ar_SA.UTF-8", "ru_RU.UTF-8"],
++    "timeZone": "Asia/Tokyo",
++    "privileged": {
++        "passwordHint": "お気に入りの食べ物は何ですか？"
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/full-featured.json b/test/fuzz/fuzz-user-record/full-featured.json
+new file mode 100644
+index 0000000000..4ed15a9299
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/full-featured.json
+@@ -0,0 +1,245 @@
++{
++    "userName": "fuzzuser",
++    "realm": "example.com",
++    "aliases": ["fuzz", "fuzzer", "testfuzz"],
++    "uuid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
++    "blobDirectory": "/var/cache/systemd/homed/fuzzuser/",
++    "blobManifest": {
++        "avatar": "c0636851d25a62d817ff7da4e081d1e646e42c74d0ecb53425f75fcf1ba43b52",
++        "login-background": "da7ad0222a6edbc6cd095149c72d38d92fd3114f606e4b57469857ef47fade18",
++        "custom-file": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
++    },
++    "realName": "Fuzz Test User",
++    "emailAddress": "fuzzuser@example.com",
++    "iconName": "user-available",
++    "location": "Fuzzing Lab, Room 42",
++    "disposition": "regular",
++    "lastChangeUSec": 1700000000000000,
++    "lastPasswordChangeUSec": 1699000000000000,
++    "shell": "/bin/bash",
++    "umask": 22,
++    "environment": [
++        "EDITOR=vim",
++        "PAGER=less",
++        "LANG=en_US.UTF-8",
++        "FUZZ_VAR=test_value"
++    ],
++    "timeZone": "Europe/Berlin",
++    "preferredLanguage": "en_US.UTF-8",
++    "additionalLanguages": ["de_DE.UTF-8", "fr_FR.UTF-8", "es_ES.UTF-8"],
++    "niceLevel": 5,
++    "resourceLimits": {
++        "RLIMIT_NOFILE": { "cur": 1024, "max": 65536 },
++        "RLIMIT_NPROC": { "cur": 4096, "max": 8192 },
++        "RLIMIT_MEMLOCK": { "cur": 65536, "max": 131072 },
++        "RLIMIT_AS": { "cur": 4294967296, "max": 8589934592 },
++        "RLIMIT_FSIZE": { "cur": 1073741824, "max": 2147483648 },
++        "RLIMIT_STACK": { "cur": 8388608, "max": 16777216 },
++        "RLIMIT_CORE": { "cur": 0, "max": 0 },
++        "RLIMIT_RSS": { "cur": 4294967296, "max": 8589934592 },
++        "RLIMIT_CPU": { "cur": 3600, "max": 7200 },
++        "RLIMIT_DATA": { "cur": 4294967296, "max": 8589934592 },
++        "RLIMIT_NICE": { "cur": 0, "max": 0 },
++        "RLIMIT_RTPRIO": { "cur": 0, "max": 0 },
++        "RLIMIT_RTTIME": { "cur": 1000000, "max": 2000000 },
++        "RLIMIT_SIGPENDING": { "cur": 128, "max": 256 },
++        "RLIMIT_MSGQUEUE": { "cur": 819200, "max": 1638400 },
++        "RLIMIT_LOCKS": { "cur": 1024, "max": 2048 }
++    },
++    "locked": false,
++    "notBeforeUSec": 1600000000000000,
++    "notAfterUSec": 1900000000000000,
++    "storage": "luks",
++    "diskSize": 107374182400,
++    "diskSizeRelative": 2147483648,
++    "skeletonDirectory": "/etc/skel",
++    "accessMode": 448,
++    "tasksMax": 4096,
++    "memoryHigh": 4294967296,
++    "memoryMax": 8589934592,
++    "cpuWeight": 100,
++    "ioWeight": 100,
++    "mountNoDevices": true,
++    "mountNoSuid": true,
++    "mountNoExecute": false,
++    "cifsDomain": "WORKGROUP",
++    "cifsUserName": "fuzzuser",
++    "cifsService": "//server.example.com/homes/fuzzuser",
++    "cifsExtraMountOptions": "vers=3.0,seal",
++    "imagePath": "/home/fuzzuser.home",
++    "homeDirectory": "/home/fuzzuser",
++    "uid": 60001,
++    "gid": 60001,
++    "memberOf": ["wheel", "users", "audio", "video", "docker", "libvirt"],
++    "capabilityBoundingSet": ["CAP_NET_ADMIN", "CAP_SYS_PTRACE", "CAP_SETUID", "CAP_SETGID"],
++    "capabilityAmbientSet": ["CAP_NET_BIND_SERVICE"],
++    "fileSystemType": "ext4",
++    "partitionUuid": "41f9ce04-c827-4b74-a981-c669f93eb4dc",
++    "luksUuid": "e63581ba-79fb-4226-b9de-1888393f7573",
++    "fileSystemUuid": "758e88c8-5851-4a2a-b88f-e7474279c111",
++    "luksDiscard": true,
++    "luksOfflineDiscard": false,
++    "luksCipher": "aes",
++    "luksCipherMode": "xts-plain64",
++    "luksVolumeKeySize": 64,
++    "luksPbkdfHashAlgorithm": "sha512",
++    "luksPbkdfType": "argon2id",
++    "luksPbkdfForceIterations": 1000,
++    "luksPbkdfTimeCostUSec": 1000000,
++    "luksPbkdfMemoryCost": 1073741824,
++    "luksPbkdfParallelThreads": 4,
++    "luksSectorSize": 4096,
++    "luksExtraMountOptions": "discard,noatime",
++    "dropCaches": true,
++    "autoResizeMode": "shrink-and-grow",
++    "rebalanceWeight": 100,
++    "service": "io.systemd.Home",
++    "rateLimitIntervalUSec": 60000000,
++    "rateLimitBurst": 5,
++    "enforcePasswordPolicy": true,
++    "autoLogin": false,
++    "preferredSessionType": "wayland",
++    "preferredSessionLauncher": "gnome",
++    "stopDelayUSec": 180000000,
++    "killProcesses": true,
++    "passwordChangeMinUSec": 86400000000,
++    "passwordChangeMaxUSec": 7776000000000,
++    "passwordChangeWarnUSec": 1209600000000,
++    "passwordChangeInactiveUSec": 2592000000000,
++    "passwordChangeNow": false,
++    "pkcs11TokenUri": [
++        "pkcs11:model=PKCS%2315%20emulated;manufacturer=piv_II;serial=00000000;token=fuzzuser"
++    ],
++    "fido2HmacCredential": [
++        "AQIDBA=="
++    ],
++    "recoveryKeyType": ["modhex64"],
++    "selfModifiableFields": [
++        "realName",
++        "emailAddress",
++        "iconName",
++        "location",
++        "preferredLanguage",
++        "additionalLanguages",
++        "timeZone",
++        "preferredSessionType",
++        "preferredSessionLauncher"
++    ],
++    "selfModifiableBlobs": ["avatar", "login-background"],
++    "selfModifiablePrivileged": ["passwordHint"],
++    "tmpLimit": 1073741824,
++    "tmpLimitScale": 858993459,
++    "devShmLimit": 536870912,
++    "devShmLimitScale": 429496729,
++    "defaultArea": "work",
++    "privileged": {
++        "passwordHint": "Your favorite fuzzing target",
++        "hashedPassword": [
++            "$6$rounds=656000$somesalt$hashedpassworddata1234567890abcdefghijklmnopqrstuvwxyz",
++            "$y$j9T$somesalt$yescrypthash1234567890"
++        ],
++        "sshAuthorizedKeys": [
++            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG7FVK5YkKL3IYQr7Z6UDYqvB8S8bM7b8vNjVp4S6Y9Y fuzzuser@example.com",
++            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC0123456789abcdef fuzzuser@backup"
++        ],
++        "pkcs11EncryptedKey": [
++            {
++                "uri": "pkcs11:model=PKCS%2315%20emulated;manufacturer=piv_II;serial=00000000;token=fuzzuser",
++                "data": "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IGVuY3J5cHRlZCBrZXku",
++                "hashedPassword": "$6$rounds=656000$somesalt$encryptedkeyhash"
++            }
++        ],
++        "fido2HmacSalt": [
++            {
++                "credential": "AQIDBA==",
++                "salt": "c29tZXNhbHRmb3JmaWRvMg==",
++                "hashedPassword": "$6$rounds=656000$fidosalt$fidohashedpassword",
++                "up": true,
++                "uv": true,
++                "clientPin": false
++            }
++        ],
++        "recoveryKey": [
++            {
++                "type": "modhex64",
++                "hashedPassword": "$6$rounds=656000$recoverysalt$recoverykeyhash"
++            }
++        ]
++    },
++    "perMachine": [
++        {
++            "matchMachineId": "15e19cf24e004b949ddaac60c74aa165",
++            "diskSize": 214748364800,
++            "memoryMax": 17179869184,
++            "cpuWeight": 200
++        },
++        {
++            "matchHostname": "workstation",
++            "shell": "/bin/zsh",
++            "niceLevel": 0,
++            "autoLogin": true
++        },
++        {
++            "matchNotMachineId": "00000000000000000000000000000000",
++            "matchNotHostname": "server",
++            "locked": false
++        }
++    ],
++    "binding": {
++        "15e19cf24e004b949ddaac60c74aa165": {
++            "blobDirectory": "/var/cache/systemd/homed/fuzzuser/",
++            "imagePath": "/home/fuzzuser.home",
++            "homeDirectory": "/home/fuzzuser",
++            "partitionUuid": "41f9ce04-c827-4b74-a981-c669f93eb4dc",
++            "luksUuid": "e63581ba-79fb-4226-b9de-1888393f7573",
++            "fileSystemUuid": "758e88c8-5851-4a2a-b88f-e7474279c111",
++            "uid": 60001,
++            "gid": 60001,
++            "storage": "luks",
++            "fileSystemType": "ext4",
++            "luksCipher": "aes",
++            "luksCipherMode": "xts-plain64",
++            "luksVolumeKeySize": 64
++        }
++    },
++    "status": {
++        "15e19cf24e004b949ddaac60c74aa165": {
++            "aliases": ["fuzz-status-alias"],
++            "diskUsage": 53687091200,
++            "diskFree": 53687091200,
++            "diskSize": 107374182400,
++            "diskCeiling": 214748364800,
++            "diskFloor": 1073741824,
++            "state": "active",
++            "service": "io.systemd.Home",
++            "signedLocally": true,
++            "goodAuthenticationCounter": 42,
++            "badAuthenticationCounter": 3,
++            "lastGoodAuthenticationUSec": 1700000000000000,
++            "lastBadAuthenticationUSec": 1699999000000000,
++            "rateLimitBeginUSec": 1699999500000000,
++            "rateLimitCount": 1,
++            "removable": false,
++            "accessMode": 448,
++            "fileSystemType": "ext4",
++            "fallbackShell": "/bin/sh",
++            "fallbackHomeDirectory": "/",
++            "useFallback": false,
++            "defaultArea": "work"
++        }
++    },
++    "signature": [
++        {
++            "data": "TFUvSGVWclBaU3ppM01KMFBWSHdENW0veGY1MVhEWUNyU3BiRFJOQmR0RjRmRFZock4wdDJJMk9xSC8xeVhpQmlkWGxWMHB0TXVRVnE4S1ZJQ2RFRHE9PQ==",
++            "key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA/QT6kQWOAMhDJf56jBmszEQQpJHqDsGDMZOdiptBgRk=\n-----END PUBLIC KEY-----\n"
++        }
++    ],
++    "secret": {
++        "password": ["testpassword123", "alternatepassword456"],
++        "tokenPin": ["1234", "5678"],
++        "pkcs11Pin": ["0000"],
++        "pkcs11ProtectedAuthenticationPathPermitted": true,
++        "fido2UserPresencePermitted": true,
++        "fido2UserVerificationPermitted": true
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/luks-complete.json b/test/fuzz/fuzz-user-record/luks-complete.json
+new file mode 100644
+index 0000000000..d74b3ae94a
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/luks-complete.json
+@@ -0,0 +1,36 @@
++{
++    "userName": "luksuser",
++    "realName": "Complete LUKS User",
++    "uid": 3015,
++    "gid": 3015,
++    "homeDirectory": "/home/luksuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "imagePath": "/home/luksuser.home",
++    "diskSize": 107374182400,
++    "fileSystemType": "btrfs",
++    "partitionUuid": "12345678-1234-1234-1234-123456789abc",
++    "luksUuid": "abcdef12-3456-7890-abcd-ef1234567890",
++    "fileSystemUuid": "fedcba98-7654-3210-fedc-ba9876543210",
++    "luksDiscard": true,
++    "luksOfflineDiscard": true,
++    "luksCipher": "aes",
++    "luksCipherMode": "xts-plain64",
++    "luksVolumeKeySize": 64,
++    "luksPbkdfHashAlgorithm": "sha256",
++    "luksPbkdfType": "pbkdf2",
++    "luksPbkdfForceIterations": 100000,
++    "luksPbkdfTimeCostUSec": 500000,
++    "luksPbkdfMemoryCost": 67108864,
++    "luksPbkdfParallelThreads": 2,
++    "luksSectorSize": 4096,
++    "luksExtraMountOptions": "compress=zstd:3,noatime",
++    "dropCaches": true,
++    "mountNoDevices": true,
++    "mountNoSuid": true,
++    "mountNoExecute": false,
++    "accessMode": 448,
++    "autoResizeMode": "shrink-and-grow",
++    "rebalanceWeight": 100
++}
+diff --git a/test/fuzz/fuzz-user-record/minimal.json b/test/fuzz/fuzz-user-record/minimal.json
+new file mode 100644
+index 0000000000..a22cc44fb3
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/minimal.json
+@@ -0,0 +1,3 @@
++{
++    "userName": "u"
++}
+diff --git a/test/fuzz/fuzz-user-record/password-policy.json b/test/fuzz/fuzz-user-record/password-policy.json
+new file mode 100644
+index 0000000000..c4b336a4f5
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/password-policy.json
+@@ -0,0 +1,24 @@
++{
++    "userName": "policuser",
++    "realName": "Password Policy User",
++    "uid": 3017,
++    "gid": 3017,
++    "homeDirectory": "/home/policyuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "enforcePasswordPolicy": true,
++    "passwordChangeNow": true,
++    "passwordChangeMinUSec": 86400000000,
++    "passwordChangeMaxUSec": 7776000000000,
++    "passwordChangeWarnUSec": 1209600000000,
++    "passwordChangeInactiveUSec": 2592000000000,
++    "lastPasswordChangeUSec": 1700000000000000,
++    "rateLimitIntervalUSec": 60000000,
++    "rateLimitBurst": 3,
++    "privileged": {
++        "hashedPassword": [
++            "$6$rounds=656000$salt$hashedpassword"
++        ],
++        "passwordHint": "Your first pet's name"
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/per-machine-complex.json b/test/fuzz/fuzz-user-record/per-machine-complex.json
+new file mode 100644
+index 0000000000..327f3e5a92
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/per-machine-complex.json
+@@ -0,0 +1,58 @@
++{
++    "userName": "permachineuser",
++    "realName": "Per Machine Complex User",
++    "uid": 3005,
++    "gid": 3005,
++    "homeDirectory": "/home/permachineuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "luks",
++    "diskSize": 53687091200,
++    "memoryMax": 4294967296,
++    "cpuWeight": 100,
++    "perMachine": [
++        {
++            "matchMachineId": "11111111111111111111111111111111",
++            "diskSize": 107374182400,
++            "memoryMax": 8589934592,
++            "cpuWeight": 200,
++            "storage": "luks",
++            "shell": "/bin/zsh"
++        },
++        {
++            "matchMachineId": ["22222222222222222222222222222222", "33333333333333333333333333333333"],
++            "diskSize": 214748364800,
++            "memoryMax": 17179869184,
++            "ioWeight": 500
++        },
++        {
++            "matchHostname": "workstation",
++            "autoLogin": true,
++            "niceLevel": -5,
++            "environment": ["WORKSTATION=true"]
++        },
++        {
++            "matchHostname": ["server1", "server2"],
++            "locked": false,
++            "killProcesses": false,
++            "stopDelayUSec": 300000000
++        },
++        {
++            "matchNotMachineId": "44444444444444444444444444444444",
++            "matchNotHostname": "restricted-host",
++            "tasksMax": 8192
++        },
++        {
++            "matchMachineId": "55555555555555555555555555555555",
++            "matchHostname": "special-host",
++            "blobDirectory": "/var/cache/special/blobs/",
++            "blobManifest": {
++                "special-file": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
++            },
++            "selfModifiableFields": ["realName", "location"],
++            "selfModifiableBlobs": ["avatar"],
++            "preferredSessionType": "x11",
++            "preferredSessionLauncher": "plasma"
++        }
++    ]
++}
+diff --git a/test/fuzz/fuzz-user-record/rlimits-all.json b/test/fuzz/fuzz-user-record/rlimits-all.json
+new file mode 100644
+index 0000000000..ea9299a69e
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/rlimits-all.json
+@@ -0,0 +1,27 @@
++{
++    "userName": "rlimitsuser",
++    "realName": "Resource Limits Test User",
++    "uid": 3009,
++    "gid": 3009,
++    "homeDirectory": "/home/rlimitsuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "resourceLimits": {
++        "RLIMIT_AS": { "cur": 4294967296, "max": 8589934592 },
++        "RLIMIT_CORE": { "cur": 0, "max": 9223372036854775807 },
++        "RLIMIT_CPU": { "cur": 3600, "max": 9223372036854775807 },
++        "RLIMIT_DATA": { "cur": 4294967296, "max": 9223372036854775807 },
++        "RLIMIT_FSIZE": { "cur": 1073741824, "max": 9223372036854775807 },
++        "RLIMIT_LOCKS": { "cur": 1024, "max": 9223372036854775807 },
++        "RLIMIT_MEMLOCK": { "cur": 65536, "max": 9223372036854775807 },
++        "RLIMIT_MSGQUEUE": { "cur": 819200, "max": 9223372036854775807 },
++        "RLIMIT_NICE": { "cur": 0, "max": 40 },
++        "RLIMIT_NOFILE": { "cur": 1024, "max": 1048576 },
++        "RLIMIT_NPROC": { "cur": 4096, "max": 9223372036854775807 },
++        "RLIMIT_RSS": { "cur": 4294967296, "max": 9223372036854775807 },
++        "RLIMIT_RTPRIO": { "cur": 0, "max": 99 },
++        "RLIMIT_RTTIME": { "cur": 1000000, "max": 9223372036854775807 },
++        "RLIMIT_SIGPENDING": { "cur": 128, "max": 9223372036854775807 },
++        "RLIMIT_STACK": { "cur": 8388608, "max": 9223372036854775807 }
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/session-prefs.json b/test/fuzz/fuzz-user-record/session-prefs.json
+new file mode 100644
+index 0000000000..56344241f3
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/session-prefs.json
+@@ -0,0 +1,14 @@
++{
++    "userName": "sessionuser",
++    "realName": "Session Preferences User",
++    "uid": 3016,
++    "gid": 3016,
++    "homeDirectory": "/home/sessionuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "autoLogin": true,
++    "preferredSessionType": "wayland",
++    "preferredSessionLauncher": "gnome",
++    "stopDelayUSec": 180000000,
++    "killProcesses": false
++}
+diff --git a/test/fuzz/fuzz-user-record/ssh-keys.json b/test/fuzz/fuzz-user-record/ssh-keys.json
+new file mode 100644
+index 0000000000..00d947d6ba
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/ssh-keys.json
+@@ -0,0 +1,18 @@
++{
++    "userName": "sshuser",
++    "realName": "SSH Keys User",
++    "uid": 3013,
++    "gid": 3013,
++    "homeDirectory": "/home/sshuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "privileged": {
++        "sshAuthorizedKeys": [
++            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKlH9A7KdFhMmfBrV2fzONpPeaQaJAXyY3bMpZ1sT5Xy ed25519-key",
++            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7s... rsa-key",
++            "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA... ecdsa-key",
++            "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIA... security-key",
++            "command=\"/usr/bin/restricted\",no-port-forwarding,no-agent-forwarding ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJx... restricted-key"
++        ]
++    }
++}
+diff --git a/test/fuzz/fuzz-user-record/storage-cifs.json b/test/fuzz/fuzz-user-record/storage-cifs.json
+new file mode 100644
+index 0000000000..f30d5d676d
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/storage-cifs.json
+@@ -0,0 +1,15 @@
++{
++    "userName": "cifsuser",
++    "realName": "CIFS Home User",
++    "uid": 1001,
++    "gid": 1001,
++    "homeDirectory": "/home/cifsuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "cifs",
++    "cifsDomain": "EXAMPLE",
++    "cifsUserName": "cifsuser",
++    "cifsService": "//fileserver.example.com/homes/cifsuser",
++    "cifsExtraMountOptions": "vers=3.0,seal,sec=krb5",
++    "memberOf": ["users", "domain-users"]
++}
+diff --git a/test/fuzz/fuzz-user-record/storage-classic.json b/test/fuzz/fuzz-user-record/storage-classic.json
+new file mode 100644
+index 0000000000..b77e07d09b
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/storage-classic.json
+@@ -0,0 +1,10 @@
++{
++    "userName": "classicuser",
++    "realName": "Classic Unix User",
++    "uid": 1005,
++    "gid": 1005,
++    "homeDirectory": "/home/classicuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "classic"
++}
+diff --git a/test/fuzz/fuzz-user-record/storage-directory.json b/test/fuzz/fuzz-user-record/storage-directory.json
+new file mode 100644
+index 0000000000..12dbd6eb5e
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/storage-directory.json
+@@ -0,0 +1,13 @@
++{
++    "userName": "diruser",
++    "realName": "Directory Storage User",
++    "uid": 1002,
++    "gid": 1002,
++    "homeDirectory": "/home/diruser",
++    "imagePath": "/home/diruser.homedir",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "directory",
++    "accessMode": 448,
++    "diskSize": 10737418240
++}
+diff --git a/test/fuzz/fuzz-user-record/storage-fscrypt.json b/test/fuzz/fuzz-user-record/storage-fscrypt.json
+new file mode 100644
+index 0000000000..63c2887fd4
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/storage-fscrypt.json
+@@ -0,0 +1,14 @@
++{
++    "userName": "fscryptuser",
++    "realName": "Fscrypt User",
++    "uid": 1004,
++    "gid": 1004,
++    "homeDirectory": "/home/fscryptuser",
++    "imagePath": "/home/fscryptuser.homedir",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "fscrypt",
++    "fileSystemType": "ext4",
++    "accessMode": 448,
++    "diskSize": 21474836480
++}
+diff --git a/test/fuzz/fuzz-user-record/storage-subvolume.json b/test/fuzz/fuzz-user-record/storage-subvolume.json
+new file mode 100644
+index 0000000000..8e80145d5c
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/storage-subvolume.json
+@@ -0,0 +1,14 @@
++{
++    "userName": "btrfsuser",
++    "realName": "Btrfs Subvolume User",
++    "uid": 1003,
++    "gid": 1003,
++    "homeDirectory": "/home/btrfsuser",
++    "imagePath": "/home/btrfsuser.homedir",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "storage": "subvolume",
++    "fileSystemType": "btrfs",
++    "accessMode": 448,
++    "diskSize": 53687091200
++}
+diff --git a/test/fuzz/fuzz-user-record/time-constraints.json b/test/fuzz/fuzz-user-record/time-constraints.json
+new file mode 100644
+index 0000000000..238efa3e69
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/time-constraints.json
+@@ -0,0 +1,13 @@
++{
++    "userName": "timeuser",
++    "realName": "Time Constraints User",
++    "uid": 3018,
++    "gid": 3018,
++    "homeDirectory": "/home/timeuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "notBeforeUSec": 1609459200000000,
++    "notAfterUSec": 1924905600000000,
++    "lastChangeUSec": 1700000000000000,
++    "locked": false
++}
+diff --git a/test/fuzz/fuzz-user-record/tmpfs-limits.json b/test/fuzz/fuzz-user-record/tmpfs-limits.json
+new file mode 100644
+index 0000000000..725e6df8a2
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/tmpfs-limits.json
+@@ -0,0 +1,13 @@
++{
++    "userName": "tmpfsuser",
++    "realName": "Tmpfs Limits Test User",
++    "uid": 3014,
++    "gid": 3014,
++    "homeDirectory": "/home/tmpfsuser",
++    "shell": "/bin/bash",
++    "disposition": "regular",
++    "tmpLimit": 1073741824,
++    "tmpLimitScale": 214748364,
++    "devShmLimit": 536870912,
++    "devShmLimitScale": 107374182
++}
+diff --git a/test/fuzz/fuzz-user-record/with-realm.json b/test/fuzz/fuzz-user-record/with-realm.json
+new file mode 100644
+index 0000000000..ab77c824af
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/with-realm.json
+@@ -0,0 +1,10 @@
++{
++    "userName": "realmuser",
++    "realm": "corp.example.com",
++    "realName": "Corporate Realm User",
++    "uid": 3011,
++    "gid": 3011,
++    "homeDirectory": "/home/realmuser@corp.example.com",
++    "shell": "/bin/bash",
++    "disposition": "regular"
++}

@@ -48,7 +48,7 @@ Url:            https://systemd.io
 # Allow users to specify the version and release when building the rpm by 
 # setting the %%version_override and %%release_override macros.
 Version:        %{?version_override}%{!?version_override:257}
-Release:        23%{?dist}.2
+Release:        33%{?dist}
 
 %global stable %(c="%version"; [ "$c" = "${c#*.*}" ]; echo $?)
 
@@ -723,25 +723,298 @@ Patch0610: 0610-ci-re-enable-bpf-framework-option-for-build-and-unit.patch
 Patch0611: 0611-ci-add-bpftool-workaround-to-codeql-job-too.patch
 Patch0612: 0612-ci-fix-workaround-about-bpftool-for-codeql.patch
 Patch0613: 0613-ci-add-bpftool-workaround-to-coverity-too.patch
-Patch0614: 0614-path-util-add-flavour-of-path_startswith-that-leaves.patch
-Patch0615: 0615-cgroup-port-some-code-over-to-path_startswith_full.patch
-Patch0616: 0616-path-util-invert-PATH_STARTSWITH_ACCEPT_DOT_DOT-flag.patch
-Patch0617: 0617-sd-json-fix-off-by-one-issue-when-updating-parent-fo.patch
-Patch0618: 0618-core-cgroup-avoid-one-unnecessary-strjoina.patch
-Patch0619: 0619-core-validate-input-cgroup-path-more-prudently.patch
-Patch0620: 0620-nspawn-apply-BindUser-Ephemeral-from-settings-file-o.patch
-Patch0621: 0621-nspawn-normalize-pivot_root-paths.patch
-Patch0622: 0622-udev-check-for-invalid-chars-in-various-fields-recei.patch
-Patch0623: 0623-udev-ensure-there-is-space-for-trailing-NUL-before-c.patch
-Patch0624: 0624-udev-ensure-tag-parsing-stays-within-bounds.patch
-Patch0625: 0625-udev-fix-review-mixup.patch
-Patch0626: 0626-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
-Patch0627: 0627-udev-builtin-net-id-print-cescaped-bad-attributes.patch
+Patch0614: 0614-Revert-man-mention-RHEL-documentation-in-systemctl-s.patch
+Patch0615: 0615-path-util-add-flavour-of-path_startswith-that-leaves.patch
+Patch0616: 0616-cgroup-port-some-code-over-to-path_startswith_full.patch
+Patch0617: 0617-path-util-invert-PATH_STARTSWITH_ACCEPT_DOT_DOT-flag.patch
+Patch0618: 0618-sd-json-fix-off-by-one-issue-when-updating-parent-fo.patch
+Patch0619: 0619-core-cgroup-avoid-one-unnecessary-strjoina.patch
+Patch0620: 0620-core-validate-input-cgroup-path-more-prudently.patch
+Patch0621: 0621-nspawn-apply-BindUser-Ephemeral-from-settings-file-o.patch
+Patch0622: 0622-nspawn-normalize-pivot_root-paths.patch
+Patch0623: 0623-udev-check-for-invalid-chars-in-various-fields-recei.patch
+Patch0624: 0624-udev-ensure-there-is-space-for-trailing-NUL-before-c.patch
+Patch0625: 0625-udev-ensure-tag-parsing-stays-within-bounds.patch
+Patch0626: 0626-udev-fix-review-mixup.patch
+Patch0627: 0627-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
+Patch0628: 0628-udev-builtin-net-id-print-cescaped-bad-attributes.patch
+Patch0629: 0629-core-only-activate-transaction-that-contain-useful-j.patch
+Patch0630: 0630-journald-extend-STDOUT_STREAMS_MAX-to-64k.patch
+Patch0631: 0631-string-util-introduce-strprepend-helper.patch
+Patch0632: 0632-missing-add-quotactl_fd-wrapper.patch
+Patch0633: 0633-homed-always-use-quotactl_fd-if-its-available.patch
+Patch0634: 0634-pid1-add-GracefulOptions-setting-to-.mount-units.patch
+Patch0635: 0635-pid1-enable-usrquota-support-on-dev-shm.patch
+Patch0636: 0636-units-enable-usrquota-support-on-tmp.patch
+Patch0637: 0637-nspawn-enable-usrquota-support-on-tmp-and-dev-shm.patch
+Patch0638: 0638-nspawn-downgrade-log-message-about-usrquota-to-debug.patch
+Patch0639: 0639-mount-setup-drop-outdated-comment.patch
+Patch0640: 0640-mount-setup-tune-down-log-level-if-usrquota-is-not-s.patch
+Patch0641: 0641-devnum-util-add-macros-to-safely-convert-dev_t-to-po.patch
+Patch0642: 0642-user-record-add-fields-for-setting-limits-on-tmp-and.patch
+Patch0643: 0643-user-runtime-dir-some-smaller-modernizations-refacto.patch
+Patch0644: 0644-user-runtime-dir-enforce-tmp-and-dev-shm-quota.patch
+Patch0645: 0645-homectl-add-support-for-configuring-tmpfs-limits.patch
+Patch0646: 0646-test-add-test-case-for-tmpfs-quota-logic-PAMName-ask.patch
+Patch0647: 0647-update-TODO.patch
+Patch0648: 0648-core-dbus-service-fix-alignment.patch
+Patch0649: 0649-core-mount-filter-out-fail-option-as-well.patch
+Patch0650: 0650-core-mount-check-parameters_fragment-first-in-mount_.patch
+Patch0651: 0651-core-mount-report-accurate-can_start-and-can_reload.patch
+Patch0652: 0652-core-mount-trivial-coding-style-cleanups.patch
+Patch0653: 0653-core-dbus-mount-add-missing-ReloadResult-and-CleanRe.patch
+Patch0654: 0654-bus-unit-util-add-missing-assertions.patch
+Patch0655: 0655-core-mount-rework-GracefulOptions-to-be-just-x-syste.patch
+Patch0656: 0656-mountpoint-util-assume-fsopen-works-in-mount_option_.patch
+Patch0657: 0657-core-mount-log-only-once-about-fs-not-supporting-new.patch
+Patch0658: 0658-user-runtime-dir-correct-quota-size-calculation.patch
+Patch0659: 0659-test-display-quota-add-a-little-helper-binary-to-sho.patch
+Patch0660: 0660-TEST-46-HOMED-check-for-support-on-dev-shm-and-tmp-s.patch
+Patch0661: 0661-TEST-46-HOMED-conditionally-skip-usrquota-tests.patch
+Patch0662: 0662-core-cleanup-unit-s-dropin-directories-from-global-c.patch
+Patch0663: 0663-libsystemd-drop-const-decorators-on-public-inline-fu.patch
+Patch0664: 0664-sd-id128-Drop-_sd_const_-from-sd_id128_in_setv.patch
+Patch0665: 0665-test-wrap-mount-umount-when-running-with-sanitizers.patch
+Patch0666: 0666-test-wrap-even-more-binaries-when-running-with-sanit.patch
+Patch0667: 0667-test-temporarily-ignore-sanitizer-warning-about-bloc.patch
+Patch0668: 0668-test-slightly-reduce-the-performance-memory-overhead.patch
+Patch0669: 0669-fstab-generator-support-swap-on-network-block-device.patch
+Patch0670: 0670-man-add-tags-for-the-next-few-versions.patch
+Patch0671: 0671-test-drop-some-extraneous-whitespaces.patch
+Patch0672: 0672-shared-fix-segfault-when-processing-matchHostname-fi.patch
+Patch0673: 0673-shared-don-t-exclude-valid-min-max-values-for-cgroup.patch
+Patch0674: 0674-shared-don-t-leak-memory-from-array-fields.patch
+Patch0675: 0675-man-fix-short-option-for-userdbctl-s-from-file.patch
+Patch0676: 0676-fuzz-add-a-fuzzer-for-user-records.patch
+Patch0677: 0677-user-record-extract-user_record_image_is_blockdev-co.patch
+Patch0678: 0678-udev-net_id-introduce-naming-scheme-for-RHEL-9.9.patch
+Patch0679: 0679-udev-net_id-introduce-naming-scheme-for-RHEL-10.3.patch
+Patch0680: 0680-Tag-accel-devices-for-uaccess-render.patch
+Patch0681: 0681-udev-tag-kfd-devices-for-xaccess-render-40888.patch
+Patch0682: 0682-fstab-generator-fix-spurious-quota-warning-for-xfs.patch
+Patch0683: 0683-man-reword-the-description-of-secure-pager-handling.patch
+Patch0684: 0684-pager-also-check-for-SUDO_UID.patch
+Patch0685: 0685-Revert-mount-setup-tune-down-log-level-if-usrquota-i.patch
+Patch0686: 0686-Revert-nspawn-enable-usrquota-support-on-tmp-and-dev.patch
+Patch0687: 0687-Revert-units-enable-usrquota-support-on-tmp.patch
+Patch0688: 0688-Revert-pid1-enable-usrquota-support-on-dev-shm.patch
+Patch0689: 0689-Revert-udev-builtin-net-id-print-cescaped-bad-attrib.patch
+Patch0690: 0690-homectl-apply-all-member-of-groups-from-a-comma-sepa.patch
+Patch0691: 0691-udevadm-gracefully-handle-when-a-maked-file-is-speci.patch
+Patch0692: 0692-udev-drop-redundant-checks.patch
+Patch0693: 0693-TEST-71-HOSTNAME-specify-job-mode-for-the-stop-job-3.patch
+Patch0694: 0694-test-wait-for-coredump-to-appear-before-parsing.patch
+Patch0695: 0695-TEST-87-AUX-UTILS-VM-make-coredumps-stored-in-archiv.patch
+Patch0696: 0696-TEST-87-AUX-UTILS-VM-rotate-journal-at-one-more-plac.patch
+Patch0697: 0697-udev-rules-add-missing-device-name-prefix-in-log-mes.patch
+Patch0698: 0698-nss-systemd-avoid-ELF-TLS-for-recursion-guard.patch
+Patch0699: 0699-core-make-manager-event-loop-rate-limit-configurable.patch
+Patch0700: 0700-resolved-replace-assert-with-error-return-in-DNSSEC-.patch
+Patch0701: 0701-pid1-normalize-oom-error-handling-a-bit.patch
+Patch0702: 0702-sd-path-don-t-chop-off-trailing-slash-in-sd_path-api.patch
+Patch0703: 0703-systemd-path-order-all-listed-paths-by-their-ID-alph.patch
+Patch0704: 0704-systemd-path-guarantee-that-tool-exit-status-is-zero.patch
+Patch0705: 0705-systemd-path-add-the-usual-ANSI-sequences-to-help-te.patch
+Patch0706: 0706-sd-path-expose-credential-store-in-sd-path.patch
+Patch0707: 0707-execute-introduce-a-user-scoped-credstore.patch
+Patch0708: 0708-pid1-add-support-for-decrypting-per-user-credentials.patch
+Patch0709: 0709-test-add-integration-test-that-makes-sure-unpriv-cre.patch
+Patch0710: 0710-man-document-the-new-per-use-credstore-paths.patch
+Patch0711: 0711-update-TODO.patch
+Patch0712: 0712-cryptenroll-repart-creds-no-longer-default-to-bindin.patch
+Patch0713: 0713-cryptenroll-repart-print-a-log-message-if-no-access-.patch
+Patch0714: 0714-repart-correct-argument-comment.patch
+Patch0715: 0715-repart-use-iovec-structure-for-key-file.patch
+Patch0716: 0716-repart-make-tpm2-pcrs-also-configurable-in-repart.d.patch
+Patch0717: 0717-repart-make-key-file-also-configurable-in-repart.d.patch
+Patch0718: 0718-man-repart-fix-typo.patch
+Patch0719: 0719-man-systemd-measure.-Remove-tpm2-pcrs-from-cryptenro.patch
+Patch0720: 0720-hwdb-rules-add-82-net-auto-link-local.-hwdb-rules-to.patch
+Patch0721: 0721-Expand-hwdb-entries-for-additional-hardware-wallets.patch
+Patch0722: 0722-hwdb-keyboard-hp-omnibook-ultra-flip.patch
+Patch0723: 0723-quirks-keyboard-d330-keyboard-rework.patch
+Patch0724: 0724-hwdb-sensor-correct-D330-respecting-panel-mount.patch
+Patch0725: 0725-hwdb-sensor-recover-Duet-3-10IGL5-normal-and-LTE.patch
+Patch0726: 0726-hwdb-sensor-remove-Asus-T101HA-and-T101HAF.patch
+Patch0727: 0727-hwdb-quote-invalid-patterns-in-error-messages.patch
+Patch0728: 0728-Add-sensor-entry-for-Toshiba-Encore-WT10A-108.patch
+Patch0729: 0729-quirks-sensor-squash-toshiba-tablets.patch
+Patch0730: 0730-Revert-hwdb-fix-arrow-keys-on-HP-Elite-Dragonfly-G3.patch
+Patch0731: 0731-hwdb-don-t-error-on-empty-hwdb-file.patch
+Patch0732: 0732-udev-rules-guess-devices-if-internal-or-external.patch
+Patch0733: 0733-udev-rules-integration-add-spi-bus-for-input-dev.patch
+Patch0734: 0734-udev-rules-integration-fix.patch
+Patch0735: 0735-hwdb-update.patch
+Patch0736: 0736-hwdb-update-autosuspend-rules.patch
+Patch0737: 0737-hwdb-sensor-say-that-model-sort-is-groupped.patch
+Patch0738: 0738-hwdb-sensor-acer-refactor-and-rework.patch
+Patch0739: 0739-hwdb-sensor-aquarius-rework.patch
+Patch0740: 0740-hwdb-sensor-archos-in-line-commenting.patch
+Patch0741: 0741-hwdb-sensor-asus-refactor-and-rework.patch
+Patch0742: 0742-hwdb-sensor-axxo-fix-previous-search-and-replace.patch
+Patch0743: 0743-hwdb-sensor-ayaneo-refactor-and-rework.patch
+Patch0744: 0744-hwdv-sensor-bmax-add-fixme-notes.patch
+Patch0745: 0745-hwdb-sensor-bush-minor-changes.patch
+Patch0746: 0746-hwdb-sensor-chuwi-refactor.patch
+Patch0747: 0747-hwdb-sensor-connect-fix.patch
+Patch0748: 0748-hwdb-sensor-csl-fix.patch
+Patch0749: 0749-hwdb-sensor-cyberbook-add-comment.patch
+Patch0750: 0750-hwdb-sensor-cytrix-fix.patch
+Patch0751: 0751-hwdb-sensor-cube-refactor.patch
+Patch0752: 0752-hwdb-sensor-dell-rework.patch
+Patch0753: 0753-hwdb-sensor-dere-add-comments.patch
+Patch0754: 0754-hwdb-sensor-dexp-rework.patch
+Patch0755: 0755-hwdb-sensor-digibras-in-line-comment.patch
+Patch0756: 0756-hwdb-sensor-digma-in-line-comment.patch
+Patch0757: 0757-hwdb-sensor-endless-add-comment.patch
+Patch0758: 0758-hwdb-sensor-estar-add-comment.patch
+Patch0759: 0759-hwdb-sensor-eve-in-line-comment.patch
+Patch0760: 0760-hwdb-sensor-exo-add-in-line-comment.patch
+Patch0761: 0761-hwdb-sensor-geo-add-in-line-comment.patch
+Patch0762: 0762-hwdb-sensor-glavey-add-colon-to-sensor-dmi.patch
+Patch0763: 0763-hwdb-sensor-gp-add-colon-to-sensor-dmi.patch
+Patch0764: 0764-hwdb-sensor-gpd-refactor.patch
+Patch0765: 0765-hwdb-sensor-hometech-fix-formatting.patch
+Patch0766: 0766-hwdb-sensor-hp-refactor.patch
+Patch0767: 0767-hwdb-sensor-huawei-add-in-line-comment.patch
+Patch0768: 0768-hwdb-sensor-iota-360-is-the-model.patch
+Patch0769: 0769-hwdb-sensor-it-works-refactor.patch
+Patch0770: 0770-hwdb-sensor-irbis-in-line-comentting.patch
+Patch0771: 0771-hwdb-sensor-jumper-prefer-bios-version-over-ct.patch
+Patch0772: 0772-hwdb-sensor-kazam-add-in-line-comment.patch
+Patch0773: 0773-hwdb-sensor-kd-kurio-add-in-line-comment.patch
+Patch0774: 0774-hwdb-sensor-lamina-add-comments.patch
+Patch0775: 0775-hwdb-sensor-lenovo-refactor.patch
+Patch0776: 0776-hwdb-sensor-linx-in-line-comment.patch
+Patch0777: 0777-hwdb-sensor-mediacom-in-line-comment.patch
+Patch0778: 0778-hwdb-sensor-medion-add-fixme-notes.patch
+Patch0779: 0779-hwdb-sensor-metaphyuni-in-line-comment.patch
+Patch0780: 0780-hwdb-sensor-microtech-in-line-comment.patch
+Patch0781: 0781-hwdb-sensor-mpman-in-line-comment.patch
+Patch0782: 0782-hwdb-sensor-msi-add-comment.patch
+Patch0783: 0783-hwdb-sensor-myria-in-line-comment.patch
+Patch0784: 0784-hwdb-sensor-nuvision-refactor.patch
+Patch0785: 0785-hwdb-sensor-odys-add-comment.patch
+Patch0786: 0786-hwdb-sensor-onda-refactor.patch
+Patch0787: 0787-hwdb-sensor-one-netbook-refactor.patch
+Patch0788: 0788-hwdb-sensor-orangepi-in-line-comment.patch
+Patch0789: 0789-hwdb-sensor-passion-in-line-comment.patch
+Patch0790: 0790-hwdb-sensor-peaq-add-comment.patch
+Patch0791: 0791-hwdb-sensor-pine64-in-line-comment.patch
+Patch0792: 0792-hwdb-sensor-pipo-refactor.patch
+Patch0793: 0793-hwdb-sensor-ployer-in-line-comment.patch
+Patch0794: 0794-hwdb-sensor-point-of-view-refactor.patch
+Patch0795: 0795-hwdb-sensor-positivo-simplify-dmi-matches.patch
+Patch0796: 0796-hwdb-sensor-predia-reformat-dmi-match.patch
+Patch0797: 0797-hwdb-sensor-prowise-add-comment.patch
+Patch0798: 0798-hwdb-sensor-purism-in-line-comment.patch
+Patch0799: 0799-hwdb-sensor-reeder-in-line-comment.patch
+Patch0800: 0800-hwdb-sensor-rca-in-line-comment.patch
+Patch0801: 0801-hwdb-sensor-schneider-remove-number-part-match.patch
+Patch0802: 0802-hwdb-sensor-teclast-refactor.patch
+Patch0803: 0803-hwdb-sensor-thundersoft-reformat-dmi-match.patch
+Patch0804: 0804-hwdb-sensor-toshiba-refactor.patch
+Patch0805: 0805-hwdb-sensor-trekstor-in-line-comment.patch
+Patch0806: 0806-hwdb-sensor-voyo-fix-dmi-match-format.patch
+Patch0807: 0807-hwdb-sensor-wortmann-in-line-comment.patch
+Patch0808: 0808-hwdb-sensor-yours-add-comment.patch
+Patch0809: 0809-hwdb-sensor-unknown-add-colon-to-sensor-match.patch
+Patch0810: 0810-hwdb-add-Vernier-Go-Direct-sensors.patch
+Patch0811: 0811-hwdb-sensor-hp-use-board-product-name-as-hp-wmi.patch
+Patch0812: 0812-hwdb-fix-typos.patch
+Patch0813: 0813-Add-BNCF-NewBook-11-ACCEL_MOUNT_MATRIX-to-60-sensor..patch
+Patch0814: 0814-udev-hwdb-replace-ID_INPUT_JOYSTICK_INTEGRATION.patch
+Patch0815: 0815-udev-rules-improve-usb-integration-detection.patch
+Patch0816: 0816-Update-hwdb.patch
+Patch0817: 0817-Update-hwdb-autosuspend.patch
+Patch0818: 0818-hwdb-drop-trailing-whitespace.patch
+Patch0819: 0819-hwdb-fix-typos-reported-by-Copilot-reword-comment.patch
+Patch0820: 0820-hwdb-use-more-modern-python-syntax-in-one-more-place.patch
+Patch0821: 0821-hwdb-add-one-more-USB-ID-for-3D-Connexion-SpaceMouse.patch
+Patch0822: 0822-hwdb-keyboard-Map-FN-key-on-Positron-Proxima-15.patch
+Patch0823: 0823-Update-hwdb.patch
+Patch0824: 0824-hwdb-map-Xiaomi-Mi-Notebook-Pro-star-key-to-KEY_MACR.patch
+Patch0825: 0825-Fix-media-keys-for-Lenovo-ThinkBook-14-2-in-1-G5-IAU.patch
+Patch0826: 0826-hwdb-sensor-bncf-reformat-match.patch
+Patch0827: 0827-hwdb-update-HP-Envy-x360-patterns-to-cover-newer-14-.patch
+Patch0828: 0828-Update-hwdb.patch
+Patch0829: 0829-hwdb-keyboard-fix-Positron-vendor-location.patch
+Patch0830: 0830-Update-hwdb.patch
+Patch0831: 0831-hwdb-fix-ABS_PRESSURE-axis-range-for-Goodix-GXTP5100.patch
+Patch0832: 0832-hwdb-keyboard-Map-FN-key-on-Wareus-B15.patch
+Patch0833: 0833-sensor-gpd-fix-matches.patch
+Patch0834: 0834-hwdb-sensor-fix-bncf-newbook-11.patch
+Patch0835: 0835-hwdb-keyboard-erase-entry-that-will-never-match.patch
+Patch0836: 0836-hwdb-Add-PXN-HB-S-handbrake.patch
+Patch0837: 0837-hwdb-Add-keymaps-for-Acer-Nitro-5-AN517-54.patch
+Patch0838: 0838-hwdb-Silence-spurrious-F23-key-press-from-Fn-key-on-.patch
+Patch0839: 0839-hwdb-keyboard-fix-enter-key-for-X-piccolo.patch
+Patch0840: 0840-hwdb-sensor-aquarius-improve-comments.patch
+Patch0841: 0841-hwdb-cooler-master-rgb-controller-is-not-a-mouse.patch
+Patch0842: 0842-hwdb-Add-extended-SteelSeries-Arctis-headset-device-.patch
+Patch0843: 0843-sensor-gpd-remove-pocket-3-and-4.patch
+Patch0844: 0844-hwdb-sensor-add-accel-mount-matrix-for-GPD-WIN-5.patch
+Patch0845: 0845-hwdb-Add-missing-Steelseries-Arctis-Pro-Wireless.patch
+Patch0846: 0846-hwdb-add-correct-keyboard-mapping-for-touchpad_toggl.patch
+Patch0847: 0847-hwdb-add-SOUND_FORM_FACTOR-for-Edifier-M60-and-Fract.patch
+Patch0848: 0848-hwdb-add-Fn-key-mappings-for-MSI-GE76-Raider-10UG.patch
+Patch0849: 0849-hwdb-add-force-release-to-Nitro-AN515-58-backlight-k.patch
+Patch0850: 0850-hwdb-keyboard-fix-KP_Enter-on-Clevo-PA70ES.patch
+Patch0851: 0851-hwdb-keyboard-use-vendor-product-specific-match-for-.patch
+Patch0852: 0852-Revert-hwdb-keyboard-fix-KP_Enter-on-Clevo-PA70ES.patch
+Patch0853: 0853-hwdb-keyboard-Map-f21-key-on-Wareus-B15.patch
+Patch0854: 0854-60-sensor.hwdb-iio-accel-fix-for-Advan-Evo-X-13-4203.patch
+Patch0855: 0855-hwdb-Add-keymap-for-Lenovo-15IRX9-42141.patch
+Patch0856: 0856-parse_hwdb-introduce-local-variable-for-boolean-synt.patch
+Patch0857: 0857-hwdb-acpi-update-apply-ruff-format.patch
+Patch0858: 0858-hwdb-ids_parser-apply-ruff-format-and-ruff-check-fix.patch
+Patch0859: 0859-hwdb-parse_hwdb-apply-ruff-format-and-ruff-check-fix.patch
+Patch0860: 0860-hwdb-ids_parser-make-text_eol-a-proper-function.patch
+Patch0861: 0861-Update-hwdb.patch
+Patch0862: 0862-Update-hwdb-autosuspend-rules.patch
+Patch0863: 0863-hwdb-keyboard-fix-match-for-for-X-Piccolo-again.patch
+Patch0864: 0864-hwdb-add-Infinix-Y3-Max-YL-613-touchpad-properties.patch
+Patch0865: 0865-hwdb-add-Infinix-Y3-Max-YL-613-keys.patch
+Patch0866: 0866-hwdb-Add-Native-Instruments-Traktor-MX2.patch
+Patch0867: 0867-Update-hwdb.patch
+Patch0868: 0868-hwdb-add-Griffin-PowerMate.patch
+Patch0869: 0869-hwdb-Update-MSI-Claw-Entries.patch
+Patch0870: 0870-Update-60-sensor.hwdb.patch
+Patch0871: 0871-hwdb-fix-match-for-MSI-Claw-entries.patch
+Patch0872: 0872-Update-60-sensor.hwdb-Add-support-for-Juno-Tab-4-Wif.patch
+Patch0873: 0873-hwdb-Make-Samsung-download-mode-work-out-of-the-box.patch
+Patch0874: 0874-Add-Elecom-Huge-Plus-information-for-wired-usb-wirel.patch
+Patch0875: 0875-Update-hwdb.patch
+Patch0876: 0876-Update-hwdb-autosuspend.patch
+Patch0877: 0877-Steam-deck-lcd-screen-is-a-tablet-LCD-rotated-in-the.patch
+Patch0878: 0878-Update-hwdb.patch
+Patch0879: 0879-Update-hwdb-autosuspend.patch
+Patch0880: 0880-hwdb-Map-Acer-Nitro-AN515-58-NitroSense-button-to-pr.patch
+Patch0881: 0881-hwdb-map-Brazilian-ThinkPad-T14-Gen-1-slash-key-to-K.patch
+Patch0882: 0882-hwbd-correctly-map-Bluetooth-Key-on-MSI-Modern-15-H-.patch
+Patch0883: 0883-hwdb-add-touchpad-toggle-mapping-for-MSI-Katana-GF66.patch
+Patch0884: 0884-hwdb-map-mic-mute-key-on-Logitech-K950-Bluetooth.patch
+Patch0885: 0885-hwdb-Make-Amlogic-burn-mode-work-out-of-box.patch
+Patch0886: 0886-hwdb-add-MSI-Claw-8-EX-AI-CG3EM-to-keyboard-hwdb-lis.patch
+Patch0887: 0887-hwdb-sensor-Add-Odys-Windesk-X10-accel-mount-matrix.patch
+Patch0888: 0888-hwdb-classify-PlayStation-controller-audio-as-contro.patch
+Patch0889: 0889-hwdb-add-numlock-mapping-for-PATEN-Labtec-USB-Numpad.patch
+Patch0890: 0890-hwdb-Add-accelerometer-matrix-for-OneXPlayer-Super-X.patch
+Patch0891: 0891-hwdb-Fix-Brazilian-ABNT2-KEY_RO-scancode-for-HP-ProB.patch
+Patch0892: 0892-hwdb-mark-Microsoft-Surface-Type-Cover-touchpad-as-i.patch
+Patch0893: 0893-hwdb-mark-Adesso-wireless-keyboard-trackball-as-trac.patch
+Patch0894: 0894-hwdb-fix-Lenovo-B570e-touchpad-ABS-ranges-for-edge-s.patch
+Patch0895: 0895-hwdb-mark-ASUS-ROG-Flow-Z13-GZ302EA-touchpad-as-inte.patch
+Patch0896: 0896-hwdb-Add-accelerometer-matrix-for-SHIFTbook-1.patch
+Patch0897: 0897-hwdb-Add-HP-EliteBook-845-G7-Fn-F11-airplane-mode-ke.patch
+Patch0898: 0898-hwdb-Make-Apple-DebugUSB-work-out-of-box.patch
+Patch0899: 0899-hwdb-mark-Razer-BlackShark-V3-Pro-as-headset.patch
+Patch0900: 0900-Update-hwdb.patch
 
 # Downstream-only patches (9000–9999)
 %endif
 
-%ifarch %{ix86} x86_64 aarch64 riscv64
+%ifarch x86_64 aarch64 riscv64
 %global want_bootloader 1
 %endif
 
@@ -1688,27 +1961,317 @@ rm -f .file-list-*
 rm -f %{name}.lang
 
 %changelog
-* Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-23.2
-- nspawn: apply BindUser/Ephemeral from settings file only if trusted (RHEL-163873)
-- nspawn: normalize pivot_root paths (RHEL-163873)
-- udev: check for invalid chars in various fields received from the kernel (RHEL-163879)
-- udev: ensure there is space for trailing NUL before calling sprintf (RHEL-163879)
-- udev: ensure tag parsing stays within bounds (RHEL-163879)
-- udev: fix review mixup (RHEL-163879)
-- udev/scsi-id: check for invalid chars in various fields received from the kernel (RHEL-163879)
-- udev-builtin-net-id: print cescaped bad attributes (RHEL-163879)
+* Tue Aug 18 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-33
+- hwdb,rules: add 82-net-auto-link-local.{hwdb,rules} to build (RHEL-72703)
+- Expand hwdb entries for additional hardware wallets (RHEL-72703)
+- hwdb: keyboard: hp omnibook ultra flip (RHEL-72703)
+- quirks: keyboard: d330 keyboard rework (RHEL-72703)
+- hwdb: sensor: correct D330 respecting panel mount (RHEL-72703)
+- hwdb: sensor: recover Duet 3 10IGL5 normal and LTE (RHEL-72703)
+- hwdb: sensor: remove Asus T101HA and T101HAF (RHEL-72703)
+- hwdb: quote invalid patterns in error messages (RHEL-72703)
+- Add sensor entry for Toshiba Encore WT10A-108 (RHEL-72703)
+- quirks: sensor: squash toshiba tablets (RHEL-72703)
+- Revert "hwdb: fix arrow keys on HP Elite Dragonfly G3" (RHEL-72703)
+- hwdb: don't error on empty hwdb file (RHEL-72703)
+- udev: rules: guess devices if internal or external (RHEL-72703)
+- udev: rules: integration add spi bus for input dev (RHEL-72703)
+- udev: rules: integration fix (RHEL-72703)
+- hwdb: update (RHEL-72703)
+- hwdb: update autosuspend rules (RHEL-72703)
+- hwdb: sensor: say that model sort is groupped (RHEL-72703)
+- hwdb: sensor: acer refactor and rework (RHEL-72703)
+- hwdb: sensor: aquarius rework (RHEL-72703)
+- hwdb: sensor: archos in-line commenting (RHEL-72703)
+- hwdb: sensor: asus refactor and rework (RHEL-72703)
+- hwdb: sensor: axxo fix previous search and replace (RHEL-72703)
+- hwdb: sensor: ayaneo refactor and rework (RHEL-72703)
+- hwdv: sensor: bmax add fixme notes (RHEL-72703)
+- hwdb: sensor: bush minor changes (RHEL-72703)
+- hwdb: sensor: chuwi refactor (RHEL-72703)
+- hwdb: sensor: connect fix (RHEL-72703)
+- hwdb: sensor: csl fix (RHEL-72703)
+- hwdb: sensor: cyberbook add comment (RHEL-72703)
+- hwdb: sensor: cytrix fix (RHEL-72703)
+- hwdb: sensor: cube refactor (RHEL-72703)
+- hwdb: sensor: dell rework (RHEL-72703)
+- hwdb: sensor: dere add comments (RHEL-72703)
+- hwdb: sensor: dexp rework (RHEL-72703)
+- hwdb: sensor: digibras in-line comment (RHEL-72703)
+- hwdb: sensor: digma in-line comment (RHEL-72703)
+- hwdb: sensor: endless add comment (RHEL-72703)
+- hwdb: sensor: estar add comment (RHEL-72703)
+- hwdb: sensor: eve in-line comment (RHEL-72703)
+- hwdb: sensor: exo add in-line comment (RHEL-72703)
+- hwdb: sensor: geo add in-line comment (RHEL-72703)
+- hwdb: sensor: glavey add colon to sensor dmi (RHEL-72703)
+- hwdb: sensor: gp add colon to sensor dmi (RHEL-72703)
+- hwdb: sensor: gpd refactor (RHEL-72703)
+- hwdb: sensor: hometech fix formatting (RHEL-72703)
+- hwdb: sensor: hp refactor (RHEL-72703)
+- hwdb: sensor: huawei add in-line comment (RHEL-72703)
+- hwdb: sensor: iota 360 is the model (RHEL-72703)
+- hwdb: sensor: it-works refactor (RHEL-72703)
+- hwdb: sensor: irbis in-line comentting (RHEL-72703)
+- hwdb: sensor: jumper prefer bios version over ct (RHEL-72703)
+- hwdb: sensor: kazam add in-line comment (RHEL-72703)
+- hwdb: sensor: kd kurio add in-line comment (RHEL-72703)
+- hwdb: sensor: lamina add comments (RHEL-72703)
+- hwdb: sensor: lenovo refactor (RHEL-72703)
+- hwdb: sensor: linx in-line comment (RHEL-72703)
+- hwdb: sensor: mediacom in-line comment (RHEL-72703)
+- hwdb: sensor: medion add fixme notes (RHEL-72703)
+- hwdb: sensor: metaphyuni in-line comment (RHEL-72703)
+- hwdb: sensor: microtech in-line comment (RHEL-72703)
+- hwdb: sensor: mpman in-line comment (RHEL-72703)
+- hwdb: sensor: msi add comment (RHEL-72703)
+- hwdb: sensor: myria in-line comment (RHEL-72703)
+- hwdb: sensor: nuvision refactor (RHEL-72703)
+- hwdb: sensor: odys add comment (RHEL-72703)
+- hwdb: sensor: onda refactor (RHEL-72703)
+- hwdb: sensor: one-netbook refactor (RHEL-72703)
+- hwdb: sensor: orangepi in-line comment (RHEL-72703)
+- hwdb: sensor: passion in-line comment (RHEL-72703)
+- hwdb: sensor: peaq add comment (RHEL-72703)
+- hwdb: sensor: pine64 in-line comment (RHEL-72703)
+- hwdb: sensor: pipo refactor (RHEL-72703)
+- hwdb: sensor: ployer in-line comment (RHEL-72703)
+- hwdb: sensor: point-of-view refactor (RHEL-72703)
+- hwdb: sensor: positivo simplify dmi matches (RHEL-72703)
+- hwdb: sensor: predia reformat dmi match (RHEL-72703)
+- hwdb: sensor: prowise add comment (RHEL-72703)
+- hwdb: sensor: purism in-line comment (RHEL-72703)
+- hwdb: sensor: reeder in-line comment (RHEL-72703)
+- hwdb: sensor: rca in-line comment (RHEL-72703)
+- hwdb: sensor: schneider remove number part match (RHEL-72703)
+- hwdb: sensor: teclast refactor (RHEL-72703)
+- hwdb: sensor: thundersoft reformat dmi match (RHEL-72703)
+- hwdb: sensor: toshiba refactor (RHEL-72703)
+- hwdb: sensor: trekstor in-line comment (RHEL-72703)
+- hwdb: sensor: voyo fix dmi match format (RHEL-72703)
+- hwdb: sensor: wortmann in-line comment (RHEL-72703)
+- hwdb: sensor: yours add comment (RHEL-72703)
+- hwdb: sensor: unknown add colon to sensor match (RHEL-72703)
+- hwdb: add Vernier Go Direct sensors (RHEL-72703)
+- hwdb: sensor: hp use board product name as hp-wmi (RHEL-72703)
+- hwdb: fix typos (RHEL-72703)
+- Add BNCF NewBook 11 ACCEL_MOUNT_MATRIX  to 60-sensor.hwdb (RHEL-72703)
+- udev: hwdb: replace ID_INPUT_JOYSTICK_INTEGRATION (RHEL-72703)
+- udev: rules: improve usb integration detection (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- Update hwdb autosuspend (RHEL-72703)
+- hwdb: drop trailing whitespace (RHEL-72703)
+- hwdb: fix typos reported by Copilot, reword comment (RHEL-72703)
+- hwdb: use more modern python syntax in one more place (RHEL-72703)
+- hwdb: add one more USB ID for 3D Connexion SpaceMouse Wireless BT (#40890) (RHEL-72703)
+- hwdb/keyboard: Map FN key on Positron Proxima 15 (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- hwdb: map Xiaomi Mi Notebook Pro star key to KEY_MACRO (RHEL-72703)
+- Fix media keys for Lenovo ThinkBook 14 2-in-1 G5 IAU (RHEL-72703)
+- hwdb: sensor: bncf reformat match (RHEL-72703)
+- hwdb: update HP Envy x360 patterns to cover newer 14-fc0xxx models (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- hwdb/keyboard: fix Positron vendor location (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- hwdb: fix ABS_PRESSURE axis range for Goodix GXTP5100 touchpad (RHEL-72703)
+- hwdb/keyboard: Map FN key on Wareus B15 (RHEL-72703)
+- sensor: gpd fix matches (RHEL-72703)
+- hwdb: sensor: fix bncf newbook 11 (RHEL-72703)
+- hwdb: keyboard: erase entry that will never match (RHEL-72703)
+- hwdb: Add PXN HB S handbrake (RHEL-72703)
+- hwdb: Add keymaps for Acer Nitro 5 AN517-54 (RHEL-72703)
+- hwdb: Silence spurrious F23 key-press from Fn key on Thinkpad T14s (RHEL-72703)
+- hwdb/keyboard: fix enter key for X+ piccolo (RHEL-72703)
+- hwdb: sensor: aquarius improve comments (RHEL-72703)
+- hwdb: cooler master rgb controller is not a mouse (RHEL-72703)
+- hwdb: Add extended SteelSeries Arctis headset device support (#41628) (RHEL-72703)
+- sensor: gpd remove pocket 3 and 4 (RHEL-72703)
+- hwdb: sensor: add accel mount matrix for GPD WIN 5 (RHEL-72703)
+- hwdb: Add missing Steelseries Arctis Pro Wireless (RHEL-72703)
+- hwdb: add correct keyboard mapping for touchpad_toggle event on msi gs66 stealth laptop (RHEL-72703)
+- hwdb: add SOUND_FORM_FACTOR for Edifier M60 and Fractal Scape Dongle (RHEL-72703)
+- hwdb: add Fn-key mappings for MSI GE76 Raider 10UG (RHEL-72703)
+- hwdb: add force-release to Nitro AN515-58 backlight keys (RHEL-72703)
+- hwdb/keyboard: fix KP_Enter on Clevo PA70ES (RHEL-72703)
+- hwdb/keyboard: use vendor/product specific match for X+ Piccolo (RHEL-72703)
+- Revert "hwdb/keyboard: fix KP_Enter on Clevo PA70ES" (RHEL-72703)
+- hwdb/keyboard: Map f21 key on Wareus B15 (RHEL-72703)
+- 60-sensor.hwdb iio/accel fix for Advan Evo-X 13 (#42037) (RHEL-72703)
+- hwdb: Add keymap for Lenovo 15IRX9 (#42141) (RHEL-72703)
+- parse_hwdb: introduce local variable for boolean syntax (RHEL-72703)
+- hwdb/acpi-update: apply "ruff format" (RHEL-72703)
+- hwdb/ids_parser: apply "ruff format" and "ruff check --fix" (RHEL-72703)
+- hwdb/parse_hwdb: apply "ruff format" and "ruff check --fix" (RHEL-72703)
+- hwdb/ids_parser: make text_eol a proper function (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- Update hwdb autosuspend rules (RHEL-72703)
+- hwdb/keyboard: fix match for for X+ Piccolo, again (RHEL-72703)
+- hwdb: add Infinix Y3 Max YL-613 touchpad properties (RHEL-72703)
+- hwdb: add Infinix Y3 Max YL-613 keys (RHEL-72703)
+- hwdb: Add Native Instruments Traktor MX2 (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- hwdb: add Griffin PowerMate (RHEL-72703)
+- (hwdb) Update MSI Claw Entries - Add support for MSI Claw A8 BZ2EM. - Switch to using rn vice pn as MSI uses a unique pn for variants of the   same model. This prevents needing to update this file when a low volume   variant is released (I.E. Polar White AI 8+). (RHEL-72703)
+- Update 60-sensor.hwdb (RHEL-72703)
+- hwdb: fix match for MSI Claw entries (RHEL-72703)
+- Update 60-sensor.hwdb - Add support for Juno Tab 4 (Wifi) (RHEL-72703)
+- hwdb: Make Samsung download mode work out-of-the-box (RHEL-72703)
+- Add Elecom Huge Plus information for wired usb, wireless usb, and bluetooth (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- Update hwdb autosuspend (RHEL-72703)
+- Steam deck lcd screen is a tablet LCD rotated in the kernel into portrait mode. (RHEL-72703)
+- Update hwdb (RHEL-72703)
+- Update hwdb autosuspend (RHEL-72703)
+- hwdb: Map Acer Nitro AN515-58 NitroSense button to prog1 (RHEL-72703)
+- hwdb: map Brazilian ThinkPad T14 Gen 1 slash key to KEY_RO (RHEL-72703)
+- hwbd: correctly map Bluetooth Key on MSI Modern 15 H AI C1MG laptop (RHEL-72703)
+- hwdb: add touchpad toggle mapping for MSI Katana GF66 12UD (RHEL-72703)
+- hwdb: map mic-mute key on Logitech K950 (Bluetooth) (RHEL-72703)
+- hwdb: Make Amlogic burn mode work out-of-box (RHEL-72703)
+- hwdb: add MSI Claw 8 EX AI+ CG3EM to keyboard hwdb list (RHEL-72703)
+- hwdb: sensor: Add Odys Windesk X10 accel mount matrix (RHEL-72703)
+- hwdb: classify PlayStation controller audio as controller form-factor (RHEL-72703)
+- hwdb: add numlock mapping for PATEN/Labtec USB Numpad (RHEL-72703)
+- hwdb: Add accelerometer matrix for OneXPlayer Super X (RHEL-72703)
+- hwdb: Fix Brazilian ABNT2 KEY_RO scancode for HP ProBook x360 435 G7 (#43151) (RHEL-72703)
+- hwdb: mark Microsoft Surface Type Cover touchpad as internal (#43262) (RHEL-72703)
+- hwdb: mark Adesso wireless keyboard trackball as trackball (#43263) (RHEL-72703)
+- hwdb: fix Lenovo B570e touchpad ABS ranges for edge scrolling (#43264) (RHEL-72703)
+- hwdb: mark ASUS ROG Flow Z13 (GZ302EA) touchpad as internal (RHEL-72703)
+- hwdb: Add accelerometer matrix for SHIFTbook 1 (RHEL-72703)
+- hwdb: Add HP EliteBook 845 G7 Fn+F11 airplane mode key mapping (RHEL-72703)
+- hwdb: Make Apple DebugUSB work out-of-box (RHEL-72703)
+- hwdb: mark Razer BlackShark V3 Pro as headset (RHEL-72703)
+- Update hwdb (RHEL-72703)
 
-* Wed Apr 08 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-23.1
-- ci: re-enable bpf-framework option for build and unit test jobs (RHEL-152080)
-- ci: add bpftool workaround to codeql job too (RHEL-152080)
-- ci: fix workaround about bpftool for codeql (RHEL-152080)
-- ci: add bpftool workaround to coverity too (RHEL-152080)
-- path-util: add flavour of path_startswith() that leaves a leading slash in place (RHEL-152080)
-- cgroup: port some code over to path_startswith_full() (RHEL-152080)
-- path-util: invert PATH_STARTSWITH_ACCEPT_DOT_DOT flag (RHEL-152080)
-- sd-json: fix off-by-one issue when updating parent for array elements (RHEL-152080)
-- core/cgroup: avoid one unnecessary strjoina() (RHEL-152080)
-- core: validate input cgroup path more prudently (RHEL-152080)
+* Fri Jul 31 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-32
+- resolved: replace assert() with error return in DNSSEC verify functions (RHEL-158349)
+- pid1: normalize oom error handling a bit (RHEL-169656)
+- sd-path: don't chop off trailing slash in sd_path apis, when user provided them (RHEL-169656)
+- systemd-path: order all listed paths by their ID alphabetically (RHEL-169656)
+- systemd-path: guarantee that tool exit status is zero on success (RHEL-169656)
+- systemd-path: add the usual ANSI sequences to --help text (RHEL-169656)
+- sd-path: expose credential store in sd-path (RHEL-169656)
+- execute: introduce a user-scoped credstore (RHEL-169656)
+- pid1: add support for decrypting per-user credentials (RHEL-169656)
+- test: add integration test that makes sure unpriv creds work correctly (RHEL-169656)
+- man: document the new per-use credstore paths (RHEL-169656)
+- update TODO (RHEL-169656)
+- cryptenroll/repart/creds: no longer default to binding against literal PCR 7 (RHEL-115813)
+- cryptenroll,repart: print a log message if no access restrictions are applied to TPM-based encryption (RHEL-115813)
+- repart: correct argument comment (RHEL-115813)
+- repart: use iovec structure for --key-file (RHEL-115813)
+- repart: make --tpm2-pcrs also configurable in repart.d/* (RHEL-115813)
+- repart: make --key-file also configurable in repart.d/* (RHEL-115813)
+- man/repart: fix typo (RHEL-115813)
+- man: systemd-measure. Remove 'tpm2-pcrs=' from cryptenroll command (#39590) (RHEL-115813)
+
+* Mon Jul 27 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-31
+- core: make manager event loop rate limit configurable (RHEL-161564)
+
+* Thu Jul 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-30
+- nss-systemd: avoid ELF TLS for recursion guard (RHEL-186510)
+
+* Tue Jul 07 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-29
+- udev: drop redundant checks (RHEL-180923)
+- TEST-71-HOSTNAME: specify job mode for the stop job (#38413) (RHEL-180923)
+- test: wait for coredump to appear before parsing (RHEL-155454)
+- TEST-87-AUX-UTILS-VM: make coredumps stored in archived journal file (RHEL-155454)
+- TEST-87-AUX-UTILS-VM: rotate journal at one more place (RHEL-155454)
+- udev-rules: add missing device name prefix in log message (RHEL-180929)
+
+* Wed Jul 01 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-28
+- man: reword the description of "secure pager" handling (RHEL-102939)
+- pager: also check for $SUDO_UID (RHEL-102939)
+- Revert "mount-setup: tune down log level if usrquota is not supported, apply usrquota when smack is in use too" (RHEL-143028)
+- Revert "nspawn: enable usrquota support on /tmp/ and /dev/shm/" (RHEL-143028)
+- Revert "units: enable usrquota support on /tmp/" (RHEL-143028)
+- Revert "pid1: enable usrquota support on /dev/shm" (RHEL-143028)
+- Revert "udev-builtin-net-id: print cescaped bad attributes" (RHEL-180922)
+- homectl: apply all --member-of= groups from a comma-separated list (RHEL-180924)
+- udevadm: gracefully handle when a maked file is specified to udevadm verify/cat (RHEL-180917)
+
+* Mon Jun 15 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-27
+- Do not build efi stub on i686 anymore (RHEL-176073)
+
+* Mon Jun 08 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-26
+- fstab-generator: fix spurious quota warning for xfs (RHEL-169955)
+
+* Tue May 12 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-25
+- core: cleanup unit's dropin directories from global cache (RHEL-171097)
+- libsystemd: drop "const" decorators on public inline functions (RHEL-155454)
+- sd-id128: Drop _sd_const_ from sd_id128_in_setv() (RHEL-155454)
+- test: wrap mount/umount when running with sanitizers (RHEL-155454)
+- test: wrap even more binaries when running with sanitizers (RHEL-155454)
+- test: temporarily ignore sanitizer warning about blocked ptrace() (RHEL-155454)
+- test: slightly reduce the performance/memory overhead for wrapped binaries (RHEL-155454)
+- fstab-generator: support swap on network block devices (RHEL-128058)
+- man: add tags for the next few versions (RHEL-128058)
+- test: drop some extraneous whitespaces (RHEL-155021)
+- shared: fix segfault when processing matchHostname field (RHEL-155021)
+- shared: don't exclude valid min/max values for cgroup weight fields (RHEL-155021)
+- shared: don't leak memory from array fields (RHEL-155021)
+- man: fix short option for userdbctl's --from-file= (RHEL-155021)
+- fuzz: add a fuzzer for user records (RHEL-155021)
+- user-record: extract user_record_image_is_blockdev() common helper (RHEL-155021)
+- udev/net_id: introduce naming scheme for RHEL-9.9 (RHEL-72814)
+- udev/net_id: introduce naming scheme for RHEL-10.3 (RHEL-72814)
+- Tag accel devices for uaccess-render (RHEL-153030)
+- udev: tag kfd devices for xaccess-render (#40888) (RHEL-153030)
+
+* Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-24
+- ci: re-enable bpf-framework option for build and unit test jobs (RHEL-155454)
+- ci: add bpftool workaround to codeql job too (RHEL-155454)
+- ci: fix workaround about bpftool for codeql (RHEL-155454)
+- ci: add bpftool workaround to coverity too (RHEL-155454)
+- Revert "man: mention RHEL documentation in systemctl's man page" (RHEL-155805)
+- path-util: add flavour of path_startswith() that leaves a leading slash in place (RHEL-155396)
+- cgroup: port some code over to path_startswith_full() (RHEL-155396)
+- path-util: invert PATH_STARTSWITH_ACCEPT_DOT_DOT flag (RHEL-155396)
+- sd-json: fix off-by-one issue when updating parent for array elements (RHEL-155396)
+- core/cgroup: avoid one unnecessary strjoina() (RHEL-155396)
+- core: validate input cgroup path more prudently (RHEL-155396)
+- nspawn: apply BindUser/Ephemeral from settings file only if trusted (RHEL-158303)
+- nspawn: normalize pivot_root paths (RHEL-158303)
+- udev: check for invalid chars in various fields received from the kernel (RHEL-158354)
+- udev: ensure there is space for trailing NUL before calling sprintf (RHEL-158354)
+- udev: ensure tag parsing stays within bounds (RHEL-158354)
+- udev: fix review mixup (RHEL-158354)
+- udev/scsi-id: check for invalid chars in various fields received from the kernel (RHEL-158354)
+- udev-builtin-net-id: print cescaped bad attributes (RHEL-158354)
+- core: only activate transaction that contain useful jobs (RHEL-143728)
+- journald: extend STDOUT_STREAMS_MAX to 64k (RHEL-168098)
+- string-util: introduce strprepend() helper (RHEL-143028)
+- missing: add quotactl_fd() wrapper (RHEL-143028)
+- homed: always use quotactl_fd() if its available (RHEL-143028)
+- pid1: add GracefulOptions= setting to .mount units (RHEL-143028)
+- pid1: enable usrquota support on /dev/shm (RHEL-143028)
+- units: enable usrquota support on /tmp/ (RHEL-143028)
+- nspawn: enable usrquota support on /tmp/ and /dev/shm/ (RHEL-143028)
+- nspawn: downgrade log message about usrquota to debug (RHEL-143028)
+- mount-setup: drop outdated comment (RHEL-143028)
+- mount-setup: tune down log level if usrquota is not supported, apply usrquota when smack is in use too (RHEL-143028)
+- devnum-util: add macros to safely convert dev_t to pointers and back (RHEL-143028)
+- user-record: add fields for setting limits on /tmp/ and /dev/shm/ (RHEL-143028)
+- user-runtime-dir: some smaller modernizations/refactorings (RHEL-143028)
+- user-runtime-dir: enforce /tmp/ and /dev/shm/ quota (RHEL-143028)
+- homectl: add support for configuring tmpfs limits (RHEL-143028)
+- test: add test case for tmpfs quota logic + PAMName= ask-password logic (RHEL-143028)
+- update TODO (RHEL-143028)
+- core/dbus-service: fix alignment (RHEL-143028)
+- core/mount: filter out "fail" option as well (RHEL-143028)
+- core/mount: check parameters_fragment first in mount_enter_(re)mounting() (RHEL-143028)
+- core/mount: report accurate can_start and can_reload (RHEL-143028)
+- core/mount: trivial coding style cleanups (RHEL-143028)
+- core/dbus-mount: add missing ReloadResult and CleanResult properties (RHEL-143028)
+- bus-unit-util: add missing assertions (RHEL-143028)
+- core/mount: rework GracefulOptions= to be just x-systemd.graceful-option= (RHEL-143028)
+- mountpoint-util: assume fsopen() works in mount_option_supported() (RHEL-143028)
+- core/mount: log only once about fs not supporting new mount API (RHEL-143028)
+- user-runtime-dir: correct quota size calculation (RHEL-143028)
+- test-display-quota: add a little helper binary to show quota on tmpfs (RHEL-143028)
+- TEST-46-HOMED: check for support on /dev/shm and /tmp separately (RHEL-143028)
+- TEST-46-HOMED: conditionally skip usrquota tests (RHEL-143028)
 
 * Tue Feb 17 2026 systemd maintenance team <systemd-maint@redhat.com> - 257-23
 - test-journal-dump: dump the headers of journal files (RHEL-106795)

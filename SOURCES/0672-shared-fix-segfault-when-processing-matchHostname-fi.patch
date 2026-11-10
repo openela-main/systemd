@@ -1,0 +1,52 @@
+From 3cf7e6cbb522532a87458036b6d3642500bfee3a Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Fri, 6 Mar 2026 16:09:35 +0100
+Subject: [PATCH] shared: fix segfault when processing matchHostname field
+
+Fix a typo which causes a segfault when processing a user record
+with matchHostname when it's an array instead of a simple string:
+
+$ echo '{"userName":"crashhostarray","perMachine":[{"matchHostname":["host1","host2"],"locked":false}]}' | userdbctl -F -
+Segmentation fault         (core dumped)
+
+$ coredumpctl info
+...
+       Message: Process 1172301 (userdbctl) of user 1000 dumped core.
+
+                Module libz.so.1 from rpm zlib-ng-2.3.3-1.fc43.x86_64
+                Module libcrypto.so.3 from rpm openssl-3.5.4-2.fc43.x86_64
+                Stack trace of thread 1172301:
+                #0  0x00007fded7b3a656 __strcmp_evex (libc.so.6 + 0x159656)
+                #1  0x00007fded7e95397 per_machine_hostname_match (libsystemd-shared-260.so + 0x295397)
+                #2  0x00007fded7e955b5 per_machine_match (libsystemd-shared-260.so + 0x2955b5)
+                #3  0x00007fded7e957c6 dispatch_per_machine (libsystemd-shared-260.so + 0x2957c6)
+                #4  0x00007fded7e96c97 user_record_load (libsystemd-shared-260.so + 0x296c97)
+                #5  0x000000000040572d display_user (/home/fsumsal/repos/@systemd/systemd/build/userdbctl + 0x572d)
+                #6  0x00007fded7ea9727 dispatch_verb (libsystemd-shared-260.so + 0x2a9727)
+                #7  0x000000000041077c run (/home/fsumsal/repos/@systemd/systemd/build/userdbctl + 0x1077c)
+                #8  0x00000000004107ce main (/home/fsumsal/repos/@systemd/systemd/build/userdbctl + 0x107ce)
+                #9  0x00007fded79e45b5 __libc_start_call_main (libc.so.6 + 0x35b5)
+                #10 0x00007fded79e4668 __libc_start_main@@GLIBC_2.34 (libc.so.6 + 0x3668)
+                #11 0x00000000004038d5 _start (/home/fsumsal/repos/@systemd/systemd/build/userdbctl + 0x38d5)
+                ELF object binary architecture: AMD x86-64
+
+(cherry picked from commit 1e2517bf2ee1b55c7c2406574f95b7d5788f6179)
+
+Resolves: RHEL-155021
+---
+ src/shared/user-record.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/user-record.c b/src/shared/user-record.c
+index 6a1813c402..38d14cbca5 100644
+--- a/src/shared/user-record.c
++++ b/src/shared/user-record.c
+@@ -1197,7 +1197,7 @@ int per_machine_hostname_match(sd_json_variant *hns, sd_json_dispatch_flags_t fl
+                                 continue;
+                         }
+ 
+-                        if (streq(sd_json_variant_string(hns), hn))
++                        if (streq(sd_json_variant_string(e), hn))
+                                 return true;
+                 }
+ 

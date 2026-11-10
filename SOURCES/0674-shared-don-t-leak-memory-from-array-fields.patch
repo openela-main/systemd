@@ -1,0 +1,75 @@
+From ef7a20ffd480b8c6021cf1277ac3f8c4293d48c1 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Fri, 6 Mar 2026 17:16:31 +0100
+Subject: [PATCH] shared: don't leak memory from array fields
+
+The fido2_hmac_salt/fido2_hmac_credential/recovery_key fields kept
+leaking memory as the array itself wasn't deallocated after deallocating
+each of its elements data:
+
+$ build-san/userdbctl -F fuzz-corpus-userdb/auth-fido2.json
+...
+=================================================================
+==1292840==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 112 byte(s) in 1 object(s) allocated from:
+    #0 0x7f56f00e5e4b in realloc.part.0 (/lib64/libasan.so.8+0xe5e4b) (BuildId: 25975f766867e9e604dc5a71a8befeaed3301942)
+    #1 0x7f56ed869e42 in greedy_realloc ../src/basic/alloc-util.c:65
+    #2 0x7f56ed7ff5e9 in dispatch_fido2_hmac_salt ../src/shared/user-record.c:836
+    #3 0x7f56edd73cbc in sd_json_dispatch_full ../src/libsystemd/sd-json/sd-json.c:5204
+    #4 0x7f56edd745fc in sd_json_dispatch ../src/libsystemd/sd-json/sd-json.c:5276
+    #5 0x7f56ed80100b in dispatch_privileged ../src/shared/user-record.c:998
+    #6 0x7f56edd73cbc in sd_json_dispatch_full ../src/libsystemd/sd-json/sd-json.c:5204
+    #7 0x7f56edd745fc in sd_json_dispatch ../src/libsystemd/sd-json/sd-json.c:5276
+    #8 0x7f56ed80622c in user_record_load ../src/shared/user-record.c:1697
+    #9 0x000000408c15 in display_user ../src/userdb/userdbctl.c:447
+    #10 0x7f56ed83cc9a in dispatch_verb ../src/shared/verbs.c:137
+    #11 0x00000041df2b in run ../src/userdb/userdbctl.c:1908
+    #12 0x00000041dfbe in main ../src/userdb/userdbctl.c:1911
+    #13 0x7f56ec8105b4 in __libc_start_call_main (/lib64/libc.so.6+0x35b4) (BuildId: 2b5beec0fd24fe9c9f43eddfdd5facf0b8a1b805)
+    #14 0x7f56ec810667 in __libc_start_main@@GLIBC_2.34 (/lib64/libc.so.6+0x3667) (BuildId: 2b5beec0fd24fe9c9f43eddfdd5facf0b8a1b805)
+    #15 0x000000404a44 in _start (/home/fsumsal/repos/@systemd/systemd/build-san/userdbctl+0x404a44) (BuildId: 19e8b7e7b7038d2cea20bc18a55bea2a9e4406d5)
+
+Direct leak of 64 byte(s) in 1 object(s) allocated from:
+    #0 0x7f56f00e5e4b in realloc.part.0 (/lib64/libasan.so.8+0xe5e4b) (BuildId: 25975f766867e9e604dc5a71a8befeaed3301942)
+    #1 0x7f56ed869e42 in greedy_realloc ../src/basic/alloc-util.c:65
+    #2 0x7f56ed7fe779 in dispatch_fido2_hmac_credential_array ../src/shared/user-record.c:775
+    #3 0x7f56edd73cbc in sd_json_dispatch_full ../src/libsystemd/sd-json/sd-json.c:5204
+    #4 0x7f56edd745fc in sd_json_dispatch ../src/libsystemd/sd-json/sd-json.c:5276
+    #5 0x7f56ed80622c in user_record_load ../src/shared/user-record.c:1697
+    #6 0x000000408c15 in display_user ../src/userdb/userdbctl.c:447
+    #7 0x7f56ed83cc9a in dispatch_verb ../src/shared/verbs.c:137
+    #8 0x00000041df2b in run ../src/userdb/userdbctl.c:1908
+    #9 0x00000041dfbe in main ../src/userdb/userdbctl.c:1911
+    #10 0x7f56ec8105b4 in __libc_start_call_main (/lib64/libc.so.6+0x35b4) (BuildId: 2b5beec0fd24fe9c9f43eddfdd5facf0b8a1b805)
+    #11 0x7f56ec810667 in __libc_start_main@@GLIBC_2.34 (/lib64/libc.so.6+0x3667) (BuildId: 2b5beec0fd24fe9c9f43eddfdd5facf0b8a1b805)
+    #12 0x000000404a44 in _start (/home/fsumsal/repos/@systemd/systemd/build-san/userdbctl+0x404a44) (BuildId: 19e8b7e7b7038d2cea20bc18a55bea2a9e4406d5)
+
+SUMMARY: AddressSanitizer: 176 byte(s) leaked in 2 allocation(s).
+(cherry picked from commit 3c7bd947b29775c6dd035a27462f445d5945447b)
+
+Related: RHEL-155021
+---
+ src/shared/user-record.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/shared/user-record.c b/src/shared/user-record.c
+index ddfeaf6659..f4febcdebe 100644
+--- a/src/shared/user-record.c
++++ b/src/shared/user-record.c
+@@ -205,12 +205,15 @@ static UserRecord* user_record_free(UserRecord *h) {
+ 
+         for (size_t i = 0; i < h->n_fido2_hmac_credential; i++)
+                 fido2_hmac_credential_done(h->fido2_hmac_credential + i);
++        free(h->fido2_hmac_credential);
+         for (size_t i = 0; i < h->n_fido2_hmac_salt; i++)
+                 fido2_hmac_salt_done(h->fido2_hmac_salt + i);
++        free(h->fido2_hmac_salt);
+ 
+         strv_free(h->recovery_key_type);
+         for (size_t i = 0; i < h->n_recovery_key; i++)
+                 recovery_key_done(h->recovery_key + i);
++        free(h->recovery_key);
+ 
+         strv_free(h->self_modifiable_fields);
+         strv_free(h->self_modifiable_blobs);

@@ -1,0 +1,46 @@
+From 05fcb907f1a80d1d1b6a2899a1499faf47aed5d3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 31 Mar 2025 22:50:38 +0200
+Subject: [PATCH] TEST-46-HOMED: conditionally skip usrquota tests
+
+The tests were failing, because the quota was not enforced.
+It seems that we simply don't have privileges to set or display the quota.
+The test is running priviled, so this is probably some SELinux:
+TEST-46-HOMED.sh[117]: + /usr/lib/systemd/tests/unit-tests/manual/test-display-quota tmpfsquota /dev/shm /tmp
+TEST-46-HOMED.sh[1103]: Lacking privileges to query UID quota on /dev/shm: Operation not permitted
+TEST-46-HOMED.sh[1103]: Lacking privileges to query UID quota on /tmp: Operation not permitted
+
+If we cannot display the quota, ignore the test results.
+In a local run under mkosi, quota is shown and the tests pass. So this is something
+about how the testing-farm:fedora-rawhide-x86_64 is configured.
+
+(cherry picked from commit f77a8edfefd47e481fab78e7dd75d5d088d4e5e3)
+
+Related: RHEL-143028
+---
+ test/units/TEST-46-HOMED.sh | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/test/units/TEST-46-HOMED.sh b/test/units/TEST-46-HOMED.sh
+index 4af79e971c..998a52c76a 100755
+--- a/test/units/TEST-46-HOMED.sh
++++ b/test/units/TEST-46-HOMED.sh
+@@ -655,11 +655,18 @@ getent passwd aliastest3@myrealm
+ NEWPASSWORD=quux homectl create tmpfsquota --storage=subvolume --dev-shm-limit=50K --tmp-limit=50K -P
+ for p in /dev/shm /tmp; do
+     if findmnt -n -o options "$p" | grep -q usrquota; then
++        # Check if we can display the quotas. If we cannot, than it's likely
++        # that PID1 was also not able to set the limits and we should not fail
++        # in the tests below.
++        /usr/lib/systemd/tests/unit-tests/manual/test-display-quota tmpfsquota "$p" || set +e
++
+         run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/zero of="$p/quotatestfile1" bs=1024 count=30
+         (! run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/zero of="$p/quotatestfile2" bs=1024 count=30)
+         run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm "$p/quotatestfile1" "$p/quotatestfile2"
+         run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/zero of="$p/quotatestfile1" bs=1024 count=30
+         run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm "$p/quotatestfile1"
++
++        set -e
+     fi
+ done
+ 

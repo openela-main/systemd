@@ -1,0 +1,27 @@
+From 82e0581eb724325ce5b7d064f4a727f5cb09dc19 Mon Sep 17 00:00:00 2001
+From: Moisticules <interknet@gmail.com>
+Date: Thu, 4 Jun 2026 03:19:48 +0100
+Subject: [PATCH] Update 60-sensor.hwdb
+
+Correction of matrix for GPD MicroPC 2
+
+(cherry picked from commit 273267cbade770f1677d296387c6fa2bac9ed913)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 93e4c3b494..923ac9efb2 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -527,7 +527,7 @@ sensor:modalias:acpi:BMI0160:*:dmi:*:svnGPD:pnG1619-04:*    # Win Max 2
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1688-08:*    # MicroPC 2
+- ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, -1
++ ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, -1
+ 
+ #########################################
+ # Hometech

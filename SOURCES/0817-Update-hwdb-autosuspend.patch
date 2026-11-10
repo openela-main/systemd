@@ -1,0 +1,27 @@
+From 01bdb812130f968293a7c7a9ceaeaa79123dc3af Mon Sep 17 00:00:00 2001
+From: Luca Boccassi <luca.boccassi@gmail.com>
+Date: Tue, 24 Feb 2026 18:38:55 +0000
+Subject: [PATCH] Update hwdb autosuspend
+
+ninja -C build update-hwdb-autosuspend
+
+(cherry picked from commit a736ceaa0270a4b323b71dc9d806d1ef33435c33)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-autosuspend-fingerprint-reader.hwdb | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/hwdb.d/60-autosuspend-fingerprint-reader.hwdb b/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
+index 5a323fb321..85083b0f3d 100644
+--- a/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
++++ b/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
+@@ -189,6 +189,8 @@ usb:v2808pA99A*
+ usb:v2808pA57A*
+ usb:v2808pA78A*
+ usb:v2808p1579*
++usb:v2808p077A*
++usb:v2808p079A*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 

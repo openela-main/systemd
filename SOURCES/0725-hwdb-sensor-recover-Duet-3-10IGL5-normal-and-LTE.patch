@@ -1,0 +1,30 @@
+From e2514058e930487de3cd5934457783df87ff8ba8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 5 Feb 2026 17:59:54 +0100
+Subject: [PATCH] hwdb: sensor: recover Duet 3 10IGL5 normal and LTE
+
+The mount matrix was as intended, normal is when the device is in panel
+orientation, not in device orientation.
+
+(cherry picked from commit f952bc5551f209c3cf0c1fa81ff19eb5a2758b2f)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 6ba23ef2a6..a7d2e1f662 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -765,7 +765,10 @@ sensor:modalias:acpi:SMO8500*:dmi:bvnLENOVO:*:pvrLenovoMIIX3-830:*
+ 
+ # IdeaPad D330-10IGM (81H3) and (81MD) product names
+ #   Panel mounted at -90º. ACPI in_mount_matrix 0, -1, 0; 1, 0, 0; 0, 0, 1
++# IdeaPad Duet 3 10IGL5 (82AT) and 10IGL5-LTE (82HK)
++#   Panel mounted at -90º. ACPI in_mount_matrix unknown, if someone knows please report it
+ sensor:modalias:acpi:BOSC0200*:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGM:*
++sensor:modalias:acpi:SMO8B30*:dmi:*:svnLENOVO:*:pvrIdeaPadDuet310IGL5*:*
+  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
+ 
+ # IdeaPad Miix 300

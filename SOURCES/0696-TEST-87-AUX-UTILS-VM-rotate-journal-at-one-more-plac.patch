@@ -1,0 +1,45 @@
+From fe781e5198242baa8888619ab7f139e0e91f224c Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Thu, 4 Sep 2025 14:19:40 +0900
+Subject: [PATCH] TEST-87-AUX-UTILS-VM: rotate journal at one more place
+
+Follow-ups for ab56a96194d102cb4ec279fc4eb181d16c1251ea.
+
+Fixes the following failure:
+```
+TEST-87-AUX-UTILS-VM.sh[1196]: + systemd-run --user --wait --pipe -M testuser@.host -- coredumpctl
+TEST-87-AUX-UTILS-VM.sh[1840]: Running as unit: run-p1840-i1841.service; invocation ID: 325a026377aa4cffb046c5a63a8906ab
+TEST-87-AUX-UTILS-VM.sh[1853]: Hint: You are currently not seeing messages from other users and the system.
+TEST-87-AUX-UTILS-VM.sh[1853]:       Users in groups 'adm', 'systemd-journal', 'wheel' can see all messages.
+TEST-87-AUX-UTILS-VM.sh[1853]:       Pass -q to turn off this notice.
+TEST-87-AUX-UTILS-VM.sh[1853]: Journal file /var/log/journal/6835d335b6684b6197bf071ad66f2678/user-4711.journal is truncated, ignoring file.
+TEST-87-AUX-UTILS-VM.sh[1853]: No coredumps found.
+TEST-87-AUX-UTILS-VM.sh[1840]:           Finished with result: exit-code
+TEST-87-AUX-UTILS-VM.sh[1840]: Main processes terminated with: code=exited, status=1/FAILURE
+TEST-87-AUX-UTILS-VM.sh[1840]:                Service runtime: 154ms
+TEST-87-AUX-UTILS-VM.sh[1840]:              CPU time consumed: 78ms
+TEST-87-AUX-UTILS-VM.sh[1840]:                    Memory peak: 21.9M (swap: 0B)
+```
+
+(cherry picked from commit c02f570260869eb98c448ad1d3b659a173145c03)
+
+Related: RHEL-155454
+---
+ test/units/TEST-87-AUX-UTILS-VM.coredump.sh | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/test/units/TEST-87-AUX-UTILS-VM.coredump.sh b/test/units/TEST-87-AUX-UTILS-VM.coredump.sh
+index 476b8f1e83..53cdcd8533 100755
+--- a/test/units/TEST-87-AUX-UTILS-VM.coredump.sh
++++ b/test/units/TEST-87-AUX-UTILS-VM.coredump.sh
+@@ -175,6 +175,10 @@ rm -fv /run/systemd/coredump.conf.d/99-external.conf
+ # Wait a bit for the coredumps to get processed
+ timeout 30 bash -c "while [[ \$(coredumpctl list -q --no-legend $CORE_TEST_UNPRIV_BIN | wc -l) -lt 4 ]]; do sleep 1; done"
+ 
++# Sync and rotate journal again to make the coredump stored in an archived journal.
++journalctl --sync
++journalctl --rotate
++
+ # root should see coredumps from both binaries
+ coredumpctl info "$CORE_TEST_UNPRIV_BIN"
+ coredumpctl info "${CORE_TEST_UNPRIV_BIN##*/}"

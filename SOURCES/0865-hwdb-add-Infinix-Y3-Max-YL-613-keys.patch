@@ -1,0 +1,46 @@
+From bac83e6f46645fc43e5a8d15d5d31740a7184059 Mon Sep 17 00:00:00 2001
+From: sykikxo <xo.sykik@gmail.com>
+Date: Sun, 31 May 2026 13:25:23 +0530
+Subject: [PATCH] hwdb: add Infinix Y3 Max YL-613 keys
+
+Map the Power Boost key (top-right corner, scancode 0x64) to KEY_PROG1.
+Map the Touchpad Toggle key (Fn+F8, scancode 0x76) to KEY_F21.
+
+Verified working via evtest:
+
+Event: type 4 (EV_MSC), code 4 (MSC_SCAN), value 64
+Event: type 1 (EV_KEY), code 148 (KEY_PROG1), value 1
+
+Event: type 4 (EV_MSC), code 4 (MSC_SCAN), value 76
+Event: type 1 (EV_KEY), code 206 (KEY_F21), value 1
+
+DMI: svnInfinix:*pnY3Max:*
+AT keyboard scancodes: 0x64, 0x76 (set 2)
+
+(cherry picked from commit 4dfae2dc0f02c430f6c8c718cc6e59d5fc33f367)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 73cb50fa4c..610127a6b1 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -959,6 +959,15 @@ evdev:name:Huawei WMI hotkeys:dmi:bvn*:bvr*:bd*:svnHUAWEI*:pnEUL-WX9:*
+  KEYBOARD_KEY_281=unknown                               # Brightness Down, also emitted by acpi-video, ignore
+  KEYBOARD_KEY_282=unknown                               # Brightness Up, also emitted by acpi-video, ignore
+ 
++###########################################################
++# Infinix
++###########################################################
++
++# Infinix Y3 Max YL-613
++evdev:atkbd:dmi:*:svnInfinix:*pnY3Max:*
++ KEYBOARD_KEY_64=prog1                                   # Power Boost key (top-right corner)
++ KEYBOARD_KEY_76=f21                                     # Fn+F8 Touchpad toggle, sends Ctrl+Meta+f21
++
+ ###########################################################
+ # IBM
+ ###########################################################

@@ -1,0 +1,26 @@
+From f1b404e6af271737e1aecc1e0b777e83ca3bcb66 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 20:53:25 +0100
+Subject: [PATCH] hwdb: sensor: cytrix fix
+
+(cherry picked from commit 0aaea4b37607ec8a9d6b780c69afa384bbc3e184)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 603f2e3e33..252bffb217 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -345,7 +345,8 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:rvnDefaultstring:rnCherryTrailCR:*:sku2017
+ #########################################
+ # Cytrix (Mytrix)
+ #########################################
+-sensor:modalias:acpi:*KIOX000A*:dmi:*svn*CytrixTechnology:*pn*Complex11t:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:svnCytrixTechnology:pnComplex11t:*    # Complex 11t
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

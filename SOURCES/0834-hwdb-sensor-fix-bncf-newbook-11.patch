@@ -1,0 +1,37 @@
+From cb16b79a09e0cee89cb2f5cd65d6caf7d0726029 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 19 Mar 2026 02:38:06 +0100
+Subject: [PATCH] hwdb: sensor: fix bncf newbook 11
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Actually was found that this device has panel mount at -90º. This fixes
+the matrix to follow panel orientation.
+
+More info in the previous PR comments:
+https://github.com/systemd/systemd/pull/40773
+
+Fixes: 774e8059590fac45614a135161dee4669945e342
+(cherry picked from commit de0314a11f2427e219fe336b6ee19210fddcfe47)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 189c19588a..480dab4cd2 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -221,8 +221,8 @@ sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH8Y6:*    # MaxBook Y14
+ # BNCF
+ #########################################
+ 
+-sensor:modalias:acpi:NSA2513:*:dmi:*:svnBNCF:pnNewBook11:*    # NewBook 11 2-in-1
+- ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, -1
++sensor:modalias:acpi:NSA2513:*:dmi:*:svnBNCF:pnNewBook11:*    # NewBook 11 2-in-1: Panel at -90 degrees. No ACPI in_mount_matrix.
++ ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################
+ # BUSH

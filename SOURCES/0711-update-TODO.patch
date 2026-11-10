@@ -1,0 +1,27 @@
+From 446eee5eca6fb42aa9ed2d3b932073edc25de002 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 10 Dec 2024 20:49:31 +0100
+Subject: [PATCH] update TODO
+
+(cherry picked from commit 8cbcdc78db9f9f39631bd211d4e2cc6578ff31e0)
+
+Related: RHEL-169656
+---
+ TODO | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/TODO b/TODO
+index 4ed9f5a834..12b70cf4cd 100644
+--- a/TODO
++++ b/TODO
+@@ -439,10 +439,6 @@ Features:
+ * credentials: add a flag to the scoped credentials that if set require PK
+   reauthentication when unlocking a secret.
+ 
+-* teach systemd --user to properly load credentials off disk, with
+-  /etc/credstore equivalent and similar. Make sure that $CREDENTIALS_DIRECTORY=
+-  actually works too when run with user privs.
+-
+ * extend the smbios11 logic for passing credentials so that instead of passing
+   the credential data literally it can also just reference an AF_VSOCK CID/port
+   to read them from. This way the data doesn't remain in the SMBIOS blob during

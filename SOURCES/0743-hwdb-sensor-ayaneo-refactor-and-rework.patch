@@ -1,0 +1,66 @@
+From d717f9483733e598c13b1d1871c051299a980e62 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 13:45:50 +0100
+Subject: [PATCH] hwdb: sensor: ayaneo refactor and rework
+
+This one is a real mess, spaces in dmi modalias, minus zeroes.
+
+Needs a little more love.
+
+fix whitespaces and comment in-line.
+
+(cherry picked from commit 3937225f16c120019391ae3bcf6c5456cc1499e9)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 37 ++++++++++---------------------------
+ 1 file changed, 10 insertions(+), 27 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 8a858fdaf3..90117cb219 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -189,33 +189,16 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnStandard:pnWCBT1011:*
+ # AYANEO
+ #########################################
+ 
+-# AYANEO 2021, 2021 Pro, 2021 Pro Retro Power
+-sensor:modalias:acpi:10EC5280*:dmi:*:svnAYANEO:pn*2021*:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, -1; 1, 0, 0
+-
+-# AYANEO 2, 2S
+-sensor:modalias:acpi:BMI0160*:dmi:*:svnAYANEO:pnAYANEO 2*:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, -1; 1, 0, 0
+-
+-# AYANEO AIR, AIR Pro, and 1S
+-sensor:modalias:acpi:BMI0160*:dmi:*:svnAYANEO:pnAIR*:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, -1; 1, 0, 0
+-
+-# AYANEO AIR Plus AMD, Plus Mendocino, and Plus Intel
+-sensor:modalias:acpi:BOSC0200*:dmi:*:svnAYANEO:pnAIR Plus*:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, 1; -1, 0, 0
+-
+-# AYANEO FLIP DS, FLIP KB
+-sensor:modalias:acpi:BMI0160*:dmi:*:svnAYANEO:pnFLIP**:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, -1; 1, 0, 0
+-
+-# AYANEO GEEK, GEEK 1S
+-sensor:modalias:acpi:BMI0160*:dmi:*:svnAYANEO:pnAYANEO GEEK*:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, -1; 1, 0, 0
+-
+-# AYANEO NEXT, NEXT Lite, NEXT Advance, and NEXT Pro
+-sensor:modalias:acpi:BMI0160*:dmi:*:svnAYANEO:pn*NEXT*:*
+- ACCEL_MOUNT_MATRIX=-0, -1, 0; 0, 0, -1; 1, 0, 0
++sensor:modalias:acpi:10EC5280:*:dmi:*:svnAYANEO:pn*2021*:*      # 2021, 2021 Pro, 2021 Pro Retro Power
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnAYANEO:pnAYANEO2*:*     # 2, 2S
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnAYANEO:pnAIR*:*         # AIR, AIR Pro, and 1S
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnAYANEO:pnFLIP*:*        # FLIP DS, FLIP KB
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnAYANEO:pnGEEK*:*        # GEEK, GEEK 1S
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnAYANEO:pn*NEXT*:*       # NEXT, NEXT Lite, NEXT Advance, NEXT Pro
++ ACCEL_MOUNT_MATRIX=0, -1, 0; 0, 0, -1; 1, 0, 0
++
++sensor:modalias:acpi:BOSC0200:*:dmi:*:svnAYANEO:pnAIRPlus*:*    # AIR Plus AMD, Plus Mendocino, Plus Intel
++ ACCEL_MOUNT_MATRIX=0, -1, 0; 0, 0, 1; -1, 0, 0
+ 
+ #########################################
+ # BMAX

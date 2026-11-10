@@ -1,0 +1,29 @@
+From 2ef3f3f5307d289bd024f26e9eed119f2ce224f3 Mon Sep 17 00:00:00 2001
+From: Betacentury <betacentury89@gmail.com>
+Date: Thu, 12 Feb 2026 10:20:14 +0100
+Subject: [PATCH] Add sensor entry for Toshiba Encore WT10A-108
+
+Added sensor configuration for Toshiba Encore WT10A-108 tablet.
+
+(cherry picked from commit 87328968574a041749c121a8c848f5b5cc24516a)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 45c7c41c1b..d7c9adef38 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -1194,6 +1194,10 @@ sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-103:*
+ sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-102:*
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
++# Toshiba Encore WT10A-108 tablet
++sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-108:*
++ ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
++
+ #########################################
+ # Trekstor
+ #########################################

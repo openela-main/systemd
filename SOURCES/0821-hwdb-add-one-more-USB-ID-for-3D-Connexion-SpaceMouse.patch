@@ -1,0 +1,33 @@
+From 79ecdcf84aefbf8414b5994ed8e1773fe2c9ef3b Mon Sep 17 00:00:00 2001
+From: IntenseWiggling <harrylane3@gmail.com>
+Date: Sun, 1 Mar 2026 22:31:29 -0500
+Subject: [PATCH] hwdb: add one more USB ID for 3D Connexion SpaceMouse
+ Wireless BT (#40890)
+
+The 3D Connexion SpaceMouse Wireless BT (256f:c63a) has an entry in
+`70-mouse.hwdb` already as a bluetooth device, but it can also be
+connected as a USB device.
+
+`5-3.3: hwdb modalias key: "usb:v256FpC63A:SpaceMouse Wireless BT"`
+
+Ref:
+https://github.com/FreeSpacenav/spacenavd/blob/39856625a6de1e8c4b57c5938e1bf29d13cf1a9f/src/dev.c#L83
+(cherry picked from commit 63fbe36d27cb96b8404f865ad79bd2980851f2b0)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-mouse.hwdb | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/hwdb.d/70-mouse.hwdb b/hwdb.d/70-mouse.hwdb
+index ae1309cdeb..dc482fee8d 100644
+--- a/hwdb.d/70-mouse.hwdb
++++ b/hwdb.d/70-mouse.hwdb
+@@ -176,6 +176,7 @@ mouse:usb:v256fpc632:name:*
+ mouse:usb:v256fpc633:name:*
+ mouse:usb:v256fpc635:name:*
+ mouse:usb:v256fpc636:name:*
++mouse:usb:v256fpc63a:name:*
+  ID_INPUT_3D_MOUSE=1
+ 
+ mouse:bluetooth:v256fpc63a:name:*

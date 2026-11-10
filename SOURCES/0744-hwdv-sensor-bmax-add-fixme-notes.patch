@@ -1,0 +1,38 @@
+From 09c9fc4ffe30edeccf8ae029b52f3a6eb6bc6c57 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Sun, 15 Feb 2026 09:47:14 +0100
+Subject: [PATCH] hwdv: sensor: bmax add fixme notes
+
+Comment that more research about the two accelerometer should be done.
+
+(cherry picked from commit 1c8ed38270af088b2c3ff23cbc1edff6ddb9545b)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 90117cb219..2b1b78cba7 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -204,13 +204,15 @@ sensor:modalias:acpi:BOSC0200:*:dmi:*:svnAYANEO:pnAIRPlus*:*    # AIR Plus AMD,
+ # BMAX
+ #########################################
+ 
+-# BMAX Y13
+-sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH2M6:*
++# FIXME: location could be not needed because correctly detected, base sensor is acpi:KIOX020A:*
++# this should requiere good testing of both accels to match their lid close position.
++sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH2M6:*    # MaxBook Y13
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, -1
+  ACCEL_LOCATION=display
+ 
+-# BMAX MaxBook Y14
+-sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH8Y6:*
++# FIXME: location could be not needed because correctly detected, base sensor is acpi:KIOX020A:*
++# this should requiere good testing of both accels to match their lid close position.
++sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH8Y6:*    # MaxBook Y14
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
+  ACCEL_LOCATION=display
+ 

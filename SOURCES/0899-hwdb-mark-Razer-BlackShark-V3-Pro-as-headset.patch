@@ -1,0 +1,35 @@
+From f20acf14b2cd5b81e452c2a1fa2f9a0928c161e4 Mon Sep 17 00:00:00 2001
+From: rashidmya <bugadev@proton.me>
+Date: Sun, 9 Aug 2026 17:10:47 +0400
+Subject: [PATCH] hwdb: mark Razer BlackShark V3 Pro as headset
+
+The BlackShark V3 Pro wireless dongle (1532:0577) exposes a sound card
+that is not detected as a headset, since neither the model name nor the
+USB interfaces provide a usable hint. Add a quirk so the form factor is
+reported correctly.
+
+(cherry picked from commit 6b0ae4b168d7f46ddf724aa17d8235d45badf9c8)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-sound-card.hwdb | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb.d/70-sound-card.hwdb b/hwdb.d/70-sound-card.hwdb
+index 62d005d61e..806e144958 100644
+--- a/hwdb.d/70-sound-card.hwdb
++++ b/hwdb.d/70-sound-card.hwdb
+@@ -51,6 +51,13 @@ usb:v045Ep02F9*
+ usb:v045Ep091E*
+  SOUND_FORM_FACTOR=headset
+ 
++###########################################################
++# Razer
++###########################################################
++# BlackShark V3 Pro
++usb:v1532p0577*
++ SOUND_FORM_FACTOR=headset
++
+ ###########################################################
+ # Sony
+ ###########################################################

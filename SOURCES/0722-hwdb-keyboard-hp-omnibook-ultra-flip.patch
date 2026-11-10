@@ -1,0 +1,31 @@
+From 76ae1047d04ac06eaba873d4ee686ea066a34eee Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 29 Jan 2026 17:49:24 +0100
+Subject: [PATCH] hwdb: keyboard: hp omnibook ultra flip
+
+avoid kernel messages complaining about unknown keycodes from keys
+already handled by acpi methods.
+
+(cherry picked from commit 7263e409b18be7672a21a3965e148e43f73ecea0)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index a942ac798a..efb99294ab 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -667,6 +667,11 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnHewlett-Packard*:pn*[tT][aA][bB][lL][eE][tT]*:*
+  KEYBOARD_KEY_86=pageup
+  KEYBOARD_KEY_87=pagedown
+ 
++# OmniBook Ultra Flip Laptop 14-fh0xxx
++evdev:atkbd:dmi:*:svnHP:pnHPOmniBookUltraFlipLaptop14-fh0xxx:*
++ KEYBOARD_KEY_82=unknown                                # Mic mute, handled by hp-wmi
++ KEYBOARD_KEY_ab=!unknown                               # Brightness Down and Up keys, handled by acpi-video
++
+ # Pavilion
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnHewlett-Packard*:pn*[pP][aA][vV][iI][lL][iI][oO][nN]*:*
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnHP*:pn*[pP][aA][vV][iI][lL][iI][oO][nN]*:*

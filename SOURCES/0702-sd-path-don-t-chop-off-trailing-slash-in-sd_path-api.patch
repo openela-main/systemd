@@ -1,0 +1,52 @@
+From 0846e7a060e34230e7be7d9224681de3bdc929ac Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 10 Dec 2024 13:37:56 +0100
+Subject: [PATCH] sd-path: don't chop off trailing slash in sd_path apis, when
+ user provided them
+
+This is a minor compat break, but given the slow adoption of the
+sd-path.h APIs I think it's one we should take. Basically, the idea is
+that if the user provides a suffix path with a trailing slash (thus
+encoding in the path that the last element must be a dir), we should
+keep it in place, and not suppress it, in order to not willy nilly
+reduce the amount of information contained in the path.
+
+Simplifications that do not alter meaning, and do not suppress
+information should be fine to apply to a path, but otherwise we really
+should be conservative on this.
+
+(cherry picked from commit 616586b91003adf08c56b5f63e60b6f8a4dbe893)
+
+Related: RHEL-169656
+---
+ src/libsystemd/sd-path/sd-path.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/libsystemd/sd-path/sd-path.c b/src/libsystemd/sd-path/sd-path.c
+index 9f495f3051..a2f03f52e9 100644
+--- a/src/libsystemd/sd-path/sd-path.c
++++ b/src/libsystemd/sd-path/sd-path.c
+@@ -366,12 +366,12 @@ static int get_path_alloc(uint64_t type, const char *suffix, char **ret) {
+         if (r < 0)
+                 return r;
+ 
+-        if (suffix) {
++        if (!isempty(suffix)) {
+                 char *suffixed = path_join(p, suffix);
+                 if (!suffixed)
+                         return -ENOMEM;
+ 
+-                path_simplify(suffixed);
++                path_simplify_full(suffixed, PATH_SIMPLIFY_KEEP_TRAILING_SLASH);
+ 
+                 free_and_replace(buffer, suffixed);
+         } else if (!buffer) {
+@@ -637,7 +637,7 @@ _public_ int sd_path_lookup_strv(uint64_t type, const char *suffix, char ***ret)
+                         if (!path_extend(i, suffix))
+                                 return -ENOMEM;
+ 
+-                        path_simplify(*i);
++                        path_simplify_full(*i, PATH_SIMPLIFY_KEEP_TRAILING_SLASH);
+                 }
+ 
+         *ret = TAKE_PTR(l);

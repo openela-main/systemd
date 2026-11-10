@@ -1,0 +1,71 @@
+From b9cfb8c02ec36304e0a3ba730363a6dd747dd26a Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 14 Jan 2025 16:51:27 +0100
+Subject: [PATCH] nspawn: enable usrquota support on /tmp/ and /dev/shm/
+
+(cherry picked from commit 611ae598889471830b2f1d7251c271b79884b1c4)
+
+Related: RHEL-143028
+---
+ src/nspawn/nspawn-mount.c | 21 +++++++++++++++++++--
+ src/nspawn/nspawn-mount.h |  1 +
+ 2 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/src/nspawn/nspawn-mount.c b/src/nspawn/nspawn-mount.c
+index c233cdf600..6bd506f960 100644
+--- a/src/nspawn/nspawn-mount.c
++++ b/src/nspawn/nspawn-mount.c
+@@ -592,7 +592,7 @@ int mount_all(const char *dest,
+ 
+                 /* Then we list outer child mounts (i.e. mounts applied *before* entering user namespacing when we are privileged) */
+                 { "tmpfs",                  "/tmp",                         "tmpfs", "mode=01777" NESTED_TMPFS_LIMITS, MS_NOSUID|MS_NODEV|MS_STRICTATIME,
+-                  MOUNT_FATAL|MOUNT_APPLY_TMPFS_TMP|MOUNT_MKDIR },
++                  MOUNT_FATAL|MOUNT_APPLY_TMPFS_TMP|MOUNT_MKDIR|MOUNT_USRQUOTA_GRACEFUL },
+                 { "tmpfs",                  "/sys",                         "tmpfs", "mode=0555" TMPFS_LIMITS_SYS,     MS_NOSUID|MS_NOEXEC|MS_NODEV,
+                   MOUNT_FATAL|MOUNT_APPLY_APIVFS_NETNS|MOUNT_MKDIR|MOUNT_PRIVILEGED },
+                 { "sysfs",                  "/sys",                         "sysfs", NULL,                             SYS_DEFAULT_MOUNT_FLAGS,
+@@ -602,7 +602,7 @@ int mount_all(const char *dest,
+                 { "tmpfs",                  "/dev",                         "tmpfs", "mode=0755" TMPFS_LIMITS_PRIVATE_DEV, MS_NOSUID|MS_STRICTATIME,
+                   MOUNT_FATAL|MOUNT_MKDIR },
+                 { "tmpfs",                  "/dev/shm",                     "tmpfs", "mode=01777" NESTED_TMPFS_LIMITS, MS_NOSUID|MS_NODEV|MS_STRICTATIME,
+-                  MOUNT_FATAL|MOUNT_MKDIR },
++                  MOUNT_FATAL|MOUNT_MKDIR|MOUNT_USRQUOTA_GRACEFUL },
+                 { "tmpfs",                  "/run",                         "tmpfs", "mode=0755" TMPFS_LIMITS_RUN,     MS_NOSUID|MS_NODEV|MS_STRICTATIME,
+                   MOUNT_FATAL|MOUNT_MKDIR },
+                 { "/run/host",              "/run/host",                    NULL,    NULL,                             MS_BIND,
+@@ -710,6 +710,23 @@ int mount_all(const char *dest,
+                                 o = options;
+                 }
+ 
++                if (FLAGS_SET(m->mount_settings, MOUNT_USRQUOTA_GRACEFUL)) {
++                        r = mount_option_supported(m->type, /* key= */ "usrquota", /* value= */ NULL);
++                        if (r < 0)
++                                log_warning_errno(r, "Failed to determine if '%s' supports 'usrquota', assuming it doesn't: %m", m->type);
++                        else if (r == 0)
++                                log_info("Kernel doesn't support 'usrquota' on '%s', not including in mount options for '%s'.", m->type, m->where);
++                        else {
++                                _cleanup_free_ char *joined = NULL;
++
++                                if (!strextend_with_separator(&joined, ",", o ?: POINTER_MAX, "usrquota"))
++                                        return log_oom();
++
++                                free_and_replace(options, joined);
++                                o = options;
++                        }
++                }
++
+                 if (FLAGS_SET(m->mount_settings, MOUNT_PREFIX_ROOT)) {
+                         /* Optionally prefix the mount source with the root dir. This is useful in bind
+                          * mounts to be created within the container image before we transition into it. Note
+diff --git a/src/nspawn/nspawn-mount.h b/src/nspawn/nspawn-mount.h
+index 5f66bc7328..529fa16658 100644
+--- a/src/nspawn/nspawn-mount.h
++++ b/src/nspawn/nspawn-mount.h
+@@ -21,6 +21,7 @@ typedef enum MountSettingsMask {
+         MOUNT_PREFIX_ROOT        = 1 << 10,/* if set, prefix the source path with the container's root directory */
+         MOUNT_FOLLOW_SYMLINKS    = 1 << 11,/* if set, we'll follow symlinks for the mount target */
+         MOUNT_PRIVILEGED         = 1 << 12,/* if set, we'll only mount this in the outer child if we are running in privileged mode */
++        MOUNT_USRQUOTA_GRACEFUL  = 1 << 13,/* if set, append "usrquota" to mount options if kernel tmpfs supports that */
+ } MountSettingsMask;
+ 
+ typedef enum CustomMountType {

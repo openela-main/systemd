@@ -1,0 +1,31 @@
+From 3a78a85f89dea1b59b707dea09269aa9ea2d7d88 Mon Sep 17 00:00:00 2001
+From: Alexandre Saou <alexandre.galdeano@gmail.com>
+Date: Thu, 23 Jul 2026 14:40:48 +0200
+Subject: [PATCH] hwdb: add numlock mapping for PATEN/Labtec USB Numpad
+
+(cherry picked from commit 4ae4470ad9903ebd2da75393269eb3e750c91efc)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 08be116265..eab92b859c 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -2436,6 +2436,14 @@ evdev:name:AT Translated Set 2 keyboard:dmi:bvn*:svnPositivo*:pn*:pvr*:rvnPositi
+ evdev:name:AT Translated Set 2 keyboard:dmi:bvn*bvr*:svnMultilaserIndustrial:pn*:pvr*:rvn*:rnUL154*
+  KEYBOARD_KEY_76=touchpad_toggle                        # Fn+f2 toggle touchpad
+ 
++###########################################################
++# PATEN/Labtec
++###########################################################
++# Labtec USB Number Pad for Notebooks (y-UE70)
++evdev:input:b0003v00001020p00000501*
++ KEYBOARD_KEY_c004f=numlock                             # Numlock key
++ KEYBOARD_LED_NUMLOCK=0
++
+ ###########################################################
+ # Other
+ ###########################################################

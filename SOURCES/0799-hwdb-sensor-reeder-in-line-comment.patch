@@ -1,0 +1,26 @@
+From cb64929173874a39d474c44174c57dc4feef77d4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 02:51:45 +0100
+Subject: [PATCH] hwdb: sensor: reeder in-line comment
+
+(cherry picked from commit 43e0f0e2fbf5b0fecc92e24359578a8e51cacd31)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 85ed6fced8..14815a3dca 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -958,8 +958,7 @@ sensor:modalias:acpi:MXC6655:*:dmi:*:svnPurism:pnlibrem_11:*    # Librem 11 (wit
+ # Reeder
+ #########################################
+ 
+-# A8iW-Rev.A
+-sensor:modalias:acpi:SMO8500*:dmi:*:rvnReeder:rnA8iW-Rev.A:*
++sensor:modalias:acpi:SMO8500:*:dmi:*:rvnReeder:rnA8iW-Rev.A:*    # A8iW-Rev.A
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################

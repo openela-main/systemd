@@ -1,0 +1,31 @@
+From e185569a3a0d1c2059bebe257dfca8251bad660b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 3 Apr 2026 20:59:42 +0200
+Subject: [PATCH] hwdb: sensor: aquarius improve comments
+
+Differentiate Cmp NS483 v2 accel variants.
+
+(cherry picked from commit 4ae4bd34d703560eabf7cd4b9e6f5bc3b7db8138)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 480dab4cd2..a8e990de97 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -114,10 +114,10 @@ sensor:modalias:acpi:BMA250E:*:dmi:*:svnAcer:*:rnAigner:*       # Iconia Tab 8W
+ #########################################
+ 
+ sensor:modalias:acpi:MXC6655:*:dmi:*:svnAquarius:pnNS483:*       # Cmp NS483
+-sensor:modalias:acpi:MXC4005:*:dmi:*:svnAquarius:pnCmpNS483:*    # Cmp NS483 v2
++sensor:modalias:acpi:MXC4005:*:dmi:*:svnAquarius:pnCmpNS483:*    # Cmp NS483 v2 (MXC4005 accel)
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+-sensor:modalias:acpi:MXC6655:*:dmi:*:svnAquarius:pnCmpNS483:*    # Cmp NS483 v2
++sensor:modalias:acpi:MXC6655:*:dmi:*:svnAquarius:pnCmpNS483:*    # Cmp NS483 v2 (MXC6655 accel)
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################

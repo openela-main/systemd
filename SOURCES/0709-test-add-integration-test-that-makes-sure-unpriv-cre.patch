@@ -1,0 +1,59 @@
+From 0928982a40942ccd17f5527886d1ceaf0fe16709 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 10 Dec 2024 20:50:19 +0100
+Subject: [PATCH] test: add integration test that makes sure unpriv creds work
+ correctly
+
+This checks both the per-user credstore directory logic, and that
+unprivileged, encrypted credentials work.
+
+(cherry picked from commit 026dfd60d477237f0e69e30ba0900e95b139436d)
+
+Related: RHEL-169656
+---
+ src/test/test-execute.c     | 4 ++++
+ test/units/TEST-54-CREDS.sh | 9 ++++++++-
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/src/test/test-execute.c b/src/test/test-execute.c
+index de575ec1e6..cd1bca1b31 100644
+--- a/src/test/test-execute.c
++++ b/src/test/test-execute.c
+@@ -1398,6 +1398,10 @@ static void run_tests(RuntimeScope scope, char **patterns) {
+         ASSERT_NOT_NULL(unit_paths = strjoin(PRIVATE_UNIT_DIR, ":", user_runtime_unit_dir));
+         ASSERT_OK(setenv_unit_path(unit_paths));
+ 
++        /* Write credential for test-execute-load-credential to the fake runtime dir, too */
++        _cleanup_free_ char *j = ASSERT_PTR(path_join(runtime_dir, "credstore/test-execute.load-credential"));
++        ASSERT_OK(write_string_file(j, "foo", WRITE_STRING_FILE_CREATE|WRITE_STRING_FILE_MKDIR_0755));
++
+         r = manager_new(scope, MANAGER_TEST_RUN_BASIC, &m);
+         if (manager_errno_skip_test(r))
+                 return (void) log_tests_skipped_errno(r, "manager_new");
+diff --git a/test/units/TEST-54-CREDS.sh b/test/units/TEST-54-CREDS.sh
+index 3a4fa654e9..bca68432d1 100755
+--- a/test/units/TEST-54-CREDS.sh
++++ b/test/units/TEST-54-CREDS.sh
+@@ -447,7 +447,7 @@ cmp /tmp/vlcredsdata /tmp/vlcredsdata2
+ rm /tmp/vlcredsdata /tmp/vlcredsdata2
+ 
+ clean_usertest() {
+-    rm -f /tmp/usertest.data /tmp/usertest.data
++    rm -f /tmp/usertest.data /tmp/usertest.data /tmp/brummbaer.data
+ }
+ 
+ trap clean_usertest EXIT
+@@ -474,6 +474,13 @@ systemd-creds encrypt --user /tmp/usertest.data /tmp/usertest.creds --name=mytes
+ systemctl start user@0.service
+ XDG_RUNTIME_DIR=/run/user/0 systemd-run --pipe --user --unit=waldi.service -p LoadCredentialEncrypted=mytest:/tmp/usertest.creds cat /run/user/0/credentials/waldi.service/mytest | cmp /tmp/usertest.data
+ 
++
++# Fully unpriv operation
++dd if=/dev/urandom of=/tmp/brummbaer.data bs=4096 count=1
++run0 -u testuser --pipe mkdir -p /home/testuser/.config/credstore.encrypted
++run0 -u testuser --pipe systemd-creds encrypt --user --name=brummbaer - /home/testuser/.config/credstore.encrypted/brummbaer < /tmp/brummbaer.data
++run0 -u testuser --pipe systemd-run --user --pipe -p ImportCredential=brummbaer systemd-creds cat brummbaer | cmp /tmp/brummbaer.data
++
+ systemd-analyze log-level info
+ 
+ touch /testok

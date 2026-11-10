@@ -1,0 +1,29 @@
+From 94ce567ebb8175392a2dd7416b15e6561d100cbc Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Mon, 3 Feb 2025 16:18:14 +0100
+Subject: [PATCH] user-runtime-dir: correct quota size calculation
+
+Follow-up for b1c95fb2e9d11fc190017dec3d64f468f9d378bc
+
+Fixes #36245
+
+(cherry picked from commit 6790db81d6bf59c34ca89f901b34e9f81cbde1a5)
+
+Related: RHEL-143028
+---
+ src/login/user-runtime-dir.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/login/user-runtime-dir.c b/src/login/user-runtime-dir.c
+index 94117c95db..590b445d41 100644
+--- a/src/login/user-runtime-dir.c
++++ b/src/login/user-runtime-dir.c
+@@ -262,7 +262,7 @@ static int apply_tmpfs_quota(
+                 uint64_t v =
+                         (scale == 0) ? 0 :
+                         (scale == UINT32_MAX) ? UINT64_MAX :
+-                        (uint64_t) ((double) (sfs.f_blocks * sfs.f_frsize) / scale * UINT32_MAX);
++                        (uint64_t) ((double) (sfs.f_blocks * sfs.f_frsize) * scale / UINT32_MAX);
+ 
+                 v = MIN(v, limit);
+                 v /= QIF_DQBLKSIZE;

@@ -1,0 +1,37 @@
+From 6cb559be4ea76c36fc83abd9aef98b0033ad853e Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Sat, 25 Apr 2026 16:37:34 +0200
+Subject: [PATCH] test: slightly reduce the performance/memory overhead for
+ wrapped binaries
+
+Let's drop the quarantine that ASan uses for use-after-free detection,
+as it's pointless in wrapped binaries and can consume up to 256 MiB of
+memory (with the default configuration). Also, don't keep any stack
+traces for allocations & deallocations, which should (slightly) help
+with both memory & performance overhead.
+
+(cherry picked from commit 035ba3ea571bad6772cf3731f6b5379ccb08267f)
+
+Related: RHEL-155454
+---
+ mkosi.sanitizers/mkosi.postinst | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/mkosi.sanitizers/mkosi.postinst b/mkosi.sanitizers/mkosi.postinst
+index 95f3f10a47..c1377bba6f 100755
+--- a/mkosi.sanitizers/mkosi.postinst
++++ b/mkosi.sanitizers/mkosi.postinst
+@@ -114,8 +114,11 @@ for bin in "${wrap[@]}"; do
+ # Preload the ASan runtime DSO, otherwise ASAn will complain
+ export LD_PRELOAD="$ASAN_RT_PATH"
+ # Disable LSan to speed things up, since we don't care about leak reports
+-# from 'external' binaries
+-export ASAN_OPTIONS=detect_leaks=$enable_lsan
++# from 'external' binaries. In addition, disable quarantine (for use-after-free
++# detection) and malloc stack frame collection as we don't care about these in
++# 'external' binaries either, and they just unnecessarily hog up memory & cpu
++# cycles.
++export ASAN_OPTIONS=detect_leaks=$enable_lsan:quarantine_size_mb=0:malloc_context_size=0
+ # Set argv[0] to the original binary name without the ".orig" suffix
+ exec -a "\$0" -- "${target}.orig" "\$@"
+ EOF

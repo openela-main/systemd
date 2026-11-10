@@ -1,0 +1,33 @@
+From 7e6496b4ee725cd75ffed4471fb4ff7093964fbd Mon Sep 17 00:00:00 2001
+From: fecet <xiezej@gmail.com>
+Date: Sat, 25 Apr 2026 14:48:19 +0800
+Subject: [PATCH] hwdb: sensor: add accel mount matrix for GPD WIN 5
+
+The WIN 5 (DMI product G1618-05) ships the same BMI0160
+accelerometer with the same physical mounting as the Win Max 2
+(G1619-04), so reuse its mount matrix. Verified on hardware:
+without the matrix iio-sensor-proxy reports
+AccelerometerOrientation=normal regardless of physical pose,
+and applying the G1619-04 matrix makes orientation transitions
+(normal / left-up / right-up / bottom-up) track the device
+correctly.
+
+(cherry picked from commit 6897562ea04c9a70622d5388c99e3e2ccf62e829)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 76f727573d..a3f243a660 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -515,6 +515,7 @@ sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvr5.11:bd03/20/20
+ sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvr5.11:bd05/25/2017:*:svnDefaultstring:pnDefaultstring:pvrDefaultstring:rvnAMICorporation:rnDefaultstring:rvrDefaultstring:cvnDefaultstring:ct3:cvrDefaultstring:*
+  ACCEL_LOCATION=base
+ 
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnGPD:pnG1618-05:*    # WIN 5
+ sensor:modalias:acpi:BMI0160:*:dmi:*:svnGPD:pnG1619-04:*    # Win Max 2
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 

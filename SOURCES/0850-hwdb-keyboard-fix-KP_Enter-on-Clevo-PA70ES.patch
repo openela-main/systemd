@@ -1,0 +1,51 @@
+From be7ae38ec77e3e2a2b2df23a32fbccc6ff155725 Mon Sep 17 00:00:00 2001
+From: Matheus Afonso Martins Moreira <matheus@matheusmoreira.com>
+Date: Sat, 9 May 2026 08:53:01 -0300
+Subject: [PATCH] hwdb/keyboard: fix KP_Enter on Clevo PA70ES
+
+The ITE keyboard controller firmware (version 0xAB83) is shared
+between the Clevo PA70ES and the X+ piccolo series.
+
+The piccolo's hwdb rule matches by input device ID
+(evdev:input:b0011v0001p0001eAB83*) and remaps scan code 0x9c
+(KP_Enter) to Enter, since the piccolo has no numpad and its
+main Enter key sends the wrong scan code.
+
+The Clevo PA70ES has a real numpad. The piccolo rule matches it
+because both laptops use the same ITE controller firmware, which
+breaks KP_Enter on the PA70ES.
+
+Add a DMI-specific override that restores KEY_KPENTER for 0x9c
+on the PA70ES.
+
+The piccolo rule should ideally be narrowed to use DMI matching
+instead of input device ID to avoid catching other laptops with
+the same ITE controller firmware.
+
+(cherry picked from commit b7be9ccc8f4299269f72bde49e426a7a9d484da9)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index ebc08560fe..2302374090 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -344,6 +344,15 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svn*BenQ*:pn*Joybook*R22*:*
+ # Clevo
+ ###########################################################
+ 
++# Clevo PA70ES (Avell C73)
++# The ITE keyboard controller firmware (version 0xAB83) is shared with
++# the X+ piccolo. The piccolo rule (below) matches by input device ID
++# and remaps KP_Enter to Enter since the piccolo has no numpad and its
++# main Enter sends the wrong scan code. The PA70ES has a real numpad,
++# so the remap breaks KP_Enter. This restores the correct mapping.
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnNotebook:pnPA70ES:*
++ KEYBOARD_KEY_9c=kpenter
++
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnNotebook:pnW65_67SZ:*
+  KEYBOARD_KEY_a0=!mute
+  KEYBOARD_KEY_a2=!playpause

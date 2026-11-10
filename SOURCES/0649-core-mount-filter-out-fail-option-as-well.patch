@@ -1,0 +1,25 @@
+From 31d4a35652e852905137c532f2f8bd1fa2391dc0 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Sun, 9 Feb 2025 20:25:21 +0100
+Subject: [PATCH] core/mount: filter out "fail" option as well
+
+(cherry picked from commit 7e9a78d6bea96bf8e9de615f6013c72f912f3e2d)
+
+Related: RHEL-143028
+---
+ src/core/mount.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 136c3f1453..786c3ae5f5 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1131,7 +1131,7 @@ static int mount_set_mount_command(Mount *m, ExecCommand *c, const MountParamete
+         }
+ 
+         _cleanup_free_ char *opts = NULL;
+-        r = fstab_filter_options(p->options, "nofail\0" "noauto\0" "auto\0", NULL, NULL, NULL, &opts);
++        r = fstab_filter_options(p->options, "nofail\0" "fail\0" "noauto\0" "auto\0", NULL, NULL, NULL, &opts);
+         if (r < 0)
+                 return r;
+ 

@@ -1,11 +1,11 @@
-From 6d965ef76e58c0ae2af3f9442a221da3e45e7cd0 Mon Sep 17 00:00:00 2001
+From 2842f1200bcb79f211309270a0afab4ab7a89b20 Mon Sep 17 00:00:00 2001
 From: Luca Boccassi <luca.boccassi@gmail.com>
 Date: Sat, 18 Oct 2025 14:23:59 +0100
 Subject: [PATCH] ci: add bpftool workaround to coverity too
 
 (cherry picked from commit d29f181cf02100c146fc8691a5515a708d06ddbf)
 
-Related: RHEL-115001
+Related: RHEL-155454
 ---
  .github/workflows/coverity.yml | 9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)

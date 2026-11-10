@@ -1,0 +1,35 @@
+From f0b480a56dabab5c6cee9e2c5932cc2e8f8da77b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 16:32:46 +0100
+Subject: [PATCH] hwdb: sensor: pipo refactor
+
+(cherry picked from commit 9034a9b6d6dcc5512b4279df7097a5f5a1ceeb70)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 8729ce7711..291bfa8b5f 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -885,15 +885,12 @@ sensor:modalias:of:NaccelerometerT_null_Csilan,sc7a20:*    # PineTab2
+ #########################################
+ # Pipo
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnPIPO:pnW2S:*
+- ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+-# Pipo W2Pro
+-sensor:modalias:acpi:KIOX0008*:dmi:*svnPIPO:pnW2pro:*
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnPIPO:pnW2S:*      # W2S 8"
++sensor:modalias:acpi:KIOX0008:*:dmi:*:svnPIPO:pnW2pro:*    # W2Pro
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+-# Pipo W4
+-sensor:modalias:acpi:SMO8500*:dmi:*:bvrV8L_WIN32_CHIPHD_*_DX:*:rvnAMICorporation:rnAptioCRB:*
++sensor:modalias:acpi:SMO8500:*:dmi:*:bvrV8L_WIN32_CHIPHD_*_DX:*:rvnAMICorporation:rnAptioCRB:*    # W4
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

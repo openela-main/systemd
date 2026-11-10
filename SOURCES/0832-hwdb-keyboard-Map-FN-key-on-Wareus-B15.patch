@@ -1,0 +1,42 @@
+From 7d94e888a496ad7f6e42e0834769887481b1cb4e Mon Sep 17 00:00:00 2001
+From: Artem Proskurnev <temap@mail.ru>
+Date: Thu, 19 Mar 2026 18:39:21 +0300
+Subject: [PATCH] hwdb/keyboard: Map FN key on Wareus B15
+
+After kernel commit 907bc9268a ("Input: atkbd - map F23 key to support default copilot shortcut")
+Fn+F5 combination (switch touchpad on/off) stopped working correctly.
+
+Fn produces F23, it is probably a bug in BIOS, ther eis no "Copilot" key.
+It was ignored before that commit, but now we have to remap it here in hwdb.
+
+This workaround is similar to systemd commit d2502f5
+("hwdb/keyboard: Map FN key on TUXEDO InfinityFlex 14 Gen1")
+
+Hardware probe of this notebook: https://linux-hardware.org/?probe=2d5266f5c6
+
+(cherry picked from commit f8e31900cec4a53e0f27a9f111d618e089b3434a)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 59aeef6b6f..936b7f7392 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -2157,6 +2157,14 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnVIA:pnK8N800:*
+ evdev:name:SIPODEV USB Composite Device:dmi:bvn*:bvr*:bd*:svnVIOS:pnLTH17:*
+  KEYBOARD_KEY_70073=touchpad_toggle                     # Touchpad toggle
+ 
++###########################################################
++# Wareus
++###########################################################
++
++# Wareus B15 (8AD5A)
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnWareus*:pnB15*:*
++ KEYBOARD_KEY_55=fn
++
+ ###########################################################
+ # WeiHeng
+ ###########################################################

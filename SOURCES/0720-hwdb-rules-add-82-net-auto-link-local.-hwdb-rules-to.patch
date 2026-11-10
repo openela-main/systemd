@@ -1,0 +1,57 @@
+From 6059f05db170ab04af3eff4fe932ae65ea36acd4 Mon Sep 17 00:00:00 2001
+From: Rebecca Cran <rebecca@bsdio.com>
+Date: Fri, 5 Dec 2025 11:20:05 -0700
+Subject: [PATCH] hwdb,rules: add 82-net-auto-link-local.{hwdb,rules} to build
+
+Update hwdb.d/meson.build and rules.d/meson.build to add the
+82-net-auto-link-local.{hwdb,rules} files into the build. Commit
+ec541c569bd19bbb81791139371111a9a7f1a3d8 in 2023 added the files
+but didn't add them to the build system.
+
+(cherry picked from commit b159befeae014a0c64069afaadfb2b58b7a7f8cd)
+
+Related: RHEL-72703
+---
+ hwdb.d/meson.build   | 3 ++-
+ hwdb.d/parse_hwdb.py | 1 +
+ rules.d/meson.build  | 1 +
+ 3 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/meson.build b/hwdb.d/meson.build
+index 82cc4f3f87..ceb2768929 100644
+--- a/hwdb.d/meson.build
++++ b/hwdb.d/meson.build
+@@ -39,7 +39,8 @@ hwdb_files_test = files(
+         '70-software-radio.hwdb',
+         '70-sound-card.hwdb',
+         '70-touchpad.hwdb',
+-        '80-ieee1394-unit-function.hwdb')
++        '80-ieee1394-unit-function.hwdb',
++        '82-net-auto-link-local.hwdb')
+ 
+ if conf.get('ENABLE_HWDB') == 1
+         auto_suspend_rules = custom_target(
+diff --git a/hwdb.d/parse_hwdb.py b/hwdb.d/parse_hwdb.py
+index bde098bd45..f5b63b7d34 100755
+--- a/hwdb.d/parse_hwdb.py
++++ b/hwdb.d/parse_hwdb.py
+@@ -181,6 +181,7 @@ def property_grammar():
+              ('ID_HARDWARE_WALLET', Or((Literal('0'), Literal('1')))),
+              ('ID_SOFTWARE_RADIO', Or((Literal('0'), Literal('1')))),
+              ('ID_MM_DEVICE_IGNORE', Or((Literal('0'), Literal('1')))),
++             ('ID_NET_AUTO_LINK_LOCAL_ONLY', Or((Literal('0'), Literal('1')))),
+              ('POINTINGSTICK_SENSITIVITY', INTEGER),
+              ('ID_INPUT_JOYSTICK_INTEGRATION', Or(('internal', 'external'))),
+              ('ID_INPUT_TOUCHPAD_INTEGRATION', Or(('internal', 'external'))),
+diff --git a/rules.d/meson.build b/rules.d/meson.build
+index 2b57322a12..09500ca94c 100644
+--- a/rules.d/meson.build
++++ b/rules.d/meson.build
+@@ -34,6 +34,7 @@ rules = [
+                '78-sound-card.rules',
+                '80-net-setup-link.rules',
+                '81-net-dhcp.rules',
++               '82-net-auto-link-local.rules',
+                '90-iocost.rules',
+               )],
+ 

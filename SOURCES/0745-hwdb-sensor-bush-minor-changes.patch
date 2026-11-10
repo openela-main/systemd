@@ -1,0 +1,26 @@
+From d77a461601d28993e130e9cfe78273bea6922b1b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Sun, 15 Feb 2026 09:58:58 +0100
+Subject: [PATCH] hwdb: sensor: bush minor changes
+
+(cherry picked from commit 9d017ceb4ad909ae9a7792bc757859fb93ad28be)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 2b1b78cba7..9e3875a90c 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -220,8 +220,7 @@ sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH8Y6:*    # MaxBook Y14
+ # BUSH
+ #########################################
+ 
+-# Bush Windows tablet
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnBUSH*:pnBushWindowstablet:*
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnBUSH:pnBushWindowstablet:*    # Bush Windows tablet
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 1, 0, 0
+ 
+ #########################################

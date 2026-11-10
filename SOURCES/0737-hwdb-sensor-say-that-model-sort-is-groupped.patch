@@ -1,0 +1,25 @@
+From 3b8b56a4091873ea2e2eda309182a0e2b3a79311 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Sun, 15 Feb 2026 05:06:03 +0100
+Subject: [PATCH] hwdb: sensor: say that model sort is groupped
+
+(cherry picked from commit 6f298b0b728fda9cf214093d5511cba9a36ac820)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 1bf1b6a66b..a451d347b6 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -76,7 +76,7 @@
+ # be identical to the display-accelerometer's readings (when the lid is
+ # closed).
+ #
+-# Sort by brand, model
++# Sort by brand, model (groupped by same matrices)
+ 
+ #########################################
+ # Acer

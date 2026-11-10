@@ -1,0 +1,33 @@
+From 7324299de36a7e409eb6c1067e83866a3b01db23 Mon Sep 17 00:00:00 2001
+From: "Matthias P. Walther" <matthiaspeterw@aol.com>
+Date: Fri, 3 Jul 2026 23:21:46 +0200
+Subject: [PATCH] hwdb: map mic-mute key on Logitech K950 (Bluetooth)
+
+The mic-mute key on the Logitech K950 keyboard (046D:B388, Bluetooth)
+emits BTN_0 (scancode 0x100e1) instead of a usable key, so it does
+nothing under GNOME/KDE. Map it to KEY_MICMUTE, its intended function.
+
+Scancode determined with evtest on the device.
+
+(cherry picked from commit 7961b4a78df9723e0de1fcac762f4d6e2d7b622b)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 0494f0311f..097714d8b8 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1432,6 +1432,10 @@ evdev:input:b0005v046DpB317*
+  KEYBOARD_KEY_70047=brightnessdown
+  KEYBOARD_KEY_70048=brightnessup
+ 
++# Logitech K950
++evdev:input:b0005v046DpB388*
++ KEYBOARD_KEY_100e1=micmute                             # Mic-mute key emits BTN_0
++
+ # iTouch
+ evdev:input:b0003v046DpC308*
+  KEYBOARD_KEY_90001=shop                                # Shopping

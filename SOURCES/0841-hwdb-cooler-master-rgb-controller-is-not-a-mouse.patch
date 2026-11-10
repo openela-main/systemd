@@ -1,0 +1,29 @@
+From fa114569bee39b50c04bdba0cc84cb56255bf217 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Luan=20Vitor=20Simi=C3=A3o=20oliveira?=
+ <luanv.oliveira@outlook.com>
+Date: Sun, 5 Apr 2026 02:37:05 -0300
+Subject: [PATCH] hwdb: cooler master rgb controller is not a mouse
+
+(cherry picked from commit 39eb7fd2591c1532a96f6fe23d0f0b5217d4b369)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-input-id.hwdb | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/hwdb.d/60-input-id.hwdb b/hwdb.d/60-input-id.hwdb
+index 03535884e5..700e7ee264 100644
+--- a/hwdb.d/60-input-id.hwdb
++++ b/hwdb.d/60-input-id.hwdb
+@@ -67,6 +67,11 @@ id-input:modalias:input:b0003v07C0p1125*
+  ID_INPUT_MOUSE=
+  ID_INPUT_JOYSTICK=1
+ 
++# Cooler Master ARGB GEN-2 controller
++id-input:modalias:input:b0003v2516p01C9*
++ ID_INPUT=0
++ ID_INPUT_MOUSE=0
++
+ # GOLD WARRIOR SIM PhoenixRC 10411R
+ id-input:modalias:input:b0003v1781p0898*
+  ID_INPUT_ACCELEROMETER=

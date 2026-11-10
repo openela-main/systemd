@@ -1,0 +1,35 @@
+From 5b71d9d79e2aecee92a039b7fe9eda61a05ee963 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@amutable.com>
+Date: Thu, 26 Feb 2026 19:02:03 +0100
+Subject: [PATCH] hwdb: use more modern python syntax in one more place
+
+(cherry picked from commit 62338aeadfb4fd09325eafbe948c8debbb351981)
+
+Related: RHEL-72703
+---
+ hwdb.d/parse_hwdb.py | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/hwdb.d/parse_hwdb.py b/hwdb.d/parse_hwdb.py
+index c39c133788..1a56f40c46 100755
+--- a/hwdb.d/parse_hwdb.py
++++ b/hwdb.d/parse_hwdb.py
+@@ -253,7 +253,7 @@ def check_matches(groups):
+     matches = sum((group[0] for group in groups), [])
+ 
+     # This is a partial check. The other cases could be also done, but those
+-    # two are most commonly wrong.
++    # three are the most commonly wrong.
+     grammars = {
+         'bluetooth' : 'v' + upperhex_word(4) + Optional('p' + upperhex_word(4) + Optional(':')) + '*',
+         'usb' : 'v' + upperhex_word(4) + Optional('p' + upperhex_word(4) + Optional(':')) + '*',
+@@ -262,8 +262,7 @@ def check_matches(groups):
+ 
+     for match in matches:
+         prefix, rest = match.split(':', maxsplit=1)
+-        gr = grammars.get(prefix)
+-        if gr:
++        if gr := grammars.get(prefix):
+             # we check this first to provide an easy error message
+             if rest[-1] not in '*:':
+                 error('Pattern {!r} does not end with "*" or ":"', match)

@@ -1,0 +1,58 @@
+From 67f7ed0331dc691c46cb5a4aff6d7ec195f97ee4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 29 Jan 2026 23:26:55 +0100
+Subject: [PATCH] quirks: keyboard: d330 keyboard rework
+
+change matches to generic input devices one as name can't be used
+because these keyboards have multiple names and also they are used in
+multiple devices. This way will be possible to define more detachable
+keyboards in an easy way for multiple devices.
+
+Known USB ids for D330 series are: 17EF:60C3, 17EF:60C6 and 17EF:60C8.
+
+Also mark that the tablet part keys and the keyboard doesn't have any
+LED to let interfaces decide to expose on-screen indicators.
+
+(cherry picked from commit 9e5b898d3a791af8b8ea75efc01f62b171ccbe94)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index efb99294ab..4244ebc5ab 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1172,12 +1172,25 @@ evdev:input:b0003v04B3p301B*
+  KEYBOARD_KEY_90007=mail
+  KEYBOARD_KEY_90008=www
+ 
+-# Lenovo Ideapad D330-10IGM
+-evdev:name:SIPODEV Lenovo HID Device:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGM:*
+- KEYBOARD_KEY_70073=touchpad_toggle                     # Fn+Supr (Touchpad toggle)
+-
+-evdev:name:SIPODEV Lenovo HID Device Consumer Control:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IGM:*
+- KEYBOARD_KEY_c00ff=fn_esc                              # Fn+Tab (FnLk toggle)
++# Lenovo Ideapad D330-10IGM and D330-10IGL
++# (Tablet buttons)
++evdev:atkbd:dmi:*:svnLENOVO:*:pvrLenovoideapadD330-10IG[ML]:*
++ KEYBOARD_LED_NUMLOCK=0                                 # Lacks Num-Lock LED
++ KEYBOARD_LED_CAPSLOCK=0                                # Lacks Caps-Lock LED
++
++# Lenovo Ideapad D330-10IGM and D330-10IGL
++# (Dock keyboard) "* Lenovo HID Device"
++evdev:input:b0003v17EFp60C[368]*-e0,1,4,11,14,k*,C2,*ram4,l0,1,2,sfw
++# Touchpad key acts as LEFTCTRL+LEFTMETA+F24 (C2) Windows shortcut for touchpad toggle,
++# with this as LEFTCTRL+LEFTMETA+TOUCHPAD_TOGGLE but just works.
++ KEYBOARD_KEY_70073=touchpad_toggle                     # Fn+Supr (Touchpad toggle).
++ KEYBOARD_LED_NUMLOCK=0                                 # Lacks Num-Lock LED
++ KEYBOARD_LED_CAPSLOCK=0                                # Lacks Caps-Lock LED
++
++# Lenovo Ideapad D330-10IGM and D330-10IGL
++# (Dock keyboard: volume, brightness and FnLk keys) "* Lenovo HID Device Consumer Control"
++evdev:input:b0003v17EFp60C[368]*-e0,1,4,k*,F0,*ram4,lsfw
++ KEYBOARD_KEY_c00ff=fn_esc                              # Fn+Tab (FnLk toggle). Default is UNKNOWN (F0).
+ 
+ # Lenovo Thinkbook 16 G6+ 2024
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO:pn21LG:pvr*

@@ -1,0 +1,26 @@
+From f5c6c181773dcfa85a38af9c025272dd81944117 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 22:24:31 +0100
+Subject: [PATCH] hwdb: sensor: geo add in-line comment
+
+(cherry picked from commit 86db0afa8758a32e2331be8d0cd0fbd9460315b3)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 824217adee..913308ec69 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -449,8 +449,7 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnEXO*:pnWings:*    # Wings 2in1 w1125
+ # Geo Computers
+ #########################################
+ 
+-# Geoflex
+-sensor:modalias:acpi:KIOX010A*:dmi:*:svnGEO*:pnGeoFlex*:*
++sensor:modalias:acpi:KIOX010A:*:dmi:*:svnGEO:pnGeoFlex:*    # Geoflex (2018)
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################

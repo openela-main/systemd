@@ -1,0 +1,24 @@
+From 2cc61dd003b3798a2beb19160501961056f8ee96 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Sat, 8 Mar 2025 19:13:44 +0100
+Subject: [PATCH] mount-setup: drop outdated comment
+
+(cherry picked from commit 80b7f60d2e7883cec3185172a85901d72fd5cdb3)
+
+Related: RHEL-143028
+---
+ src/shared/mount-setup.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/shared/mount-setup.c b/src/shared/mount-setup.c
+index db8c2b61d2..93e646d045 100644
+--- a/src/shared/mount-setup.c
++++ b/src/shared/mount-setup.c
+@@ -179,7 +179,6 @@ static int mount_one(const MountPoint *p, bool relabel) {
+         if (r > 0)
+                 return 0;
+ 
+-        /* Skip securityfs in a container */
+         if (!FLAGS_SET(p->mode, MNT_IN_CONTAINER) && detect_container() > 0)
+                 return 0;
+ 

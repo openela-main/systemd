@@ -1,0 +1,41 @@
+From 7e6c61be2598bfd6096610d3049760d1d57c56ea Mon Sep 17 00:00:00 2001
+From: Christian Hesse <mail@eworm.de>
+Date: Wed, 27 May 2026 20:40:06 +0200
+Subject: [PATCH] hwdb/keyboard: fix match for for X+ Piccolo, again
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+I got infos from product_name:
+
+$ cat /sys/class/dmi/id/product_name
+X+ Piccolo
+
+Turns out the modalias has a little difference:
+
+$ cat /sys/class/dmi/id/modalias
+dmi:bvnAmericanMegatrendsInternational,LLC.:bvr5.27:bd09/10/2025:br5.27:svnX-Plus.tech:pnX+Piccolo:pvrDefaultstring:rvnX-Plus:rnXPLUS-SERIES81x-DEV:rvrDefaultstring:cvnDefaultstring:ct10:cvrDefaultstring:skuSeries81x:pfaPiccoloSeries:
+
+So let's remove the extra space. Crossing fingers... 🤞
+
+Fixes: 033be1a41b5f75a3f2c8f4fe212512062bc4d5f3
+(cherry picked from commit 7a53696201adccecb7ad1b49ad825c02842c6845)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index fedf9dcc5a..73cb50fa4c 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -2224,7 +2224,7 @@ evdev:atkbd:dmi:bvnTIMI*:bvr*:bd*:svnTIMI*:pnMiNoteBookPro*:*
+ ###########################################################
+ 
+ # X+ piccolo series 81X (Intel N305, possibly more)
+-evdev:atkbd:dmi:bvn*:bvr*:bd*:svnX-Plus.tech:pnX+ Piccolo:*
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnX-Plus.tech:pnX+Piccolo:pvr*
+  KEYBOARD_KEY_9c=enter                                  # KP_enter in the main area is wrong
+ 
+ ###########################################################

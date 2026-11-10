@@ -1,0 +1,39 @@
+From c24e23ae2f1080cc8c821eab6ac7d67ef438832a Mon Sep 17 00:00:00 2001
+From: guido <guido@dis.tur.bio>
+Date: Mon, 15 Jun 2026 23:16:22 -0400
+Subject: [PATCH] Add Elecom Huge Plus information for wired usb, wireless usb,
+ and bluetooth
+
+(cherry picked from commit fc06cd756ef136a14cd222b7fc0e28ddeb6e2b79)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-mouse.hwdb | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/hwdb.d/70-mouse.hwdb b/hwdb.d/70-mouse.hwdb
+index dc482fee8d..3009ea2fdc 100644
+--- a/hwdb.d/70-mouse.hwdb
++++ b/hwdb.d/70-mouse.hwdb
+@@ -280,6 +280,21 @@ mouse:usb:v056ep01a9:name:ELECOM ELECOM Bridge G1000 Mouse:*
+ mouse:bluetooth:v056ep018a:name:ELECOM IST PRO Mouse:*
+  ID_INPUT_TRACKBALL=1
+ 
++# Elecom HUGE Plus (via wired usb) (M-HT1MR)
++mouse:usb:v056ep01aa:name:HUGE PLUS HUGE PLUS:*
++ ID_INPUT_TRACKBALL=1
++ MOUSE_DPI=500 *1000 1500
++
++# Elecom HUGE Plus (via usb receiver) (M-HT1MR)
++mouse:usb:v056ep01ab:name:HUGE PLUS HUGE PLUS:*
++ ID_INPUT_TRACKBALL=1
++ MOUSE_DPI=500 *1000 1500
++
++# Elecom HUGE Plus (via Bluetooth) (M-HT1MR)
++mouse:bluetooth:v056ep01ac:name:HUGE PLUS:*
++ ID_INPUT_TRACKBALL=1
++ MOUSE_DPI=500 *1000 1500
++
+ ##########################################
+ # Fujitsu Siemens
+ ##########################################

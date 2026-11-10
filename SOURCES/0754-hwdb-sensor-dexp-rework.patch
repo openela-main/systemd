@@ -1,0 +1,27 @@
+From 1228200cbad392dcdf8f7ab7c7fd2fb2976a8464 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 21:14:46 +0100
+Subject: [PATCH] hwdb: sensor: dexp rework
+
+(cherry picked from commit 81f69d617664645841aa319d2e7553a1276f36ed)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index dfb0d58196..36d28f05af 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -398,7 +398,9 @@ sensor:modalias:acpi:MXC6655:*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvr*:
+ #########################################
+ # DEXP
+ #########################################
+-sensor:modalias:acpi:SMO8500*:dmi:*svn*DEXP*:*pn*DEXPOEM:*
++
++sensor:modalias:acpi:SMO8500:*:dmi:bvnTechvisionHASHVersion96AC8868:*:svnDEXP:pnDEXPOEM:*    # Ursus 10XW
++sensor:modalias:acpi:SMO8500:*:dmi:bvnTechvisionHASHVersion1DE28747:*:svnDEXP:pnDEXPOEM:*    # Ursus Z110i Apollo
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

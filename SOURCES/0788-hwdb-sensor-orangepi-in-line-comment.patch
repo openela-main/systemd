@@ -1,0 +1,26 @@
+From 3d2356c5177f8dae6e41b8a32f2f1646ea4ec2bd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:32:54 +0100
+Subject: [PATCH] hwdb: sensor: orangepi in-line comment
+
+(cherry picked from commit f65d619959168e9e2f2fcbeac3bb0a199b1454a8)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index e279f65aba..f89297edb6 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -858,8 +858,7 @@ sensor:modalias:acpi:BMI0160:*:dmi:*:rnONEXPLAYER:rvrV01:*
+ # OrangePi
+ #########################################
+ 
+-# OrangePi NEO
+-sensor:modalias:acpi:BMI0260*:dmi:*:svnOrangePi:pnNEO-01:*
++sensor:modalias:acpi:BMI0260:*:dmi:*:svnOrangePi:pnNEO-01:*    # NEO
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 0, -1; 0, -1, 0
+ 
+ #########################################

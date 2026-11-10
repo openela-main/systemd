@@ -1,0 +1,29 @@
+From 26440f1043f23f0ce650f67f9bd78b5b81b5c42f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 21:46:40 +0100
+Subject: [PATCH] hwdb: sensor: eve in-line comment
+
+(cherry picked from commit e3a9643798357e3560443ef28950870b94f37699)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 2fb9039978..5adafe5da4 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -432,9 +432,10 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnEstar:pneSTARBEAUTYHDIntelQuadcore:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################
+-# Eve Technology
++# Eve-Tech
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnEVE*:pnEveV:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnEVE:pnEveV:*    # Eve V
+  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

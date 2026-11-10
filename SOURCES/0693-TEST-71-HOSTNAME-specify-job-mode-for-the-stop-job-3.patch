@@ -1,0 +1,40 @@
+From b01cc566e8b5ae794b08def0eaeec62b1f471fa2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 30 Jul 2025 01:25:28 +0200
+Subject: [PATCH] TEST-71-HOSTNAME: specify job mode for the stop job (#38413)
+
+The CI run is failing in the stop command:
+```
+[ 4841.936906] TEST-71-HOSTNAME.sh[140]: + stop_hostnamed
+[ 4841.936906] TEST-71-HOSTNAME.sh[140]: + systemctl stop systemd-hostnamed.service
+[ 4845.959747] TEST-71-HOSTNAME.sh[226]: Job for systemd-hostnamed.service canceled.
+[ 4846.013286] systemd[1]: TEST-71-HOSTNAME.service: Main process exited, code=exited, status=1/FAILURE
+[ 4846.013792] systemd[1]: TEST-71-HOSTNAME.service: Failed with result 'exit-code'.
+[ 4846.021821] systemd[1]: Failed to start TEST-71-HOSTNAME.service - TEST-71-HOSTNAME.
+```
+This happens when we create the stop job, but while we're waiting for
+it to finish, something triggers a start of the unit and we lose to competing
+start job.
+
+Hopefully fixes #36089.
+
+(cherry picked from commit 57fbe401f5ef03af503a10e9c3339d646fb84dd3)
+
+Related: RHEL-180923
+---
+ test/units/TEST-71-HOSTNAME.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/units/TEST-71-HOSTNAME.sh b/test/units/TEST-71-HOSTNAME.sh
+index dc3f587ea3..4cd197fc2e 100755
+--- a/test/units/TEST-71-HOSTNAME.sh
++++ b/test/units/TEST-71-HOSTNAME.sh
+@@ -62,7 +62,7 @@ get_chassis() (
+ )
+ 
+ stop_hostnamed() {
+-    systemctl stop systemd-hostnamed.service
++    systemctl stop --job-mode=replace-irreversibly systemd-hostnamed.service
+     # Reset trigger limit. This might fail if the unit was unloaded already, so ignore any errors.
+     systemctl reset-failed systemd-hostnamed || :
+ }

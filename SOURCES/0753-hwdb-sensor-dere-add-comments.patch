@@ -1,0 +1,42 @@
+From 147fde50cac8f0f38d97b228d3f61b20c623d5d6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 20:59:03 +0100
+Subject: [PATCH] hwdb: sensor: dere add comments
+
+(cherry picked from commit a252f18c19d1fa52667f214e0db69342a130f694)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index c327d31ab3..dfb0d58196 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -378,17 +378,21 @@ sensor:modalias:acpi:INVN6500:*:dmi:*:svnDellInc.:pnVenue10Pro5055:*        # Ve
+ # DERE
+ #########################################
+ 
++# TODO: Find sku if it's a better match.
+ # DBook D10 / Juno Tablet
+-sensor:modalias:acpi:KIOX000A*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvrJP2V*:svnDefaultstring:*
++sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvrJP2V*:svnDefaultstring:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
++# TODO: Find sku if it's a better match.
+ # T11 / Juno Tablet 2
+-sensor:modalias:acpi:NSA2513*:dmi:*:svnDigitek:*
+-sensor:modalias:acpi:NSA2513*:dmi:*:svnDefaultstring:*
++sensor:modalias:acpi:NSA2513:*:dmi:*:svnDigitek:*
++# FIXME: Too generic dmi match.
++sensor:modalias:acpi:NSA2513:*:dmi:*:svnDefaultstring:*
+  ACCEL_MOUNT_MATRIX=0, -1, 0; 1, 0, 0; 0, 0, 1
+ 
++# TODO: Find sku if it's a better match.
+ # N12 / Juno Tablet 3
+-sensor:modalias:acpi:MXC6655*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvr*:svnDefaultstring:pnS1105ANR100:pvr*:rvn*:rnS1105ANR100:*
++sensor:modalias:acpi:MXC6655:*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvr*:svnDefaultstring:pnS1105ANR100:pvr*:rvn*:rnS1105ANR100:*
+  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, -1
+ 
+ #########################################

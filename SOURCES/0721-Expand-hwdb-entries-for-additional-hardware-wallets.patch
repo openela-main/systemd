@@ -1,0 +1,95 @@
+From 8335ad27c7cdd0baf58fe734d2ce9b540e9fd84d Mon Sep 17 00:00:00 2001
+From: Nicolas Dorier <nicolas.dorier@gmail.com>
+Date: Fri, 30 Jan 2026 15:46:27 +0900
+Subject: [PATCH] Expand hwdb entries for additional hardware wallets
+
+The list is ported straight from https://github.com/bitcoin-core/HWI/tree/master/hwilib/udev
+
+The HWI project is a widely popular command line tool to access bitcoin
+hardware wallets, maintained by the bitcoin-core team.
+
+(cherry picked from commit 4585483ef9debc556f1680ebb1314ff44fa1a2f2)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-hardware-wallets.hwdb | 61 +++++++++++++++++++++++++++++++--
+ 1 file changed, 59 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/70-hardware-wallets.hwdb b/hwdb.d/70-hardware-wallets.hwdb
+index 94fe332872..56d7cc6e23 100644
+--- a/hwdb.d/70-hardware-wallets.hwdb
++++ b/hwdb.d/70-hardware-wallets.hwdb
+@@ -20,6 +20,65 @@
+ # Allowed properties are:
+ #   ID_HARDWARE_WALLET=0|1
+ 
++################
++# Blockstream Jade Hardware Wallets
++################
++
++# Jade UART (Silicon Labs)
++usb:v10C4pEA60*
++ ID_HARDWARE_WALLET=1
++
++# Jade UART (WCH)
++usb:v1A86p55D4*
++ ID_HARDWARE_WALLET=1
++
++################
++# Coinkite Hardware Wallets
++################
++
++# Coldcard
++usb:vD13EpCC10*
++ ID_HARDWARE_WALLET=1
++
++################
++# Digital Bitbox Hardware Wallets
++################
++
++# Digital Bitbox (dbb)
++usb:v03EBp2402*
++ ID_HARDWARE_WALLET=1
++
++# BitBox02
++usb:v03EBp2403*
++ ID_HARDWARE_WALLET=1
++
++################
++# KeepKey Hardware Wallets
++################
++
++# KeepKey HID Firmware/Bootloader
++usb:v2B24p0001*
++ ID_HARDWARE_WALLET=1
++
++# KeepKey WebUSB Firmware/Bootloader
++usb:v2B24p0002*
++ ID_HARDWARE_WALLET=1
++
++################
++# Ledger Hardware Wallets
++################
++
++# Ledger HW.1 / Nano series
++usb:v2581p1B7C*
++usb:v2581p2B7C*
++usb:v2581p3B7C*
++usb:v2581p4B7C*
++ ID_HARDWARE_WALLET=1
++
++# Ledger Nano S/X/Blue/Stax and related devices
++usb:v2C97*
++ ID_HARDWARE_WALLET=1
++
+ ################
+ # Trezor Hardware Wallets
+ ################
+@@ -30,7 +89,5 @@ usb:v534Cp0001*
+ 
+ # Trezor v2
+ usb:v1209p53C0*
+- ID_HARDWARE_WALLET=1
+-
+ usb:v1209p53C1*
+  ID_HARDWARE_WALLET=1

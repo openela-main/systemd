@@ -1,0 +1,26 @@
+From f65420336946d478f82ace41847c92a75c1221a5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 21:17:52 +0100
+Subject: [PATCH] hwdb: sensor: digibras in-line comment
+
+(cherry picked from commit 500f5c645af6e1c81baf134faef870c2989ca9af)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 36d28f05af..88b6055ad6 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -407,8 +407,7 @@ sensor:modalias:acpi:SMO8500:*:dmi:bvnTechvisionHASHVersion1DE28747:*:svnDEXP:pn
+ # Digibras
+ #########################################
+ 
+-# Digibras F10-30
+-sensor:modalias:acpi:SMO8500*:dmi:*:svnDigibras:pnF10-30:*
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnDigibras:pnF10-30:*    # F10-30
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

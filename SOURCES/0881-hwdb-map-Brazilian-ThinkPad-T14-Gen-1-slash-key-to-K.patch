@@ -1,0 +1,45 @@
+From 6f7cde25c4d85adea42448d6289ebf04acf57f23 Mon Sep 17 00:00:00 2001
+From: LucasTavaresA <tavares.lassuncao@gmail.com>
+Date: Wed, 24 Jun 2026 09:21:29 -0300
+Subject: [PATCH] hwdb: map Brazilian ThinkPad T14 Gen 1 slash key to KEY_RO
+
+On Lenovo ThinkPad T14 Gen 1 AMD model 20UES5TQ00 with the Brazilian
+keyboard, the physical slash/question key reports as KEY_RIGHTCTRL.
+
+This keyboard layout has no physical Right Ctrl key in that position. The
+key after Space is AltGr, then PrtSc, then the slash/question key. Map the
+AT keyboard scancode 0x9d to KEY_RO, matching the ABNT slash/question key
+used by Brazilian keyboard layouts.
+
+Verified with evtest:
+
+Event: type 4 (EV_MSC), code 4 (MSC_SCAN), value 9d
+Event: type 1 (EV_KEY), code 97 (KEY_RIGHTCTRL), value 1
+
+After applying the hwdb mapping, the key reports as KEY_RO.
+
+DMI: svnLENOVO:pn20UES5TQ00:pvrThinkPadT14Gen1
+AT keyboard scancode: 0x9d
+
+(cherry picked from commit b48228a559b6bd3fcc35f8c2887c7793b48c5d00)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 291a2fcba6..5ada02b285 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1083,6 +1083,10 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO*:pn*3000*:pvr*
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO:pn0769AP2:pvr3000N200:*
+  KEYBOARD_KEY_b4=prog1
+ 
++# Lenovo ThinkPad T14 Gen 1 AMD, Brazilian keyboard
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO:pn20UES5TQ00:pvr*
++ KEYBOARD_KEY_9d=ro                                     # slash/question key
++
+ # Lenovo IdeaPad
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO*:pn*IdeaPad*:pvr*
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnLENOVO*:pnS10-*:*

@@ -1,0 +1,29 @@
+From fa5fbb4bb4f8f9a6ca4f2f13abe1b4a6d2c45fab Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 00:02:55 +0100
+Subject: [PATCH] hwdb: sensor: iota 360 is the model
+
+(cherry picked from commit 61a4440d5f48a8020e6f77a31b7902cfef37491b)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 54b5b9a857..515ddf8450 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -596,9 +596,10 @@ sensor:modalias:acpi:BOSC0200*:dmi:*:svnIRBIS:pnTW118:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################
+-# iOTA 360
++# iOTA
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:*svn*iOTA*:*pn*IOTA2210:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svniOTA:pnIOTA2210:*    # 360
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

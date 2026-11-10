@@ -1,0 +1,57 @@
+From bb4a13f0b861cad6d69b5dd0223412fb8fd4465e Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Wed, 22 Apr 2026 19:12:23 +0200
+Subject: [PATCH] test: wrap mount/umount when running with sanitizers
+
+On Fedora Rawhide mount/umount is linked against libsystemd, which then
+breaks the binaries in sanitizer runs, as we try to run instrumented
+code from an uninstrumented binary:
+
+bash-5.3# ldd /usr/bin/mount
+        linux-vdso.so.1 (0x00007fa757ef9000)
+        libmount.so.1 => /lib64/libmount.so.1 (0x00007fa757e84000)
+        libselinux.so.1 => /lib64/libselinux.so.1 (0x00007fa757e51000)
+        libc.so.6 => /lib64/libc.so.6 (0x00007fa757c56000)
+        libblkid.so.1 => /lib64/libblkid.so.1 (0x00007fa757c16000)
+        libsystemd.so.0 => /lib64/libsystemd.so.0 (0x00007fa757400000)
+        libpcre2-8.so.0 => /lib64/libpcre2-8.so.0 (0x00007fa75734f000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007fa757efb000)
+        libclang_rt.asan.so => /usr/lib/clang/22/lib/x86_64-redhat-linux-gnu/libclang_rt.asan.so (0x00007fa756800000)
+        libm.so.6 => /lib64/libm.so.6 (0x00007fa7566e4000)
+        libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x00007fa7566b7000)
+        libstdc++.so.6 => /lib64/libstdc++.so.6 (0x00007fa756400000)
+bash-5.3# mount
+==458==ASan runtime does not come first in initial library list; you should either link runtime to your application or manually preload it with LD_PRELOAD.
+
+This then breaks the whole machine, as mount is quite essential during
+boot.
+
+Let's just add mount/umount to the list of wrapped binaries to fix this.
+
+(cherry picked from commit 8030e0b19ef7c0e823d84dd08ad38a2d88e0a230)
+
+Related: RHEL-155454
+---
+ mkosi.sanitizers/mkosi.postinst | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mkosi.sanitizers/mkosi.postinst b/mkosi.sanitizers/mkosi.postinst
+index e83d05c6bc..c984a91a5a 100755
+--- a/mkosi.sanitizers/mkosi.postinst
++++ b/mkosi.sanitizers/mkosi.postinst
+@@ -65,6 +65,7 @@ wrap=(
+     mdadm
+     mkfs.btrfs
+     mksquashfs
++    mount
+     multipath
+     multipathd
+     nvme
+@@ -78,6 +79,7 @@ wrap=(
+     su
+     tar
+     tgtd
++    umount
+     useradd
+     userdel
+     veritysetup

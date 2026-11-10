@@ -1,0 +1,89 @@
+From 72d7385b4390e3c4def7e488aef31b84e1bb5f5d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 23 Jan 2025 11:40:36 +0100
+Subject: [PATCH] devnum-util: add macros to safely convert dev_t to pointers
+ and back
+
+Sometimes it's nice being able to store dev_t as pointer values in
+hashmaps/tables, instead of having to allocate memory for them and using
+devt_hash_ops. After all dev_t is weird on Linux/glibc: glibc defines it
+as 64bit entity (which hence appears as something we cannot encode in a
+pointer value for compat with 32bit archs) but it actually is 32bit in
+the kernel apis. Hence we can safely cut off the upper 32bit, and still
+retain compat with all archs.
+
+But let's hide this in new macros, and validate this is all correct via
+a test.
+
+(cherry picked from commit d15811d7e5bb3fc3afc1c14e4d5bb3b18fddedc1)
+
+Related: RHEL-143028
+---
+ src/basic/devnum-util.h     | 10 ++++++++--
+ src/test/test-devnum-util.c | 17 +++++++++++++++++
+ 2 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/src/basic/devnum-util.h b/src/basic/devnum-util.h
+index e109de9913..0efca56780 100644
+--- a/src/basic/devnum-util.h
++++ b/src/basic/devnum-util.h
+@@ -9,6 +9,9 @@
+ 
+ int parse_devnum(const char *s, dev_t *ret);
+ 
++#define DEVNUM_MAJOR_MAX ((UINT32_C(1) << 12) - 1U)
++#define DEVNUM_MINOR_MAX ((UINT32_C(1) << 20) - 1U)
++
+ /* glibc and the Linux kernel have different ideas about the major/minor size. These calls will check whether the
+  * specified major is valid by the Linux kernel's standards, not by glibc's. Linux has 20bits of minor, and 12 bits of
+  * major space. See MINORBITS in linux/kdev_t.h in the kernel sources. (If you wonder why we define _y here, instead of
+@@ -18,14 +21,14 @@ int parse_devnum(const char *s, dev_t *ret);
+ #define DEVICE_MAJOR_VALID(x)                                           \
+         ({                                                              \
+                 typeof(x) _x = (x), _y = 0;                             \
+-                _x >= _y && _x < (UINT32_C(1) << 12);                   \
++                _x >= _y && _x <= DEVNUM_MAJOR_MAX;                     \
+                                                                         \
+         })
+ 
+ #define DEVICE_MINOR_VALID(x)                                           \
+         ({                                                              \
+                 typeof(x) _x = (x), _y = 0;                             \
+-                _x >= _y && _x < (UINT32_C(1) << 20);                   \
++                _x >= _y && _x <= DEVNUM_MINOR_MAX;                     \
+         })
+ 
+ int device_path_make_major_minor(mode_t mode, dev_t devnum, char **ret);
+@@ -54,3 +57,6 @@ static inline char *format_devnum(dev_t d, char buf[static DEVNUM_STR_MAX]) {
+ static inline bool devnum_is_zero(dev_t d) {
+         return major(d) == 0 && minor(d) == 0;
+ }
++
++#define DEVNUM_TO_PTR(u) ((void*) (uintptr_t) (u))
++#define PTR_TO_DEVNUM(p) ((dev_t) ((uintptr_t) (p)))
+diff --git a/src/test/test-devnum-util.c b/src/test/test-devnum-util.c
+index ebef794001..782f15d86f 100644
+--- a/src/test/test-devnum-util.c
++++ b/src/test/test-devnum-util.c
+@@ -121,4 +121,21 @@ TEST(devnum_format_str) {
+         test_devnum_format_str_one(makedev(4095, 1048575), "4095:1048575");
+ }
+ 
++TEST(devnum_to_ptr) {
++        dev_t m = makedev(0, 0);
++        ASSERT_EQ(major(m), 0U);
++        ASSERT_EQ(minor(m), 0U);
++        ASSERT_EQ(m, PTR_TO_DEVNUM(DEVNUM_TO_PTR(m)));
++
++        m = makedev(DEVNUM_MAJOR_MAX, DEVNUM_MINOR_MAX);
++        ASSERT_EQ(major(m), DEVNUM_MAJOR_MAX);
++        ASSERT_EQ(minor(m), DEVNUM_MINOR_MAX);
++        ASSERT_EQ(m, PTR_TO_DEVNUM(DEVNUM_TO_PTR(m)));
++
++        m = makedev(5, 8);
++        ASSERT_EQ(major(m), 5U);
++        ASSERT_EQ(minor(m), 8U);
++        ASSERT_EQ(m, PTR_TO_DEVNUM(DEVNUM_TO_PTR(m)));
++}
++
+ DEFINE_TEST_MAIN(LOG_INFO);

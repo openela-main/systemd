@@ -1,0 +1,40 @@
+From 2425eb1611a0176aa096296d28e612be41c917ee Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 15 Jan 2025 00:25:22 +0100
+Subject: [PATCH] test: add test case for tmpfs quota logic + PAMName=
+ ask-password logic
+
+(cherry picked from commit d58d449fc6b828429f2e4d06779a45318eb17f27)
+
+Related: RHEL-143028
+---
+ test/units/TEST-46-HOMED.sh | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/test/units/TEST-46-HOMED.sh b/test/units/TEST-46-HOMED.sh
+index 8de170a1c9..3663e53908 100755
+--- a/test/units/TEST-46-HOMED.sh
++++ b/test/units/TEST-46-HOMED.sh
+@@ -652,6 +652,22 @@ getent passwd aliastest@myrealm
+ getent passwd aliastest2@myrealm
+ getent passwd aliastest3@myrealm
+ 
++if findmnt -n -o options /tmp | grep -q usrquota ; then
++
++    NEWPASSWORD=quux homectl create tmpfsquota --storage=subvolume --dev-shm-limit=50K -P
++
++    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/urandom of=/dev/shm/quotatestfile1 bs=1024 count=30
++    (! run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/urandom of=/dev/shm/quotatestfile2 bs=1024 count=30)
++    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm /dev/shm/quotatestfile1 /dev/shm/quotatestfile2
++    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/urandom of=/dev/shm/quotatestfile1 bs=1024 count=30
++    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm /dev/shm/quotatestfile1
++
++    systemctl stop user@"$(id -u tmpfsquota)".service
++
++    wait_for_state tmpfsquota inactive
++    homectl remove tmpfsquota
++fi
++
+ systemd-analyze log-level info
+ 
+ touch /testok

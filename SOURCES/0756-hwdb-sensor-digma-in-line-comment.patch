@@ -1,0 +1,26 @@
+From 2a30143ad3cf8f336e2c8081e86ed5e1f74e13cb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 21:18:43 +0100
+Subject: [PATCH] hwdb: sensor: digma in-line comment
+
+(cherry picked from commit 5a1aa20882ba80be22f123fdfbc76fcfd2d73575)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 88b6055ad6..0de1a12b6c 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -414,8 +414,7 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnDigibras:pnF10-30:*    # F10-30
+ # DIGMA
+ #########################################
+ 
+-# Digma CITI E203
+-sensor:modalias:acpi:BOSC0200*:dmi:*:svnDigma:pnCITIE203ES2010EW:*
++sensor:modalias:acpi:BOSC0200:*:dmi:*:svnDigma:pnCITIE203ES2010EW:*    # CITI E203
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ #########################################

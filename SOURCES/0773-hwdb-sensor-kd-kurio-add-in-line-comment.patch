@@ -1,0 +1,26 @@
+From 51c11e54edb0aa011c7fdfe1beff24345ce33968 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 00:20:04 +0100
+Subject: [PATCH] hwdb: sensor: kd kurio add in-line comment
+
+(cherry picked from commit f8b2a756ae7543a16c4edc6d9c0c954dfe9bbe63)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 806b8dd9e9..b8431f953c 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -624,7 +624,8 @@ sensor:modalias:acpi:KIOX000A:*:dmi:bvnINSYDECorp.:bvrVISION.I22K*:svnKAZAM:pnVI
+ #########################################
+ # KD / Kurio
+ #########################################
+-sensor:modalias:acpi:SMO8500*:dmi:*:svnKDInteractive:pnKurioSmart:*:rnKDM960BCP:*
++
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnKDInteractive:pnKurioSmart:*:rnKDM960BCP:*    # Smart C15200
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################

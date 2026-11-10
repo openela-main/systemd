@@ -1,0 +1,49 @@
+From 341da00c9aea8c3987cbf7042c5392bd7b8f2181 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Mon, 10 Feb 2025 20:22:09 +0100
+Subject: [PATCH] core/mount: report accurate can_start and can_reload
+
+(cherry picked from commit 74c0d9726cfbd4ecdf1807adf5433fcf4b1d86b4)
+
+Related: RHEL-143028
+---
+ src/core/mount.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index b317af03a7..6b38ee9431 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1393,6 +1393,12 @@ static int mount_reload(Unit *u) {
+         return 1;
+ }
+ 
++static bool mount_can_reload(Unit *u) {
++        Mount *m = ASSERT_PTR(MOUNT(u));
++
++        return get_mount_parameters_fragment(m);
++}
++
+ static int mount_serialize(Unit *u, FILE *f, FDSet *fds) {
+         Mount *m = ASSERT_PTR(MOUNT(u));
+ 
+@@ -2334,6 +2340,9 @@ static int mount_test_startable(Unit *u) {
+                 return r;
+         }
+ 
++        if (!get_mount_parameters_fragment(m))
++                return -ENOENT;
++
+         return true;
+ }
+ 
+@@ -2448,7 +2457,9 @@ const UnitVTable mount_vtable = {
+ 
+         .start = mount_start,
+         .stop = mount_stop,
++
+         .reload = mount_reload,
++        .can_reload = mount_can_reload,
+ 
+         .clean = mount_clean,
+         .can_clean = mount_can_clean,

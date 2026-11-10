@@ -1,0 +1,32 @@
+From f2822645916b4229b41fe2c5fc4f63443ac1ed02 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 19 Mar 2026 04:07:07 +0100
+Subject: [PATCH] sensor: gpd fix matches
+
+Actually for example the Win Max 2 match is affecting devices that even
+didn't exist when the matrix was added.
+
+(cherry picked from commit afc418daa65d31f4b35b07d4dc4200dd8b28c488)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 75fc9428a1..189c19588a 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -519,10 +519,10 @@ sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1621-02:*    # Pocket 3
+ sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1628-04:*    # Pocket 4
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+-sensor:modalias:acpi:BMI0160:*:dmi:*:svnGPD:pnG1619*:*      # WinMax2
++sensor:modalias:acpi:BMI0160:*:dmi:*:svnGPD:pnG1619-04:*    # Win Max 2
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+-sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1688-*:*     # MicroPC 2
++sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1688-08:*    # MicroPC 2
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, -1
+ 
+ #########################################

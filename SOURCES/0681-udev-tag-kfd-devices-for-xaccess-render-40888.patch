@@ -1,0 +1,29 @@
+From 9041d136f9d72358233b9b66eef13a7906e1c794 Mon Sep 17 00:00:00 2001
+From: Mario Limonciello <superm1@kernel.org>
+Date: Sun, 1 Mar 2026 21:32:50 -0600
+Subject: [PATCH] udev: tag kfd devices for xaccess-render (#40888)
+
+The kfd device is used for running compute workloads on AMD
+GPUs. Users that are logged in should be able to run compute
+so tag them like other DRM and ACCEL devices are.
+
+(cherry picked from commit 9d3b73d9bf181e6adf2e900739c4d998e3450a12)
+
+Resolves: RHEL-153030
+---
+ rules.d/70-uaccess.rules.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/rules.d/70-uaccess.rules.in b/rules.d/70-uaccess.rules.in
+index 6ba4200ff9..8c05bd3454 100644
+--- a/rules.d/70-uaccess.rules.in
++++ b/rules.d/70-uaccess.rules.in
+@@ -49,6 +49,8 @@ SUBSYSTEM=="drm", KERNEL=="card*", TAG+="uaccess"
+ SUBSYSTEM=="drm", KERNEL=="renderD*", TAG+="uaccess"
+ # DRI accel nodes
+ SUBSYSTEM=="accel", KERNEL=="accel*", TAG+="uaccess", TAG+="xaccess-accel"
++# AMD KFD nodes
++SUBSYSTEM=="kfd", KERNEL=="kfd", TAG+="uaccess", TAG+="xaccess-render"
+ {% endif %}
+ {% if DEV_KVM_UACCESS %}
+ # KVM

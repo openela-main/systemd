@@ -1,0 +1,66 @@
+From e99f9546312aded19513c0041b39953e7c77e466 Mon Sep 17 00:00:00 2001
+From: Luca Boccassi <luca.boccassi@gmail.com>
+Date: Fri, 19 Jun 2026 10:09:59 +0100
+Subject: [PATCH] Update hwdb autosuspend
+
+ninja -C build update-hwdb-autosuspend
+
+(cherry picked from commit 7c1f7c54c94a1ff39f406c1656435f6c3f15df72)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-autosuspend-fingerprint-reader.hwdb | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-autosuspend-fingerprint-reader.hwdb b/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
+index e9d7311fea..d4f77ea7db 100644
+--- a/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
++++ b/hwdb.d/60-autosuspend-fingerprint-reader.hwdb
+@@ -172,6 +172,7 @@ usb:v04F3p0C8C*
+ usb:v04F3p0C8D*
+ usb:v04F3p0C98*
+ usb:v04F3p0C99*
++usb:v04F3p0C9C*
+ usb:v04F3p0C9D*
+ usb:v04F3p0C9F*
+ usb:v04F3p0CA3*
+@@ -200,6 +201,7 @@ usb:v2808p1579*
+ usb:v2808p077A*
+ usb:v2808p079A*
+ usb:v2808p5158*
++usb:v2808p6553*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 
+@@ -257,6 +259,11 @@ usb:v27C6p6984*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 
++# Supported by libfprint driver mafpmoc
++usb:v3274p8012*
++ ID_AUTOSUSPEND=1
++ ID_PERSIST=0
++
+ # Supported by libfprint driver nb1010
+ usb:v298Dp1010*
+  ID_AUTOSUSPEND=1
+@@ -269,6 +276,11 @@ usb:v2541pFA03*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0
+ 
++# Supported by libfprint driver secugen
++usb:v1162p2200*
++ ID_AUTOSUSPEND=1
++ ID_PERSIST=0
++
+ # Supported by libfprint driver synaptics
+ usb:v06CBp00BD*
+ usb:v06CBp00C2*
+@@ -507,7 +519,6 @@ usb:v2808pA553*
+ usb:v298Dp2020*
+ usb:v298Dp2033*
+ usb:v2DF0p0003*
+-usb:v3274p8012*
+ usb:v3538p0930*
+  ID_AUTOSUSPEND=1
+  ID_PERSIST=0

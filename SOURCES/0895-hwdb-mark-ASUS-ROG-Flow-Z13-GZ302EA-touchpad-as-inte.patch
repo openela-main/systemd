@@ -1,0 +1,45 @@
+From 198cab7dd20ee9230176b171188ff422a4de6cd9 Mon Sep 17 00:00:00 2001
+From: Confusedphoton <confusedphotons@gmail.com>
+Date: Wed, 5 Aug 2026 12:47:15 -0400
+Subject: [PATCH] hwdb: mark ASUS ROG Flow Z13 (GZ302EA) touchpad as internal
+
+The ASUS ROG Flow Z13 (GZ302EA) keyboard/touchpad (USB 0B05:1A30) is
+attached through a USB port that firmware reports as removable.
+Because of that, 65-integration.rules sets
+ID_INPUT_TOUCHPAD_INTEGRATION=external, and libinput skips
+disable-while-typing (DWT) for the device.
+
+The touchpad is physically integrated into the tablet's keyboard
+accessory, which has no supported standalone/external use case, so
+add a hwdb entry in 70-touchpad.hwdb that overrides
+ID_INPUT_TOUCHPAD_INTEGRATION=internal, restoring DWT. This mirrors
+the existing Microsoft Surface Type Cover entry, which addresses the
+same root cause.
+
+(cherry picked from commit 373a4020d5be4021e692316ff32c5d3c3103d1be)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-touchpad.hwdb | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/hwdb.d/70-touchpad.hwdb b/hwdb.d/70-touchpad.hwdb
+index 2d5feb9236..889a9bcc93 100644
+--- a/hwdb.d/70-touchpad.hwdb
++++ b/hwdb.d/70-touchpad.hwdb
+@@ -38,6 +38,15 @@
+ #touchpad:bluetooth:vffffp0000:*
+ # ID_INPUT_TOUCHPAD_INTEGRATION=internal
+ 
++###########################################################
++# ASUS ROG Flow Z13 (GZ302EA)
++###########################################################
++# The USB port is reported as removable by firmware, so 65-integration.rules
++# classifies the touchpad as external and libinput skips disable-while-typing.
++# The touchpad is physically integrated; mark it internal to enable DWT.
++touchpad:usb:v0b05p1a30:name:ASUSTeK Computer Inc. GZ302EA-Keyboard Touchpad:*
++ ID_INPUT_TOUCHPAD_INTEGRATION=internal
++
+ ###########################################################
+ # Lenovo IdeaPad Duet3 10IGL5 (82AT)
+ ###########################################################

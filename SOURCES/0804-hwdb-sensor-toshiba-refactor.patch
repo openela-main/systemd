@@ -1,0 +1,35 @@
+From c88a8c27ed874d638034b34d2c442acc99ccd4ff Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 16:43:14 +0100
+Subject: [PATCH] hwdb: sensor: toshiba refactor
+
+(cherry picked from commit 5f558de6995c822c721b27ce2e50012af7d3def4)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index edbde11b49..6834c2ec90 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -1022,14 +1022,10 @@ sensor:modalias:acpi:BMA250E:*:dmi:bvnAmericanMegatrendsInc.:bvr5.6.5:bd04/15/20
+ # Toshiba
+ #########################################
+ 
+-# Toshiba Encore WT8-B | WT10A | WT10A-102 tablets
+-sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAENCORE2WT8-B:*
+-sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-103:*
+-sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-102:*
+- ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+-
+-# Toshiba Encore WT10A-108 tablet
+-sensor:modalias:acpi:INVN6500*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-108:*
++sensor:modalias:acpi:INVN6500:*:dmi:*:svnTOSHIBA:pnTOSHIBAENCORE2WT8-B:*    # Encore WT8-B
++sensor:modalias:acpi:INVN6500:*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-103:*      # Encore WT10A
++sensor:modalias:acpi:INVN6500:*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-102:*      # Encore WT10A-102
++sensor:modalias:acpi:INVN6500:*:dmi:*:svnTOSHIBA:pnTOSHIBAWT10-A-108:*      # Encore WT10A-108
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

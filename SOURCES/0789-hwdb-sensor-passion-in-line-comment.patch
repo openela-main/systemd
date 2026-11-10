@@ -1,0 +1,26 @@
+From 9624b7f0848fcf8e89510880373f5e046b4ccf39 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:34:34 +0100
+Subject: [PATCH] hwdb: sensor: passion in-line comment
+
+(cherry picked from commit 01f785ee0254bcad5ce7296fde80fe1d4b440344)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index f89297edb6..44f79a3e0b 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -865,8 +865,7 @@ sensor:modalias:acpi:BMI0260:*:dmi:*:svnOrangePi:pnNEO-01:*    # NEO
+ # Passion
+ #########################################
+ 
+-# Passion P612F
+-sensor:modalias:acpi:MXC6655*:dmi:*:svnDefaultstring*:pnP612F:*
++sensor:modalias:acpi:MXC6655:*:dmi:*:svnDefaultstring*:pnP612F:*    # P612F
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

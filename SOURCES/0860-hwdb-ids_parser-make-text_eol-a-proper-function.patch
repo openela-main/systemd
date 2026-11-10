@@ -1,0 +1,32 @@
+From 62b2f47be518be5c022cf0ec0df1f4bced6f5410 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?J=C3=B6rg=20Behrmann?= <behrmann@physik.fu-berlin.de>
+Date: Wed, 25 Feb 2026 10:26:59 +0100
+Subject: [PATCH] hwdb/ids_parser: make text_eol a proper function
+
+(cherry picked from commit f4fcd5cfad769e022e87ad058d66f0b9b6e28753)
+
+Related: RHEL-72703
+---
+ hwdb.d/ids_parser.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/ids_parser.py b/hwdb.d/ids_parser.py
+index 7efd934f46..d517f6b909 100755
+--- a/hwdb.d/ids_parser.py
++++ b/hwdb.d/ids_parser.py
+@@ -31,11 +31,14 @@ NUM6 = Word('0123456789abcdefABCDEF', exact=6)
+ TAB = White('\t', exact=1).suppress()
+ COMMENTLINE = pythonStyleComment + EOL
+ EMPTYLINE = LineEnd()
+-text_eol = lambda name: Regex(r'[^\n]+')(name) + EOL
+ 
+ ParserElement.setDefaultWhitespaceChars(' \n')
+ 
+ 
++def text_eol(name):
++    return Regex(r'[^\n]+')(name) + EOL
++
++
+ def klass_grammar():
+     # fmt: off
+     klass_line = Literal('C ').suppress() + NUM2('klass') + text_eol('text')

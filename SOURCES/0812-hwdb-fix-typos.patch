@@ -1,0 +1,39 @@
+From d9acbe4fe3bf1c6905cf06f86cb0b2854b083065 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 19 Feb 2026 21:48:38 +0100
+Subject: [PATCH] hwdb: fix typos
+
+(cherry picked from commit be9dd0da4053fafaebbbc19bb703621dae49cac2)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-joystick.hwdb | 2 +-
+ hwdb.d/70-touchpad.hwdb | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/70-joystick.hwdb b/hwdb.d/70-joystick.hwdb
+index ad654478b6..c38ef0fa34 100644
+--- a/hwdb.d/70-joystick.hwdb
++++ b/hwdb.d/70-joystick.hwdb
+@@ -35,7 +35,7 @@
+ #   bluetooth devices are assumed to be external, usb devices are assumed
+ #   to be internal when connected to a PCB port and external otherwise.
+ 
+-# Example entry; vid: ffff, pid: 0000; both must be lowecase.
++# Example entry; vid: ffff, pid: 0000; both must be lowercase.
+ # this will make this usb joystick to behave as internal.
+ #joystick:usb:vffffp0000*
+ # ID_INPUT_JOYSTICK_INTEGRATION=internal
+diff --git a/hwdb.d/70-touchpad.hwdb b/hwdb.d/70-touchpad.hwdb
+index ddb06c7642..8c166d7013 100644
+--- a/hwdb.d/70-touchpad.hwdb
++++ b/hwdb.d/70-touchpad.hwdb
+@@ -33,7 +33,7 @@
+ #   bluetooth devices are assumed to be external, usb devices are assumed
+ #   to be internal when connected to a PCB port and external otherwise.
+ 
+-# Example entry; vid: ffff, pid: 0000; both must be lowecase.
++# Example entry; vid: ffff, pid: 0000; both must be lowercase.
+ # this will make this bluetooth touchpad to behave as internal.
+ #touchpad:bluetooth:vffffp0000:*
+ # ID_INPUT_TOUCHPAD_INTEGRATION=internal

@@ -1,0 +1,31 @@
+From 80d830fcaf09942a30782f2e5114455f0dbb6f94 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Sat, 9 Aug 2025 09:07:35 +0900
+Subject: [PATCH] udev-rules: add missing device name prefix in log message
+
+Otherwise, it is hard to find the dump in journal. With this change,
+we can find the entry by e.g.
+journalctl -b -u systemd-udevd.service DEVICE=eth0
+
+Follow-up for b4ffb776696bdd3a7345f73956ce7551f6b449ff.
+
+(cherry picked from commit d858b1b10ad85fc96ff86989297a2abc6205a343)
+
+Resolves: RHEL-180929
+---
+ src/udev/udev-rules.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udev/udev-rules.c b/src/udev/udev-rules.c
+index 4d9fbd39a5..e51b21f3cc 100644
+--- a/src/udev/udev-rules.c
++++ b/src/udev/udev-rules.c
+@@ -2586,7 +2586,7 @@ static int udev_rule_apply_token_to_event(
+                         if (r < 0)
+                                 log_event_warning_errno(event, token, r, "Failed to finalize memory stream, ignoring: %m");
+                         else
+-                                log_info("%s", buf);
++                                log_device_info(dev, "%s", buf);
+                 } else {
+                         puts("============================");
+                         dump_event(event, NULL);

@@ -1,0 +1,26 @@
+From 1e1aa79c9d234bd2a3cf53d07ae8b0b61d9f4a08 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:21:13 +0100
+Subject: [PATCH] hwdb: sensor: odys add comment
+
+(cherry picked from commit fdbc3bbc42da1c6cba660f37a6538370d6cdef2f)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index aa6ea33bc8..537904fd20 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -815,7 +815,8 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svnTMAX:pnTM101W610L:*    # Solo 10 Draw.
+ #########################################
+ # Odys
+ #########################################
+-sensor:modalias:acpi:BOSC0200*:dmi:bvnINSYDECorp.:bvrODYS.FUSIONWIN12:*
++
++sensor:modalias:acpi:BOSC0200:*:dmi:bvnINSYDECorp.:bvrODYS.FUSIONWIN12:*    # Fusion Win 12 2in1
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

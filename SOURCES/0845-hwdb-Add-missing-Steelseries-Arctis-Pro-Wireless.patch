@@ -1,0 +1,31 @@
+From 32c7dd40f365c4e90125584affa37bb517a1192e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jos=C3=A9=20Miguel=20Sarasola?= <alosarjos@gmail.com>
+Date: Fri, 1 May 2026 19:30:42 +0200
+Subject: [PATCH] hwdb: Add missing Steelseries Arctis Pro Wireless
+
+The Hub for these headsets uses the following
+USB entries:
+
+Bus 007 Device 002: ID 0451:2036 Texas Instruments, Inc. TUSB2036 Hub
+Bus 007 Device 003: ID 1038:1290 SteelSeries ApS Arctis Pro Wireless
+Bus 007 Device 004: ID 1038:1294 SteelSeries ApS Arctis Pro Wireless
+
+(cherry picked from commit 2cfaf50cc86670b4b671dd4d4f9614b2c2cfb736)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-sound-card.hwdb | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/hwdb.d/70-sound-card.hwdb b/hwdb.d/70-sound-card.hwdb
+index 03a0a5eefc..f9ceeacb7d 100644
+--- a/hwdb.d/70-sound-card.hwdb
++++ b/hwdb.d/70-sound-card.hwdb
+@@ -55,6 +55,7 @@ usb:v1038p2216*
+ usb:v1038p2236*
+ usb:v1038p12C2*
+ usb:v1038p1290*
++usb:v1038p1294*
+ usb:v1038p12EC*
+ usb:v1038p2269*
+ usb:v1038p226D*

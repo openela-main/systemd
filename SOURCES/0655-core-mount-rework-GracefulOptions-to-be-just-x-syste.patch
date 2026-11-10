@@ -1,0 +1,439 @@
+From 4c474d4d10e0c52e108bbb75ad3aad0ca2dca469 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Tue, 11 Feb 2025 18:43:25 +0100
+Subject: [PATCH] core/mount: rework GracefulOptions= to be just
+ x-systemd.graceful-option=
+
+09fbff57fcde47782a73f23b3d5cfdcd0e8f699b introduced new knob
+for such functionality. However, that seems unnecessary.
+
+The mount option string is ubiquitous in that all of fstab,
+kernel cmdline, credentials, systemd-mount, ... speak it.
+And we already have x-systemd.device-bound= that's parsed
+by pid1 instead of fstab-generator. It feels hence more natural
+for graceful options to be an extension of that, rather than
+its own property.
+
+There's also one nice side effect that the setting itself
+is now more graceful for systemd versions not supporting
+such feature.
+
+(cherry picked from commit 0d76f1c4237a3e4adda828c694721fd709374b36)
+
+Related: RHEL-143028
+---
+ man/org.freedesktop.systemd1.xml         |  9 +---
+ man/systemd.mount.xml                    | 29 +++++------
+ src/core/dbus-mount.c                    | 26 +---------
+ src/core/load-fragment-gperf.gperf.in    |  1 -
+ src/core/load-fragment.c                 | 45 -----------------
+ src/core/load-fragment.h                 |  1 -
+ src/core/mount.c                         | 62 +++++++++++-------------
+ src/core/mount.h                         |  2 -
+ src/shared/bus-unit-util.c               |  3 --
+ test/units/TEST-87-AUX-UTILS-VM.mount.sh |  4 +-
+ units/tmp.mount                          |  3 +-
+ 11 files changed, 47 insertions(+), 138 deletions(-)
+
+diff --git a/man/org.freedesktop.systemd1.xml b/man/org.freedesktop.systemd1.xml
+index 4e9d72be25..0b6be4c755 100644
+--- a/man/org.freedesktop.systemd1.xml
++++ b/man/org.freedesktop.systemd1.xml
+@@ -7006,8 +7006,6 @@ node /org/freedesktop/systemd1/unit/home_2emount {
+       readonly s CleanResult = '...';
+       readonly u UID = ...;
+       readonly u GID = ...;
+-      @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+-      readonly as GracefulOptions = ['...', ...];
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("invalidates")
+       readonly a(sasbttttuii) ExecMount = [...];
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("invalidates")
+@@ -7612,8 +7610,6 @@ node /org/freedesktop/systemd1/unit/home_2emount {
+ 
+     <!--property GID is not documented!-->
+ 
+-    <!--property GracefulOptions is not documented!-->
+-
+     <!--property ExecUnmount is not documented!-->
+ 
+     <!--property ExecRemount is not documented!-->
+@@ -8164,8 +8160,6 @@ node /org/freedesktop/systemd1/unit/home_2emount {
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="GID"/>
+ 
+-    <variablelist class="dbus-property" generated="True" extra-ref="GracefulOptions"/>
+-
+     <variablelist class="dbus-property" generated="True" extra-ref="ExecMount"/>
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="ExecUnmount"/>
+@@ -12396,8 +12390,7 @@ $ gdbus introspect --system --dest org.freedesktop.systemd1 \
+       <varname>ManagedOOMMemoryPressureDurationUSec</varname>,
+       <varname>ProtectControlGroupsEx</varname>, and
+       <varname>PrivatePIDs</varname> were added in version 257.</para>
+-      <para><varname>GracefulOptions</varname>,
+-      <varname>ReloadResult</varname>, and
++      <para><varname>ReloadResult</varname>, and
+       <varname>CleanResult</varname> were added in version 258.</para>
+     </refsect2>
+     <refsect2>
+diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
+index 9b394f6079..e84b6a9d48 100644
+--- a/man/systemd.mount.xml
++++ b/man/systemd.mount.xml
+@@ -284,6 +284,19 @@
+         <xi:include href="version-info.xml" xpointer="v220"/></listitem>
+        </varlistentry>
+ 
++      <varlistentry>
++        <term><option>x-systemd.graceful-option=</option></term>
++
++        <listitem><para>Additional mount option that shall be appended if supported by the kernel.
++        This may be used to configure mount options that are optional and only enabled on kernels that
++        support them. Note that this is supported only for native kernel mount options (i.e. explicitly not
++        for mount options implemented in userspace, such as those processed by
++        <command>/usr/bin/mount</command> itself, by FUSE or by mount helpers such as
++        <command>mount.nfs</command>). This option may be specified more than once.</para>
++
++        <xi:include href="version-info.xml" xpointer="v258"/></listitem>
++      </varlistentry>
++
+       <varlistentry>
+         <term><option>x-systemd.device-bound=</option></term>
+ 
+@@ -650,22 +663,6 @@
+         <citerefentry><refentrytitle>systemd-system.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.
+         </para></listitem>
+       </varlistentry>
+-
+-      <varlistentry>
+-        <term><varname>GracefulOptions=</varname></term>
+-
+-        <listitem><para>Additional mount options that shall be appended to <varname>Options=</varname> if
+-        supported by the kernel. This may be used to configure mount options that are optional and only
+-        enabled on kernels that support them. Note that this is supported only for native kernel mount
+-        options (i.e. explicitly not for mount options implemented in userspace, such as those processed by
+-        <command>/usr/bin/mount</command> itself, by FUSE or by mount helpers such as
+-        <command>mount.nfs</command>).</para>
+-
+-        <para>May be specified multiple times. If specified multiple times, all listed, supported mount
+-        options are combined. If an empty string is assigned, the list is reset.</para>
+-
+-        <xi:include href="version-info.xml" xpointer="v258"/></listitem>
+-      </varlistentry>
+     </variablelist>
+ 
+     <xi:include href="systemd.service.xml" xpointer="shared-unit-options" />
+diff --git a/src/core/dbus-mount.c b/src/core/dbus-mount.c
+index 72bd4c697a..6b30b90f7f 100644
+--- a/src/core/dbus-mount.c
++++ b/src/core/dbus-mount.c
+@@ -77,7 +77,7 @@ const sd_bus_vtable bus_mount_vtable[] = {
+         SD_BUS_PROPERTY("CleanResult", "s", property_get_result, offsetof(Mount, clean_result), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("UID", "u", bus_property_get_uid, offsetof(Unit, ref_uid), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("GID", "u", bus_property_get_gid, offsetof(Unit, ref_gid), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+-        SD_BUS_PROPERTY("GracefulOptions", "as", NULL, offsetof(Mount, graceful_options), SD_BUS_VTABLE_PROPERTY_CONST),
++
+         BUS_EXEC_COMMAND_VTABLE("ExecMount", offsetof(Mount, exec_command[MOUNT_EXEC_MOUNT]), SD_BUS_VTABLE_PROPERTY_EMITS_INVALIDATION),
+         BUS_EXEC_COMMAND_VTABLE("ExecUnmount", offsetof(Mount, exec_command[MOUNT_EXEC_UNMOUNT]), SD_BUS_VTABLE_PROPERTY_EMITS_INVALIDATION),
+         BUS_EXEC_COMMAND_VTABLE("ExecRemount", offsetof(Mount, exec_command[MOUNT_EXEC_REMOUNT]), SD_BUS_VTABLE_PROPERTY_EMITS_INVALIDATION),
+@@ -153,30 +153,6 @@ static int bus_mount_set_transient_property(
+         if (streq(name, "ReadWriteOnly"))
+                 return bus_set_transient_bool(u, name, &m->read_write_only, message, flags, error);
+ 
+-        if (streq(name, "GracefulOptions")) {
+-                _cleanup_strv_free_ char **add = NULL;
+-                r = sd_bus_message_read_strv(message, &add);
+-                if (r < 0)
+-                        return r;
+-
+-                if (!UNIT_WRITE_FLAGS_NOOP(flags)) {
+-
+-                        if (strv_isempty(add)) {
+-                                m->graceful_options = strv_free(m->graceful_options);
+-                                unit_write_settingf(u, flags, name, "GracefulOptions=");
+-                        } else {
+-                                r = strv_extend_strv(&m->graceful_options, add, /* filter_duplicates= */ false);
+-                                if (r < 0)
+-                                        return r;
+-
+-                                STRV_FOREACH(a, add)
+-                                        unit_write_settingf(u, flags|UNIT_ESCAPE_SPECIFIERS, name, "GracefulOptions=%s", *a);
+-                        }
+-                }
+-
+-                return 1;
+-        }
+-
+         return 0;
+ }
+ 
+diff --git a/src/core/load-fragment-gperf.gperf.in b/src/core/load-fragment-gperf.gperf.in
+index 5b67d7b554..d7564b3767 100644
+--- a/src/core/load-fragment-gperf.gperf.in
++++ b/src/core/load-fragment-gperf.gperf.in
+@@ -546,7 +546,6 @@ Mount.SloppyOptions,                          config_parse_bool,
+ Mount.LazyUnmount,                            config_parse_bool,                                  0,                                  offsetof(Mount, lazy_unmount)
+ Mount.ForceUnmount,                           config_parse_bool,                                  0,                                  offsetof(Mount, force_unmount)
+ Mount.ReadWriteOnly,                          config_parse_bool,                                  0,                                  offsetof(Mount, read_write_only)
+-Mount.GracefulOptions,                        config_parse_mount_graceful_options,                0,                                  offsetof(Mount, graceful_options)
+ {{ EXEC_CONTEXT_CONFIG_ITEMS('Mount') }}
+ {{ CGROUP_CONTEXT_CONFIG_ITEMS('Mount') }}
+ {{ KILL_CONTEXT_CONFIG_ITEMS('Mount') }}
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 9007846e64..90f054ec9e 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -6121,51 +6121,6 @@ int config_parse_mount_node(
+         return config_parse_string(unit, filename, line, section, section_line, lvalue, ltype, path, data, userdata);
+ }
+ 
+-int config_parse_mount_graceful_options(
+-                const char *unit,
+-                const char *filename,
+-                unsigned line,
+-                const char *section,
+-                unsigned section_line,
+-                const char *lvalue,
+-                int ltype,
+-                const char *rvalue,
+-                void *data,
+-                void *userdata) {
+-
+-        const Unit *u = ASSERT_PTR(userdata);
+-        char ***sv = ASSERT_PTR(data);
+-        int r;
+-
+-        assert(filename);
+-        assert(lvalue);
+-        assert(rvalue);
+-
+-        if (isempty(rvalue)) {
+-                *sv = strv_free(*sv);
+-                return 1;
+-        }
+-
+-        _cleanup_free_ char *resolved = NULL;
+-        r = unit_full_printf(u, rvalue, &resolved);
+-        if (r < 0) {
+-                log_syntax(unit, LOG_WARNING, filename, line, r, "Failed to resolve unit specifiers in '%s', ignoring: %m", rvalue);
+-                return 0;
+-        }
+-
+-        _cleanup_strv_free_ char **strv = NULL;
+-
+-        r = strv_split_full(&strv, resolved, ",", EXTRACT_RETAIN_ESCAPE|EXTRACT_UNESCAPE_SEPARATORS);
+-        if (r < 0)
+-                return log_syntax_parse_error(unit, filename, line, r, lvalue, rvalue);
+-
+-        r = strv_extend_strv_consume(sv, TAKE_PTR(strv), /* filter_duplicates = */ false);
+-        if (r < 0)
+-                return log_oom();
+-
+-        return 1;
+-}
+-
+ static int merge_by_names(Unit *u, Set *names, const char *id) {
+         char *k;
+         int r;
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index 673088a42d..8ac962a94b 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -164,7 +164,6 @@ CONFIG_PARSER_PROTOTYPE(config_parse_open_file);
+ CONFIG_PARSER_PROTOTYPE(config_parse_memory_pressure_watch);
+ CONFIG_PARSER_PROTOTYPE(config_parse_cgroup_nft_set);
+ CONFIG_PARSER_PROTOTYPE(config_parse_mount_node);
+-CONFIG_PARSER_PROTOTYPE(config_parse_mount_graceful_options);
+ 
+ /* gperf prototypes */
+ const struct ConfigPerfItem* load_fragment_gperf_lookup(const char *key, GPERF_LEN_TYPE length);
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 8ec18d8952..037902c91c 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -231,8 +231,6 @@ static void mount_done(Unit *u) {
+         mount_unwatch_control_pid(m);
+ 
+         m->timer_event_source = sd_event_source_disable_unref(m->timer_event_source);
+-
+-        m->graceful_options = strv_free(m->graceful_options);
+ }
+ 
+ static int update_parameters_proc_self_mountinfo(
+@@ -1062,22 +1060,25 @@ fail:
+         mount_enter_dead_or_mounted(m, MOUNT_FAILURE_RESOURCES, /* flush_result = */ false);
+ }
+ 
+-static int mount_append_graceful_options(Mount *m, const MountParameters *p, char **opts) {
++static int mount_apply_graceful_options(Mount *m, const MountParameters *p, char **opts) {
++        _cleanup_strv_free_ char **graceful = NULL;
++        _cleanup_free_ char *filtered = NULL;
+         int r;
+ 
+         assert(m);
+         assert(p);
+         assert(opts);
+ 
+-        if (strv_isempty(m->graceful_options))
+-                return 0;
++        r = fstab_filter_options(*opts, "x-systemd.graceful-option\0", NULL, NULL, &graceful, &filtered);
++        if (r <= 0)
++                return r;
+ 
+         if (!p->fstype) {
+-                log_unit_warning(UNIT(m), "GracefulOptions= used but file system type not known, suppressing all graceful options.");
++                log_unit_warning(UNIT(m), "x-systemd.graceful-option= used but file system type not known, suppressing all graceful options.");
+                 return 0;
+         }
+ 
+-        STRV_FOREACH(o, m->graceful_options) {
++        STRV_FOREACH(o, graceful) {
+                 _cleanup_free_ char *k = NULL, *v = NULL;
+ 
+                 r = split_pair(*o, "=", &k, &v);
+@@ -1086,21 +1087,22 @@ static int mount_append_graceful_options(Mount *m, const MountParameters *p, cha
+ 
+                 r = mount_option_supported(p->fstype, k ?: *o, v);
+                 if (r < 0)
+-                        log_unit_warning_errno(UNIT(m), r, "GracefulOptions=%s specified, but cannot determine availability, suppressing.", *o);
++                        log_unit_warning_errno(UNIT(m), r,
++                                               "x-systemd.graceful-option=%s specified, but cannot determine availability, suppressing: %m", *o);
+                 else if (r == 0)
+-                        log_unit_info(UNIT(m), "GracefulOptions=%s specified, but option is not available, suppressing.", *o);
++                        log_unit_info(UNIT(m), "x-systemd.graceful-option=%s specified, but option is not available, suppressing.", *o);
+                 else {
+-                        log_unit_debug(UNIT(m), "GracefulOptions=%s specified and supported, appending to mount option string.", *o);
++                        log_unit_debug(UNIT(m), "x-systemd.graceful-option=%s specified and supported, appending to mount option string.", *o);
+ 
+-                        if (!strextend_with_separator(opts, ",", *o))
++                        if (!strextend_with_separator(&filtered, ",", *o))
+                                 return -ENOMEM;
+                 }
+         }
+ 
+-        return 0;
++        return free_and_replace(*opts, filtered);
+ }
+ 
+-static int mount_set_mount_command(Mount *m, ExecCommand *c, const MountParameters *p) {
++static int mount_set_mount_command(Mount *m, ExecCommand *c, const MountParameters *p, bool remount) {
+         int r;
+ 
+         assert(m);
+@@ -1134,10 +1136,19 @@ static int mount_set_mount_command(Mount *m, ExecCommand *c, const MountParamete
+         if (r < 0)
+                 return r;
+ 
+-        r = mount_append_graceful_options(m, p, &opts);
++        r = mount_apply_graceful_options(m, p, &opts);
+         if (r < 0)
+                 return r;
+ 
++        if (remount) {
++                if (isempty(opts)) {
++                        opts = strdup("remount");
++                        if (!opts)
++                                return -ENOMEM;
++                } else if (!strprepend(&opts, "remount,"))
++                        return -ENOMEM;
++        }
++
+         if (!isempty(opts)) {
+                 r = exec_command_append(c, "-o", opts, NULL);
+                 if (r < 0)
+@@ -1229,9 +1240,9 @@ static void mount_enter_mounting(Mount *m) {
+         m->control_command_id = MOUNT_EXEC_MOUNT;
+         m->control_command = m->exec_command + MOUNT_EXEC_MOUNT;
+ 
+-        r = mount_set_mount_command(m, m->control_command, p);
++        r = mount_set_mount_command(m, m->control_command, p, /* remount = */ false);
+         if (r < 0) {
+-                log_unit_warning_errno(UNIT(m), r, "Failed to prepare mount command line: %m");
++                log_unit_error_errno(UNIT(m), r, "Failed to prepare mount command line: %m");
+                 goto fail;
+         }
+ 
+@@ -1276,24 +1287,9 @@ static void mount_enter_remounting(Mount *m) {
+         m->control_command_id = MOUNT_EXEC_REMOUNT;
+         m->control_command = m->exec_command + MOUNT_EXEC_REMOUNT;
+ 
+-        const char *o;
+-
+-        if (p->options)
+-                o = strjoina("remount,", p->options);
+-        else
+-                o = "remount";
+-
+-        r = exec_command_set(m->control_command, MOUNT_PATH,
+-                             p->what, m->where,
+-                             "-o", o, NULL);
+-        if (r >= 0 && m->sloppy_options)
+-                r = exec_command_append(m->control_command, "-s", NULL);
+-        if (r >= 0 && m->read_write_only)
+-                r = exec_command_append(m->control_command, "-w", NULL);
+-        if (r >= 0 && p->fstype)
+-                r = exec_command_append(m->control_command, "-t", p->fstype, NULL);
++        r = mount_set_mount_command(m, m->control_command, p, /* remount = */ true);
+         if (r < 0) {
+-                log_unit_warning_errno(UNIT(m), r, "Failed to prepare remount command line: %m");
++                log_unit_error_errno(UNIT(m), r, "Failed to prepare remount command line: %m");
+                 goto fail;
+         }
+ 
+diff --git a/src/core/mount.h b/src/core/mount.h
+index a8ae25e638..7fd643f6fa 100644
+--- a/src/core/mount.h
++++ b/src/core/mount.h
+@@ -88,8 +88,6 @@ struct Mount {
+         sd_event_source *timer_event_source;
+ 
+         unsigned n_retry_umount;
+-
+-        char **graceful_options;
+ };
+ 
+ extern const UnitVTable mount_vtable;
+diff --git a/src/shared/bus-unit-util.c b/src/shared/bus-unit-util.c
+index 9128c06555..bc58d43140 100644
+--- a/src/shared/bus-unit-util.c
++++ b/src/shared/bus-unit-util.c
+@@ -2311,9 +2311,6 @@ static int bus_append_mount_property(sd_bus_message *m, const char *field, const
+                               "ReadwriteOnly"))
+                 return bus_append_parse_boolean(m, field, eq);
+ 
+-        if (streq(field, "GracefulOptions"))
+-                return bus_append_strv(m, field, eq, /* separator= */ ",", 0);
+-
+         return 0;
+ }
+ 
+diff --git a/test/units/TEST-87-AUX-UTILS-VM.mount.sh b/test/units/TEST-87-AUX-UTILS-VM.mount.sh
+index c1bfbdc1a2..8ad7ae6fc5 100755
+--- a/test/units/TEST-87-AUX-UTILS-VM.mount.sh
++++ b/test/units/TEST-87-AUX-UTILS-VM.mount.sh
+@@ -181,9 +181,9 @@ touch "$WORK_DIR/mnt/hello"
+ [[ "$(stat -c "%U:%G" "$WORK_DIR/mnt/hello")" == "testuser:testuser" ]]
+ systemd-umount LABEL=owner-vfat
+ 
+-# Mkae sure that graceful mount options work
++# Make sure that graceful mount options work
+ GRACEFULTEST="/tmp/graceful/$RANDOM"
+-systemd-mount --tmpfs -p GracefulOptions=idefinitelydontexist,nr_inodes=4711,idonexisteither "$GRACEFULTEST"
++systemd-mount --tmpfs --options="x-systemd.graceful-option=idefinitelydontexist,x-systemd.graceful-option=nr_inodes=4711,x-systemd.graceful-option=idonexisteither" "$GRACEFULTEST"
+ findmnt -n -o options "$GRACEFULTEST"
+ findmnt -n -o options "$GRACEFULTEST" | grep -q nr_inodes=4711
+ umount "$GRACEFULTEST"
+diff --git a/units/tmp.mount b/units/tmp.mount
+index d347af56d3..373b131211 100644
+--- a/units/tmp.mount
++++ b/units/tmp.mount
+@@ -22,8 +22,7 @@ After=swap.target
+ What=tmpfs
+ Where=/tmp
+ Type=tmpfs
+-Options=mode=1777,strictatime,nosuid,nodev,size=50%%,nr_inodes=1m
+-GracefulOptions=usrquota
++Options=mode=1777,strictatime,nosuid,nodev,size=50%%,nr_inodes=1m,x-systemd.graceful-option=usrquota
+ 
+ # Make 'systemctl enable tmp.mount' work:
+ [Install]

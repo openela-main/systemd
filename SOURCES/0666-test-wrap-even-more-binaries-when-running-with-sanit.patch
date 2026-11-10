@@ -1,0 +1,93 @@
+From 1bc0a05e4e9a6611b00c1e3dcdb9f0b96cb755cb Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Thu, 23 Apr 2026 13:44:59 +0200
+Subject: [PATCH] test: wrap even more binaries when running with sanitizers
+
+Turns out that the util-linux dep on libsystemd caused more fun than I
+originally anticipated:
+
+$ lddtree /usr/bin/dfuzzer
+dfuzzer => /usr/bin/dfuzzer (interpreter => /lib64/ld-linux-x86-64.so.2)
+    libgio-2.0.so.0 => /lib64/libgio-2.0.so.0
+        libgmodule-2.0.so.0 => /lib64/libgmodule-2.0.so.0
+        libz.so.1 => /lib64/libz.so.1
+        libmount.so.1 => /lib64/libmount.so.1
+            libblkid.so.1 => /lib64/libblkid.so.1
+            libsystemd.so.0 => /lib64/libsystemd.so.0
+                libm.so.6 => /lib64/libm.so.6
+                    ld-linux-x86-64.so.2 => /lib64/ld-linux-x86-64.so.2
+        libselinux.so.1 => /lib64/libselinux.so.1
+            libpcre2-8.so.0 => /lib64/libpcre2-8.so.0
+...
+
+Also, the tpm2 utils now depend on libudev through libcurl -> libssh ->
+libfido2 dep chain:
+
+$ lddtree /usr/bin/tpm2_pcrread
+tpm2_pcrread => /usr/bin/tpm2_pcrread (interpreter => /lib64/ld-linux-x86-64.so.2)
+    ...
+    libcurl.so.4 => /lib64/libcurl.so.4
+    ...
+        libssh.so.4 => /lib64/libssh.so.4
+            libfido2.so.1 => /lib64/libfido2.so.1
+                libcbor.so.0.13 => /lib64/libcbor.so.0.13
+                libudev.so.1 => /lib64/libudev.so.1
+                    libgcc_s.so.1 => /lib64/libgcc_s.so.1
+...
+
+Follow-up for 8030e0b19ef7c0e823d84dd08ad38a2d88e0a230.
+
+(cherry picked from commit a8400c8f1a61223e4905e2939f8d71be82831c8c)
+
+Related: RHEL-155454
+---
+ mkosi.sanitizers/mkosi.postinst | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/mkosi.sanitizers/mkosi.postinst b/mkosi.sanitizers/mkosi.postinst
+index c984a91a5a..95f3f10a47 100755
+--- a/mkosi.sanitizers/mkosi.postinst
++++ b/mkosi.sanitizers/mkosi.postinst
+@@ -44,6 +44,7 @@ wrap=(
+     dbus-broker-launch
+     dbus-daemon
+     delv
++    dfuzzer
+     dhcpd
+     dig
+     dnf
+@@ -55,17 +56,21 @@ wrap=(
+     getfacl
+     id
+     integritysetup
++    iscsiadm
+     iscsid
+     kpartx
+     logger
+     login
+     ls
+     lsblk
++    lsns
+     lvm
+     mdadm
+     mkfs.btrfs
++    mkfs.ext4
+     mksquashfs
+     mount
++    mountpoint
+     multipath
+     multipathd
+     nvme
+@@ -77,8 +82,12 @@ wrap=(
+     sshd
+     stat
+     su
++    swapoff
++    swapon
+     tar
+     tgtd
++    # The tpm2 tools (tpm2_readpublic, tpm2_pcrextend, ...) all are symlinks to tpm2
++    tpm2
+     umount
+     useradd
+     userdel

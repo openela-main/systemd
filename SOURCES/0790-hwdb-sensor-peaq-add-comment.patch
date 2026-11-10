@@ -1,0 +1,26 @@
+From 40ea20b99edab828e65267280378678f46a8d972 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:36:53 +0100
+Subject: [PATCH] hwdb: sensor: peaq add comment
+
+(cherry picked from commit 8515b8bb77af233ebe76469758a843901578fa03)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 44f79a3e0b..ef1866de89 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -871,7 +871,8 @@ sensor:modalias:acpi:MXC6655:*:dmi:*:svnDefaultstring*:pnP612F:*    # P612F
+ #########################################
+ # Peaq
+ #########################################
+-sensor:modalias:acpi:SMO8500*:dmi:*:svnPEAQ:pnPEAQPMMC1010MD99187:*
++
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnPEAQ:pnPEAQPMMC1010MD99187:*    # MMC1010 2-in-1
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

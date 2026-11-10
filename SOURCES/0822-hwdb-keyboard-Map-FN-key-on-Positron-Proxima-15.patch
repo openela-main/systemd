@@ -1,0 +1,39 @@
+From 78c75ba7dafc5560cbd37ec55b105f725cac55c7 Mon Sep 17 00:00:00 2001
+From: Mikhail Novosyolov <m.novosyolov@rosalinux.ru>
+Date: Tue, 3 Mar 2026 16:57:30 +0300
+Subject: [PATCH] hwdb/keyboard: Map FN key on Positron Proxima 15
+
+After kernel commit 907bc9268a ("Input: atkbd - map F23 key to support default copilot shortcut")
+Fn+F5 combination (switch touchpad on/off) stopped working correctly.
+
+Fn produces F23, it is probably a bug in BIOS, ther eis no "Copilot" key.
+It was ignored before that commit, but now we have to remap it here in hwdb.
+
+This workaround is similar to systemd commit d2502f55a2d
+("hwdb/keyboard: Map FN key on TUXEDO InfinityFlex 14 Gen1")
+
+Hardware probe of this notebook: https://linux-hardware.org/?probe=7aca7ed668
+See also: https://bugzilla.rosa.ru/show_bug.cgi?id=19950
+
+(cherry picked from commit 9aad3336ff0174428a8a1ee138190b6d5122af81)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 2af76e1ca2..70264a467e 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -2133,6 +2133,10 @@ evdev:atkbd:dmi:*:svnTUXEDO:*:rvnNB02:*
+ evdev:atkbd:dmi:*:svnTUXEDO:*:rnDN50Z-140HC-YD:*
+  KEYBOARD_KEY_6e=fn
+ 
++# Positron Proxima 15 (G1569)
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svn*Positron*:pnG1569*:*
++ KEYBOARD_KEY_6e=fn
++
+ ###########################################################
+ # VIA
+ ###########################################################

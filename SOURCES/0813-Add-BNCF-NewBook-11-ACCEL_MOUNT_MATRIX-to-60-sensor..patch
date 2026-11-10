@@ -1,0 +1,34 @@
+From 3115b067f6904469d3c10ce8f7f746fbb6c98337 Mon Sep 17 00:00:00 2001
+From: Ryan Zeigler <zeiglerr@gmail.com>
+Date: Fri, 20 Feb 2026 12:26:38 -0500
+Subject: [PATCH] Add BNCF NewBook 11 ACCEL_MOUNT_MATRIX  to 60-sensor.hwdb
+
+Corrects DE autorotation
+
+Device description: https://www.bncfai.com/product/773/
+
+(cherry picked from commit 774e8059590fac45614a135161dee4669945e342)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 07e85b3781..1b7bea51da 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -216,6 +216,13 @@ sensor:modalias:acpi:KIOX010A:*:dmi:*:svnAMI:*:skuH8Y6:*    # MaxBook Y14
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
+  ACCEL_LOCATION=display
+ 
++#########################################
++# BNCF
++#########################################
++
++sensor:modalias:acpi:NSA2513:NSA2513*:dmi:*svnBNCF:pnNewBook11* # NewBook 11 2-in-1
++ ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, -1
++
+ #########################################
+ # BUSH
+ #########################################

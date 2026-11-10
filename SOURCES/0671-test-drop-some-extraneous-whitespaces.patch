@@ -1,0 +1,29 @@
+From 553503cc7c263f2b22d8d3f2b9af608939e967ca Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Fri, 6 Mar 2026 16:09:21 +0100
+Subject: [PATCH] test: drop some extraneous whitespaces
+
+(cherry picked from commit 45830bc8d28513ebe7b57df178bfedeff75b80cf)
+
+Related: RHEL-155021
+---
+ test/units/TEST-74-AUX-UTILS.userdbctl.sh | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/test/units/TEST-74-AUX-UTILS.userdbctl.sh b/test/units/TEST-74-AUX-UTILS.userdbctl.sh
+index c6ecc4ea63..ef56114453 100755
+--- a/test/units/TEST-74-AUX-UTILS.userdbctl.sh
++++ b/test/units/TEST-74-AUX-UTILS.userdbctl.sh
+@@ -19,9 +19,9 @@ u test-74-userdbctl - "Test user for TEST-74-AUX-UTILS.userdbctl.sh" / /bin/bash
+ EOF
+ 
+ # Make sure that -F shows same data as if we'd ask directly
+-userdbctl user root -j | userdbctl -F- user  | cmp - <(userdbctl user root)
+-userdbctl user test-74-userdbctl -j | userdbctl -F- user  | cmp - <(userdbctl user test-74-userdbctl)
+-userdbctl user 65534 -j | userdbctl -F- user  | cmp - <(userdbctl user 65534)
++userdbctl user root -j | userdbctl -F- user | cmp - <(userdbctl user root)
++userdbctl user test-74-userdbctl -j | userdbctl -F- user | cmp - <(userdbctl user test-74-userdbctl)
++userdbctl user 65534 -j | userdbctl -F- user | cmp - <(userdbctl user 65534)
+ 
+ userdbctl group root -j | userdbctl -F- group  | cmp - <(userdbctl group root)
+ userdbctl group test-74-userdbctl -j | userdbctl -F- group  | cmp - <(userdbctl group test-74-userdbctl)

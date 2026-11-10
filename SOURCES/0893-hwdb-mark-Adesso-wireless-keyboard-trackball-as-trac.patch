@@ -1,0 +1,40 @@
+From bef361f1996e9c6338c9eedef3e213c121873b66 Mon Sep 17 00:00:00 2001
+From: lzwind <100665065+lzwind@users.noreply.github.com>
+Date: Mon, 3 Aug 2026 12:42:13 +0800
+Subject: [PATCH] hwdb: mark Adesso wireless keyboard trackball as trackball
+ (#43263)
+
+The Adesso wireless keyboard with an integrated trackball (MosArt
+062a:4101) is identified as a regular mouse, so trackball-style
+scrolling does not work out of the box. Add a hwdb entry in
+`70-mouse.hwdb` setting `ID_INPUT_TRACKBALL=1` so libinput and other
+clients treat the device as a trackball.
+
+Fixes #29609
+
+(cherry picked from commit bee944044f94535f4fb97740d677a3bffd040cbc)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-mouse.hwdb | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/hwdb.d/70-mouse.hwdb b/hwdb.d/70-mouse.hwdb
+index 3009ea2fdc..60a5c2a530 100644
+--- a/hwdb.d/70-mouse.hwdb
++++ b/hwdb.d/70-mouse.hwdb
+@@ -182,6 +182,14 @@ mouse:usb:v256fpc63a:name:*
+ mouse:bluetooth:v256fpc63a:name:*
+  ID_INPUT_3D_MOUSE=1
+ 
++##########################################
++# Adesso
++##########################################
++
++# Adesso Wireless keyboard with integrated trackball (MosArt 062a:4101)
++mouse:usb:v062ap4101:*
++ ID_INPUT_TRACKBALL=1
++
+ ##########################################
+ # Apple
+ ##########################################

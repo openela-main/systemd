@@ -1,0 +1,30 @@
+From 5f4fb0aff87b8af37758955a0d3583756ba149c2 Mon Sep 17 00:00:00 2001
+From: Christian Hesse <mail@eworm.de>
+Date: Mon, 11 May 2026 10:12:47 +0200
+Subject: [PATCH] hwdb/keyboard: use vendor/product specific match for X+
+ Piccolo
+
+The controller is used in other devices, and some of these do have a
+separate keypad with enter key.
+
+Fixes: 7ae0a588154ad279deaa98f82c15470684189856
+(cherry picked from commit 033be1a41b5f75a3f2c8f4fe212512062bc4d5f3)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 2302374090..f965d2c6ec 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -2228,7 +2228,7 @@ evdev:atkbd:dmi:bvnTIMI*:bvr*:bd*:svnTIMI*:pnMiNoteBookPro*:*
+ ###########################################################
+ 
+ # X+ piccolo series 81X (Intel N305, possibly more)
+-evdev:input:b0011v0001p0001eAB83*
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnX-Plus.tech:pnX+ Piccolo:*
+  KEYBOARD_KEY_9c=enter                                  # KP_enter in the main area is wrong
+ 
+ ###########################################################

@@ -1,0 +1,53 @@
+From 3253ad479f21efd868cce41aa4e29a66efdd0cf4 Mon Sep 17 00:00:00 2001
+From: Dirga Yuza <dirgayuza123@gmail.com>
+Date: Fri, 8 May 2026 07:10:40 +0700
+Subject: [PATCH] hwdb: add force-release to Nitro AN515-58 backlight keys
+
+This fixes an incomplete mapping introduced in PR #39769 for the Acer
+Nitro 5 AN515-58.
+
+The previous PR mapped the physical keyboard backlight keys (scancodes
+`0xef` and `0xf0`) to `kbdillumup` and `kbdillumdown` to prevent them
+from dropping screen brightness.
+
+However, the embedded controller on this Acer model only emits "make"
+(press) scancodes and fails to emit "break" (release) scancodes for
+these specific keys. Without a release event, the input subsystem
+registers the keys as continously held down (auto-repeat). In desktop
+environments like KDE Plasma, pressing the key once causes the
+brightness UI slider to get stuck in an infinite adjustment loop.
+
+This issue is previously unnoticed as this model did not expose any
+keyboard backlight control.
+
+The fix is done by prepending the `!` (force-release) flag to the
+keycodes. This instructs `evdev` to synthesize a key
+release event.
+
+The fix is verified locally on an Acer Nitro AN515-58. `evtest` now
+correctly reports `value 1` immediately followed by `value` 0, and KDE
+Plasma brightness OSD no longer gets stuck.
+
+Signed-off-by: Dirga Yuza <dirgayuza123@gmail.com>
+(cherry picked from commit f2361469e41454c573200c562b9d89481205f76b)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 8c1605930d..ebc08560fe 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -237,8 +237,8 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pnNitro*AN*515-47:pvr*
+ 
+ # Nitro AN515-58
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAcer*:pnNitro*AN*515-58:pvr*
+- KEYBOARD_KEY_ef=kbdillumup                             # Fn+F10
+- KEYBOARD_KEY_f0=kbdillumdown                           # Fn+F9
++ KEYBOARD_KEY_ef=!kbdillumup                            # Fn+F10
++ KEYBOARD_KEY_f0=!kbdillumdown                          # Fn+F9
+  KEYBOARD_KEY_8a=micmute                                # Microphone mute button
+  KEYBOARD_KEY_55=power
+ 

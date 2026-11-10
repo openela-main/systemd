@@ -1,0 +1,59 @@
+From 00991e59bd14fa52da9d3a71676ebda852ab4048 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Sun, 1 Mar 2026 19:55:27 +0100
+Subject: [PATCH] udev: rules: improve usb integration detection
+
+usb hubs tend to expose removable attribute as unknown. This makes some
+problems like a hub for external usb ports in pogo pins is unknown and
+also soldered hubs in laptops for keyboard+touchpad.
+
+Let's set internal when the device removable attribute is fixed and
+external when removable, but when it's unknown lets check the parent
+ports (not the host devpath!=0) attribute to decide.
+
+This makes us to missdetect pogo ping connected external usb hubs but
+let us to correctly detect laptop internal keyboards and touchpads that
+are wired through hubs instead directly.
+
+This behaviour is more desirable, as actually there are a bunch of
+laptops with this setup.
+
+Fixes: a4381cae8bfacb1160967ac499c2919da7ff8c2b.
+(cherry picked from commit 3e7b9b7462b0be5862f471b64d3bdd9556cda849)
+
+Related: RHEL-72703
+---
+ rules.d/65-integration.rules | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/rules.d/65-integration.rules b/rules.d/65-integration.rules
+index 5f26416eb5..5d78c94c38 100644
+--- a/rules.d/65-integration.rules
++++ b/rules.d/65-integration.rules
+@@ -7,16 +7,21 @@ ACTION=="remove", GOTO="integration_end"
+ ENV{ID_BUS}=="", GOTO="integration_end"
+ 
+ # ACPI, platform, PS/2, I2C, RMI, SPI and PCI devices: Internal by default.
+-ENV{ID_BUS}=="acpi|platform|i8042|i2c|rmi|spi|pci", ENV{ID_INTEGRATION}="internal"
++ENV{ID_BUS}=="acpi|platform|i8042|i2c|rmi|spi|pci", ENV{ID_INTEGRATION}="internal", GOTO="libinput_integration_compat"
+ 
+ # Bluetooth devices: External by default.
+-ENV{ID_BUS}=="bluetooth", ENV{ID_INTEGRATION}="external"
++ENV{ID_BUS}=="bluetooth", ENV{ID_INTEGRATION}="external", GOTO="libinput_integration_compat"
+ 
+-# USB devices: Internal if it's connected to a fixed port, external to a removable or unknown.
+-ENV{ID_BUS}=="usb", DRIVERS=="usb", ATTRS{maxchild}=="0", ATTRS{removable}=="fixed", ENV{ID_INTEGRATION}="internal"
+-ENV{ID_BUS}=="usb", DRIVERS=="usb", ATTRS{maxchild}=="0", ATTRS{removable}=="removable|unknown", ENV{ID_INTEGRATION}="external"
++# USB devices: Internal if it's connected to a fixed port, external to a removable and if it's unknown we use the main parent device attribute.
++ENV{ID_BUS}!="usb", GOTO="usb_integration_end"
++DRIVERS=="usb", ATTRS{maxchild}=="0", ATTRS{removable}=="fixed", ENV{ID_INTEGRATION}="internal", GOTO="libinput_integration_compat"
++DRIVERS=="usb", ATTRS{maxchild}=="0", ATTRS{removable}=="removable", ENV{ID_INTEGRATION}="external", GOTO="libinput_integration_compat"
++DRIVERS=="usb", ATTRS{devpath}!="0", ATTRS{removable}=="fixed", ENV{ID_INTEGRATION}="internal", GOTO="libinput_integration_compat"
++DRIVERS=="usb", ATTRS{devpath}!="0", ATTRS{removable}=="removable|unknown", ENV{ID_INTEGRATION}="external", GOTO="libinput_integration_compat"
++LABEL="usb_integration_end"
+ 
+ # libinput compatibility, must be loaded before 70-touchpad.rules to allow hwdb quirks to override.
++LABEL="libinput_integration_compat"
+ ENV{ID_INPUT_TOUCHPAD}=="1", ENV{ID_INPUT_TOUCHPAD_INTEGRATION}="$env{ID_INTEGRATION}"
+ 
+ LABEL="integration_end"

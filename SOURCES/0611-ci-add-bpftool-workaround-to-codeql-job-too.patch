@@ -1,11 +1,11 @@
-From 72fe197199cfd1efe8e8eb57d7d157583887f03f Mon Sep 17 00:00:00 2001
+From 5886ebf6256fb0b1873828fa46d918877c18e474 Mon Sep 17 00:00:00 2001
 From: Luca Boccassi <luca.boccassi@gmail.com>
 Date: Fri, 17 Oct 2025 15:39:09 +0100
 Subject: [PATCH] ci: add bpftool workaround to codeql job too
 
 (cherry picked from commit e9fd2bbfffc5c2c7cd1ea0a288d5435fc15e387f)
 
-Related: RHEL-115001
+Related: RHEL-155454
 ---
  .github/workflows/codeql.yml | 9 ++++++++-
  1 file changed, 8 insertions(+), 1 deletion(-)

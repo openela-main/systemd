@@ -1,0 +1,75 @@
+From 1d0d81d776f35dc0c5c2f98fbf546fee06fdf2ff Mon Sep 17 00:00:00 2001
+From: David Tardon <dtardon@redhat.com>
+Date: Thu, 25 Jun 2026 14:29:22 +0200
+Subject: [PATCH] Revert "pid1: enable usrquota support on /dev/shm"
+
+This reverts commit 75f712d4fb8d5b05f28eda98e9ae44512ba6d7f8.
+
+Reverts: RHEL-143028
+---
+ src/shared/mount-setup.c | 33 ++++++++-------------------------
+ 1 file changed, 8 insertions(+), 25 deletions(-)
+
+diff --git a/src/shared/mount-setup.c b/src/shared/mount-setup.c
+index 93e646d045..e7a315a420 100644
+--- a/src/shared/mount-setup.c
++++ b/src/shared/mount-setup.c
+@@ -34,12 +34,11 @@
+ #include "virt.h"
+ 
+ typedef enum MountMode {
+-        MNT_NONE              = 0,
+-        MNT_FATAL             = 1 << 0,
+-        MNT_IN_CONTAINER      = 1 << 1,
+-        MNT_CHECK_WRITABLE    = 1 << 2,
+-        MNT_FOLLOW_SYMLINK    = 1 << 3,
+-        MNT_USRQUOTA_GRACEFUL = 1 << 4,
++        MNT_NONE           = 0,
++        MNT_FATAL          = 1 << 0,
++        MNT_IN_CONTAINER   = 1 << 1,
++        MNT_CHECK_WRITABLE = 1 << 2,
++        MNT_FOLLOW_SYMLINK = 1 << 3,
+ } MountMode;
+ 
+ typedef struct MountPoint {
+@@ -93,7 +92,7 @@ static const MountPoint mount_table[] = {
+           mac_smack_use, MNT_FATAL                  },
+ #endif
+         { "tmpfs",       "/dev/shm",                  "tmpfs",      "mode=01777",                               MS_NOSUID|MS_NODEV|MS_STRICTATIME,
+-          NULL,          MNT_FATAL|MNT_IN_CONTAINER|MNT_USRQUOTA_GRACEFUL },
++          NULL,          MNT_FATAL|MNT_IN_CONTAINER },
+         { "devpts",      "/dev/pts",                  "devpts",     "mode=" STRINGIFY(TTY_MODE) ",gid=" STRINGIFY(TTY_GID), MS_NOSUID|MS_NOEXEC,
+           NULL,          MNT_IN_CONTAINER           },
+ #if ENABLE_SMACK
+@@ -189,29 +188,13 @@ static int mount_one(const MountPoint *p, bool relabel) {
+         else
+                 (void) mkdir_p(p->where, 0755);
+ 
+-        _cleanup_free_ char *extend_options = NULL;
+-        const char *o = p->options;
+-        if (FLAGS_SET(p->mode, MNT_USRQUOTA_GRACEFUL)) {
+-                r = mount_option_supported(p->type, "usrquota", /* value= */ NULL);
+-                if (r < 0)
+-                        log_warning_errno(r, "Unable to determine whether %s supports 'usrquota' mount option, assuming not: %m", p->type);
+-                else if (r == 0)
+-                        log_info("Not enabling 'usrquota' on '%s' as kernel lacks support for it.", p->where);
+-                else {
+-                        if (!strextend_with_separator(&extend_options, ",", p->options ?: POINTER_MAX, "usrquota"))
+-                                return log_oom();
+-
+-                        o = extend_options;
+-                }
+-        }
+-
+         log_debug("Mounting %s to %s of type %s with options %s.",
+                   p->what,
+                   p->where,
+                   p->type,
+-                  strna(o));
++                  strna(p->options));
+ 
+-        r = mount_verbose_full(priority, p->what, p->where, p->type, p->flags, o, FLAGS_SET(p->mode, MNT_FOLLOW_SYMLINK));
++        r = mount_verbose_full(priority, p->what, p->where, p->type, p->flags, p->options, FLAGS_SET(p->mode, MNT_FOLLOW_SYMLINK));
+         if (r < 0)
+                 return FLAGS_SET(p->mode, MNT_FATAL) ? r : 0;
+ 

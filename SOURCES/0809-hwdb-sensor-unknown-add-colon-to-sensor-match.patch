@@ -1,0 +1,25 @@
+From 8ac12296ba865ca9ae455b793b6e6010d3df76c9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 04:17:41 +0100
+Subject: [PATCH] hwdb: sensor: unknown add colon to sensor match
+
+(cherry picked from commit e723d295130736b5d4378f093960d5d0e3488fd9)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index bccef5fbdc..bf6fbf7e06 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -1113,6 +1113,7 @@ sensor:modalias:acpi:BMA250E:*:dmi:*:svnYOURS:pnY8W81:*    # Y8W81
+ #########################################
+ # Unknown manufacturer
+ #########################################
++
+ # ANP09 Intel N100 based 7-inch tablet
+-sensor:modalias:acpi:BOSC0200*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvrANP09_INTEL001:*
++sensor:modalias:acpi:BOSC0200:*:dmi:bvnAmericanMegatrendsInternational,LLC.:bvrANP09_INTEL001:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, -1

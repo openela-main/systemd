@@ -1,0 +1,62 @@
+From 5edd006fdaf63ff4a9ae4ca3303aaa5d0f67b6f6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 19 Feb 2026 18:38:13 +0100
+Subject: [PATCH] hwdb: sensor: hp use board product name as hp-wmi
+
+Doing it made also to include the 14t-fh000, the product name initial
+units of the omnibook ultra flip 14 had, this is intended.
+
+Order the entries by product name.
+
+Follow up: fadb0b53f7d8d2d9e9d8dd141bc05de9116b083a.
+
+(cherry picked from commit 3b51529cbf97338cf45f120b3072075848ad58c7)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index bf6fbf7e06..07e85b3781 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -530,8 +530,7 @@ sensor:modalias:acpi:BMA250E:*:dmi:*:svnInsyde*:pni101c:*
+ #########################################
+ # HP
+ #########################################
+-
+-# TODO: Look if for HP is better to use pvr.
++# With HP match in system vendor and board product name as hp-wmi module does.
+ 
+ # Most HP Laptop using the lis3lv02d device have it in the base,
+ # mark these sensors as such.
+@@ -539,20 +538,20 @@ sensor:modalias:platform:lis3lv02d:dmi:*:svnHewlett-Packard:*
+ sensor:modalias:platform:lis3lv02d:dmi:*:svnHP:*
+  ACCEL_LOCATION=base
+ 
+-sensor:modalias:platform:HID-SENSOR-200073:dmi:*:svnHP:pnHPOmniBookUltraFlipLaptop14-fh0xxx:*    # OmniBook Ultra Flip 14
++sensor:modalias:platform:HID-SENSOR-200073:dmi:*:svnHP:*:rn8CDE:*       # OmniBook Ultra Flip Laptop 14-fh0xxx and 14t-fh000
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, 1, 0; 0, 0, -1
+ 
+-sensor:modalias:acpi:SMO8500:*:dmi:*:svnHewlett-Packard:pnHPStream7Tablet:*                      # Stream 7 Tablet
+-sensor:modalias:acpi:SMO8500:*:dmi:*:svnHewlett-Packard:pnHPStream8Tablet:*                      # Stream 8 Tablet
+- ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+-
+-sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:pnHPPavilionx2Detachable:*:rn815D:*    # Pavilion X2 10-n000nd
+-sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:pnHPPavilionx2DetachablePC10:*         # Pavilion X2 10-k010nr
++sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:*:rn8021:*    # Pavilion X2 10-k010nr
++sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:*:rn815D:*    # Pavilion X2 10-n000nd
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+-sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:pnHPProTablet408:*:rn8048:*            # Pro Tablet 408 G1
++sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:*:rn8048:*    # Pro Tablet 408 G1
+  ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; 0, 0, 1
+ 
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnHewlett-Packard:*:rn8031:*      # Stream 7 Tablet
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnHewlett-Packard:*:rn8032:*      # Stream 8 Tablet
++ ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
++
+ #########################################
+ # HUAWEI
+ #########################################

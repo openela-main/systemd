@@ -1,0 +1,81 @@
+From fc1337e72cc8c224ddf0e99297b1db6f15be622a Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Fri, 6 Mar 2026 22:07:31 +0100
+Subject: [PATCH] user-record: extract user_record_image_is_blockdev() common
+ helper
+
+(cherry picked from commit a7f1670f62cc8bc37f52acee94d2209eff66cd10)
+
+Related: RHEL-155021
+---
+ src/shared/user-record.c                      | 20 +++++++++++--------
+ .../crash-empty-image-path.json               |  4 ++++
+ 2 files changed, 16 insertions(+), 8 deletions(-)
+ create mode 100644 test/fuzz/fuzz-user-record/crash-empty-image-path.json
+
+diff --git a/src/shared/user-record.c b/src/shared/user-record.c
+index f4febcdebe..df65df72fa 100644
+--- a/src/shared/user-record.c
++++ b/src/shared/user-record.c
+@@ -1856,6 +1856,16 @@ const char* user_record_image_path(UserRecord *h) {
+                 user_record_home_directory_real(h) : NULL;
+ }
+ 
++static bool user_record_image_is_blockdev(UserRecord *h) {
++        assert(h);
++
++        const char *p = user_record_image_path(h);
++        if (!p)
++                return false;
++
++        return path_startswith(p, "/dev/");
++}
++
+ const char* user_record_cifs_user_name(UserRecord *h) {
+         assert(h);
+ 
+@@ -1907,24 +1917,18 @@ const char* user_record_real_name(UserRecord *h) {
+ }
+ 
+ bool user_record_luks_discard(UserRecord *h) {
+-        const char *ip;
+-
+         assert(h);
+ 
+         if (h->luks_discard >= 0)
+                 return h->luks_discard;
+ 
+-        ip = user_record_image_path(h);
+-        if (!ip)
+-                return false;
+-
+         /* Use discard by default if we are referring to a real block device, but not when operating on a
+          * loopback device. We want to optimize for SSD and flash storage after all, but we should be careful
+          * when storing stuff on top of regular file systems in loopback files as doing discard then would
+          * mean thin provisioning and we should not do that willy-nilly since it means we'll risk EIO later
+          * on should the disk space to back our file systems not be available. */
+ 
+-        return path_startswith(ip, "/dev/");
++        return user_record_image_is_blockdev(h);
+ }
+ 
+ bool user_record_luks_offline_discard(UserRecord *h) {
+@@ -2090,7 +2094,7 @@ int user_record_removable(UserRecord *h) {
+                 return -1;
+ 
+         /* For now consider only LUKS home directories with a reference by path as removable */
+-        return storage == USER_LUKS && path_startswith(user_record_image_path(h), "/dev/");
++        return storage == USER_LUKS && user_record_image_is_blockdev(h);
+ }
+ 
+ uint64_t user_record_ratelimit_interval_usec(UserRecord *h) {
+diff --git a/test/fuzz/fuzz-user-record/crash-empty-image-path.json b/test/fuzz/fuzz-user-record/crash-empty-image-path.json
+new file mode 100644
+index 0000000000..0506a71fc2
+--- /dev/null
++++ b/test/fuzz/fuzz-user-record/crash-empty-image-path.json
+@@ -0,0 +1,4 @@
++{
++    "userName": "root",
++     "storage": "luks"
++}

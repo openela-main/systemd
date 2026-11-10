@@ -1,0 +1,34 @@
+From d0da446e13758965d34dfbdc6ebe3b88b6cd3cf5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 5 Feb 2026 18:06:39 +0100
+Subject: [PATCH] hwdb: sensor: remove Asus T101HA and T101HAF
+
+T101HA reports corect values in monitor-sensor when no mount matrix is
+defined and was added to correct KDE display output.
+
+T101HAF original bug report stated that it corrects the display in KDE
+so indeed this is wrong.
+
+(cherry picked from commit b3786e0296bcab9f1a66ae468187f65edc8b6247)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index a7d2e1f662..45c7c41c1b 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -160,11 +160,6 @@ sensor:modalias:acpi:INVN6500*:dmi:*svnASUSTeK*:*pnT100TAS:*
+ sensor:modalias:acpi:INVN6500*:dmi:*svnASUSTeK*:pnT200TA:*
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+-# Asus Transformer Mini T101HA & T103HAF
+-sensor:modalias:platform:HID-SENSOR-200073*:dmi:*svn*ASUSTeK*:pnT101HA:*
+-sensor:modalias:platform:HID-SENSOR-200073*:dmi:*svn*ASUSTeK*:pnT103HAF:*
+- ACCEL_MOUNT_MATRIX=0, -1, 0; 1, 0, 0; 0, 0, -1
+-
+ sensor:modalias:acpi:INVN6500*:dmi:*svnASUSTeK*:*pnTP201SA:*
+ sensor:modalias:acpi:INVN6500*:dmi:*svnASUSTeK*:pn*E205SA:*
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1

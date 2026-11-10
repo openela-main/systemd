@@ -1,0 +1,42 @@
+From 391d1d3b7e0b47749369ea6d590991d19032fdab Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Wed, 25 Feb 2026 19:45:55 +0100
+Subject: [PATCH] core: cleanup unit's dropin directories from global cache
+
+When user creates dropin files via API (e.g. systemctl set-property ...)
+we put the dropin directory path into unit_path_cache. Drop those
+directories from the cache in unit_free() and prevent memory leak.
+
+Follow-up for fce94c5c563b8f6ede2b8f7f283d2d2faff4e062.
+
+(cherry picked from commit 0c98e432d1def1e8428dbead50dc629ed0645366)
+
+Resolves: RHEL-171097
+---
+ src/core/unit.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 6b31599972..6a2f552483 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -653,6 +653,8 @@ static void unit_remove_transient(Unit *u) {
+         if (!u->transient)
+                 return;
+ 
++        const char *dropin_directory = strjoina(u->id, ".d");
++
+         STRV_FOREACH(i, u->dropin_paths) {
+                 _cleanup_free_ char *p = NULL, *pp = NULL;
+ 
+@@ -666,6 +668,10 @@ static void unit_remove_transient(Unit *u) {
+                 if (!path_equal(u->manager->lookup_paths.transient, pp))
+                         continue;
+ 
++                /* Drop the transient drop-in directory also from unit path cache. */
++                if (path_equal(last_path_component(p), dropin_directory))
++                        free(set_remove(u->manager->unit_path_cache, p));
++
+                 (void) unlink(*i);
+                 (void) rmdir(p);
+         }

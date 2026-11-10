@@ -1,0 +1,76 @@
+From 4b773b91307715d016c84542037cbfbc16dbdcfa Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Mon, 10 Feb 2025 19:03:08 +0100
+Subject: [PATCH] string-util: introduce strprepend() helper
+
+(cherry picked from commit b40694f5fc21317af617f37bb03304c84ca993c8)
+
+Related: RHEL-143028
+---
+ src/basic/string-util.c     | 14 ++++++++++++++
+ src/basic/string-util.h     |  2 ++
+ src/test/test-string-util.c | 13 +++++++++++++
+ 3 files changed, 29 insertions(+)
+
+diff --git a/src/basic/string-util.c b/src/basic/string-util.c
+index 7122d5145e..6d490e7444 100644
+--- a/src/basic/string-util.c
++++ b/src/basic/string-util.c
+@@ -46,6 +46,20 @@ char* first_word(const char *s, const char *word) {
+         return (char*) nw;
+ }
+ 
++char* strprepend(char **x, const char *s) {
++        assert(x);
++
++        if (isempty(s) && *x)
++                return *x;
++
++        char *p = strjoin(strempty(s), *x);
++        if (!p)
++                return NULL;
++
++        free_and_replace(*x, p);
++        return *x;
++}
++
+ char* strnappend(const char *s, const char *suffix, size_t b) {
+         size_t a;
+         char *r;
+diff --git a/src/basic/string-util.h b/src/basic/string-util.h
+index a1592b6e6d..7ce26b30f9 100644
+--- a/src/basic/string-util.h
++++ b/src/basic/string-util.h
+@@ -106,6 +106,8 @@ static inline const char* empty_or_dash_to_null(const char *p) {
+ 
+ char* first_word(const char *s, const char *word) _pure_;
+ 
++char* strprepend(char **x, const char *s);
++
+ char* strnappend(const char *s, const char *suffix, size_t length);
+ 
+ char* strjoin_real(const char *x, ...) _sentinel_;
+diff --git a/src/test/test-string-util.c b/src/test/test-string-util.c
+index b692af6cc0..0474f3a162 100644
+--- a/src/test/test-string-util.c
++++ b/src/test/test-string-util.c
+@@ -1335,6 +1335,19 @@ TEST(strextendn) {
+         x = mfree(x);
+ }
+ 
++TEST(strprepend) {
++        _cleanup_free_ char *x = NULL;
++
++        ASSERT_STREQ(strprepend(&x, NULL), "");
++        x = mfree(x);
++
++        ASSERT_STREQ(strprepend(&x, ""), "");
++
++        ASSERT_STREQ(strprepend(&x, "xxx"), "xxx");
++        ASSERT_STREQ(strprepend(&x, "bar"), "barxxx");
++        ASSERT_STREQ(strprepend(&x, "foo"), "foobarxxx");
++}
++
+ TEST(strlevenshtein) {
+         assert_se(strlevenshtein(NULL, NULL) == 0);
+         assert_se(strlevenshtein("", "") == 0);

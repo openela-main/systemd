@@ -1,0 +1,41 @@
+From f14e54bc70cc06b3cd97d3f0cd9ca16bc42812fc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Sat, 21 Mar 2026 02:32:15 +0100
+Subject: [PATCH] sensor: gpd remove pocket 3 and 4
+
+Both devices have -90 degrees mounted panels but they don't have the
+quirk in kernel.
+
+The Pocket 4 has been researched and it has an acpi accel matrix that
+works when setting panel orientation at boot parameter.
+
+The Pocket 3 hasn't been tested, but given it didn't had panel
+orientation quirk is for sure that matrix is wrong for it.
+
+Actually is pending the quirks for both devices in kernel but eventually
+they will get merged. Till that happens is encourage that owners of
+these devices set panel orientation boot parameter to right-up.
+
+Fixes: #41036.
+(cherry picked from commit 795948170b17fa2ba5c13b53398714d48acbfa5f)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index a8e990de97..76f727573d 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -515,10 +515,6 @@ sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvr5.11:bd03/20/20
+ sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvr5.11:bd05/25/2017:*:svnDefaultstring:pnDefaultstring:pvrDefaultstring:rvnAMICorporation:rnDefaultstring:rvrDefaultstring:cvnDefaultstring:ct3:cvrDefaultstring:*
+  ACCEL_LOCATION=base
+ 
+-sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1621-02:*    # Pocket 3
+-sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1628-04:*    # Pocket 4
+- ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+-
+ sensor:modalias:acpi:BMI0160:*:dmi:*:svnGPD:pnG1619-04:*    # Win Max 2
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 

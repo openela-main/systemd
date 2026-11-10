@@ -1,0 +1,31 @@
+From 4a4f0b5dcb42533971116fd8f467f9866f50d58c Mon Sep 17 00:00:00 2001
+From: Luca Boccassi <luca.boccassi@gmail.com>
+Date: Mon, 20 Jan 2025 19:05:11 +0000
+Subject: [PATCH] nspawn: downgrade log message about usrquota to debug
+
+This is shown every time nspawn is started, which is annoying
+and there's nothing a user can do about it, since it depends on
+an extremely new kernel. Downgrade to debug.
+
+Follow-up for 611ae598889471830b2f1d7251c271b79884b1c4
+
+(cherry picked from commit 8fa7863a93047d310ec6600f939590f07854b497)
+
+Related: RHEL-143028
+---
+ src/nspawn/nspawn-mount.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/nspawn/nspawn-mount.c b/src/nspawn/nspawn-mount.c
+index 6bd506f960..cd5a634ec0 100644
+--- a/src/nspawn/nspawn-mount.c
++++ b/src/nspawn/nspawn-mount.c
+@@ -715,7 +715,7 @@ int mount_all(const char *dest,
+                         if (r < 0)
+                                 log_warning_errno(r, "Failed to determine if '%s' supports 'usrquota', assuming it doesn't: %m", m->type);
+                         else if (r == 0)
+-                                log_info("Kernel doesn't support 'usrquota' on '%s', not including in mount options for '%s'.", m->type, m->where);
++                                log_debug("Kernel doesn't support 'usrquota' on '%s', not including in mount options for '%s'.", m->type, m->where);
+                         else {
+                                 _cleanup_free_ char *joined = NULL;
+ 

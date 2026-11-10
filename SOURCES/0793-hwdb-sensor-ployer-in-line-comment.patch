@@ -1,0 +1,26 @@
+From 2afdd2bd95b6359508220c4e84bab17fb1ed3af0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:55:18 +0100
+Subject: [PATCH] hwdb: sensor: ployer in-line comment
+
+(cherry picked from commit f06b18f2d215ef51eff5ee8e81fd48d8d8afd0d0)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 291bfa8b5f..f52c923ad4 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -896,7 +896,8 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:bvrV8L_WIN32_CHIPHD_*_DX:*:rvnAMICorporatio
+ #########################################
+ # Ployer
+ #########################################
+-sensor:modalias:acpi:BMA250E*:dmi:*:svnShenzhenPLOYER*:pnMOMO7W:*
++
++sensor:modalias:acpi:BMA250E:*:dmi:*:svnShenzhenPLOYER*:pnMOMO7W:*    # Momo7w
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ #########################################

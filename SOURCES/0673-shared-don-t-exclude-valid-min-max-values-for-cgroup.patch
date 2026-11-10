@@ -1,0 +1,57 @@
+From 08b4a2c4340aa8d4285f90b266aaae45cb3579aa Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Fri, 6 Mar 2026 16:36:52 +0100
+Subject: [PATCH] shared: don't exclude valid min/max values for cgroup weight
+ fields
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+1 and 10000 are valid cgroup weight values, but the condition was
+incorrectly excluding them:
+
+$ echo '{"userName":"crashhostarray","cpuWeight":1}' | userdbctl -F -
+<stdin>:1:42: JSON field 'cpuWeight' is not in valid range 1…10000.
+
+$ echo '{"userName":"crashhostarray","cpuWeight":10000}' | userdbctl -F -
+<stdin>:1:42: JSON field 'cpuWeight' is not in valid range 1…10000.
+
+(cherry picked from commit 76ab7861ff8ce505cf8deff880ce2d6c1bd05e0c)
+
+Related: RHEL-155021
+---
+ src/shared/user-record.c                  | 6 +++---
+ test/units/TEST-74-AUX-UTILS.userdbctl.sh | 4 ++++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/src/shared/user-record.c b/src/shared/user-record.c
+index 38d14cbca5..ddfeaf6659 100644
+--- a/src/shared/user-record.c
++++ b/src/shared/user-record.c
+@@ -590,11 +590,11 @@ static int json_dispatch_weight(const char *name, sd_json_variant *variant, sd_j
+                 return json_log(variant, flags, SYNTHETIC_ERRNO(EINVAL), "JSON field '%s' is not an integer.", strna(name));
+ 
+         k = sd_json_variant_unsigned(variant);
+-        if (k <= CGROUP_WEIGHT_MIN || k >= CGROUP_WEIGHT_MAX)
++        if (k < CGROUP_WEIGHT_MIN || k > CGROUP_WEIGHT_MAX)
+                 return json_log(variant, flags, SYNTHETIC_ERRNO(ERANGE),
+                                 "JSON field '%s' is not in valid range %" PRIu64 "%s%" PRIu64 ".",
+-                                strna(name), (uint64_t) CGROUP_WEIGHT_MIN,
+-                                special_glyph(SPECIAL_GLYPH_ELLIPSIS), (uint64_t) CGROUP_WEIGHT_MAX);
++                                strna(name), CGROUP_WEIGHT_MIN,
++                                special_glyph(SPECIAL_GLYPH_ELLIPSIS), CGROUP_WEIGHT_MAX);
+ 
+         *weight = k;
+         return 0;
+diff --git a/test/units/TEST-74-AUX-UTILS.userdbctl.sh b/test/units/TEST-74-AUX-UTILS.userdbctl.sh
+index ef56114453..55963ccd43 100755
+--- a/test/units/TEST-74-AUX-UTILS.userdbctl.sh
++++ b/test/units/TEST-74-AUX-UTILS.userdbctl.sh
+@@ -26,3 +26,7 @@ userdbctl user 65534 -j | userdbctl -F- user | cmp - <(userdbctl user 65534)
+ userdbctl group root -j | userdbctl -F- group  | cmp - <(userdbctl group root)
+ userdbctl group test-74-userdbctl -j | userdbctl -F- group  | cmp - <(userdbctl group test-74-userdbctl)
+ userdbctl group 65534 -j | userdbctl -F- group  | cmp - <(userdbctl group 65534)
++
++# Probe specific user records
++echo '{"userName":"weightmin","cpuWeight":1,"ioWeight":1}' | userdbctl -F -
++echo '{"userName":"weightmax","cpuWeight":10000,"ioWeight":10000}' | userdbctl -F -

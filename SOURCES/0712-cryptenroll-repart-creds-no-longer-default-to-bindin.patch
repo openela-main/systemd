@@ -1,0 +1,248 @@
+From e3d696ad24a3fbab6b6548635dbb9519061abbb5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 28 Jan 2025 09:48:48 +0100
+Subject: [PATCH] cryptenroll/repart/creds: no longer default to binding
+ against literal PCR 7
+
+PCR 7 covers the SecureBoot policy, in particular "dbx", i.e. the
+denylist of bad actors. That list is pretty much as frequently updated
+as firmware these days (as fwupd took over automatic updating). This
+means literal PCR 7 policies are problematic: they likely break soon,
+and are as brittle as any other literal PCR policies.
+
+hence, pick safer defaults, i.e. exclude PCR 7 from the default mask.
+This means the mask is now empty.
+
+Generally, people should really switch to signed PCR policies covering
+PCR 11, in combination with systemd-pcrlock for the other PCRs.
+
+(cherry picked from commit 4b840414be3b2d6520599d86d2b718a37574aabf)
+
+Related: RHEL-115813
+---
+ TODO                                  | 13 -------------
+ man/systemd-creds.xml                 |  7 ++++---
+ man/systemd-cryptenroll.xml           |  4 ++--
+ src/creds/creds.c                     |  2 +-
+ src/cryptenroll/cryptenroll.c         | 14 +-------------
+ src/cryptsetup/cryptsetup.c           |  2 +-
+ src/repart/repart.c                   | 14 +-------------
+ src/shared/tpm2-util.h                |  9 ++++++---
+ test/units/TEST-70-TPM2.cryptsetup.sh |  8 ++++----
+ 9 files changed, 20 insertions(+), 53 deletions(-)
+
+diff --git a/TODO b/TODO
+index 12b70cf4cd..e2c00a3a53 100644
+--- a/TODO
++++ b/TODO
+@@ -300,8 +300,6 @@ Features:
+ * creds: add a new cred format that reused the JSON structures we use in the
+   LUKS header, so that we get the various newer policies for free.
+ 
+-* drop PCR 7 from default PCR mask in credentials and LUKS2 enrollments
+-
+ * systemd-analyze: port "pcrs" verb to talk directly to TPM device, instead of
+   using sysfs interface (well, or maybe not, as that would require privileges?)
+ 
+@@ -939,17 +937,6 @@ Features:
+   - If run on every boot, should it use the sysupdate config from the host on
+     subsequent boots?
+ 
+-* revisit default PCR bindings in cryptenroll and systemd-creds. Currently they
+-  use PCR 7 which should contain secureboot state db/dbx. Which sounded like a
+-  safe bet, given that it should change only on policy changes, and not
+-  software updates. But that's wrong. Recent fwupd (rightfully) contains code
+-  for updating the dbx denylist. This means even without any active policy
+-  change PCR 7 might change. Hence, better idea might be in systemd-creds to
+-  default to PCR 15 at least if sd-stub is used (i.e. bind to system identity),
+-  and in cryptsetup simply the empty list? Also, PCR 14 almost certainly should
+-  be included as much as PCR 7 (as it contains shim's policy, which is
+-  certainly as relevant as PCR 7 on many systems)
+-
+ * To mimic the new tpm2-measure-pcr= crypttab option add the same to veritytab
+   (measuring the root hash) and integritytab (measuring the HMAC key if one is
+   used)
+diff --git a/man/systemd-creds.xml b/man/systemd-creds.xml
+index 8f972eeffb..dbc63e1bb4 100644
+--- a/man/systemd-creds.xml
++++ b/man/systemd-creds.xml
+@@ -371,9 +371,10 @@
+         <term><option>--tpm2-pcrs=<replaceable>PCR<optional>+PCR...</optional></replaceable></option></term>
+ 
+         <listitem><para>Configures the TPM2 PCRs (Platform Configuration Registers) to bind the encryption
+-        key to. Takes a <literal>+</literal> separated list of numeric PCR indexes in the range 0…23. If not
+-        used, defaults to PCR 7 only. If an empty string is specified, binds the encryption key to no PCRs at
+-        all. For details about the PCRs available, see the documentation of the switch of the same name for
++        key to. Takes a <literal>+</literal> separated list of numeric PCR indexes in the range 0…23. If an
++        empty string is specified, binds the encryption key to no PCRs at all (this is also the default if
++        this option is not used). For details about the PCRs available, see the documentation of the switch
++        of the same name for
+         <citerefentry><refentrytitle>systemd-cryptenroll</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+ 
+         <xi:include href="version-info.xml" xpointer="v250"/></listitem>
+diff --git a/man/systemd-cryptenroll.xml b/man/systemd-cryptenroll.xml
+index fb36f455ba..20b12d79ce 100644
+--- a/man/systemd-cryptenroll.xml
++++ b/man/systemd-cryptenroll.xml
+@@ -578,8 +578,8 @@
+         entry starts with a name or numeric index in the range 0…23, optionally followed by
+         <literal>:</literal> and a hash algorithm name (specifying the PCR bank), optionally followed by
+         <literal>=</literal> and a hash digest value. Multiple PCR entries are separated by
+-        <literal>+</literal>. If not specified, the default is to use PCR 7 only. If an empty string is
+-        specified, binds the enrollment to no PCRs at all. See the table above for a list of available
++        <literal>+</literal>. If an empty string is specified, binds the enrollment to no PCRs at all (this
++        is also the default, if this option is not used). See the table above for a list of available
+         PCRs.</para>
+ 
+         <para>Example: <option>--tpm2-pcrs=boot-loader-code+platform-config+boot-loader-config</option>
+diff --git a/src/creds/creds.c b/src/creds/creds.c
+index 7635aee37c..a1257d8c5a 100644
+--- a/src/creds/creds.c
++++ b/src/creds/creds.c
+@@ -1030,7 +1030,7 @@ static int parse_argv(int argc, char *argv[]) {
+         }
+ 
+         if (arg_tpm2_pcr_mask == UINT32_MAX)
+-                arg_tpm2_pcr_mask = TPM2_PCR_MASK_DEFAULT;
++                arg_tpm2_pcr_mask = 0;
+         if (arg_tpm2_public_key_pcr_mask == UINT32_MAX)
+                 arg_tpm2_public_key_pcr_mask = UINT32_C(1) << TPM2_PCR_KERNEL_BOOT;
+ 
+diff --git a/src/cryptenroll/cryptenroll.c b/src/cryptenroll/cryptenroll.c
+index 3fb58c2874..c40c0d402f 100644
+--- a/src/cryptenroll/cryptenroll.c
++++ b/src/cryptenroll/cryptenroll.c
+@@ -308,7 +308,7 @@ static int parse_argv(int argc, char *argv[]) {
+                 {}
+         };
+ 
+-        bool auto_hash_pcr_values = true, auto_public_key_pcr_mask = true, auto_pcrlock = true;
++        bool auto_public_key_pcr_mask = true, auto_pcrlock = true;
+         int c, r;
+ 
+         assert(argc >= 0);
+@@ -530,7 +530,6 @@ static int parse_argv(int argc, char *argv[]) {
+                         break;
+ 
+                 case ARG_TPM2_PCRS:
+-                        auto_hash_pcr_values = false;
+                         r = tpm2_parse_pcr_argument_append(optarg, &arg_tpm2_hash_pcr_values, &arg_tpm2_n_hash_pcr_values);
+                         if (r < 0)
+                                 return r;
+@@ -698,17 +697,6 @@ static int parse_argv(int argc, char *argv[]) {
+                         assert(arg_tpm2_public_key_pcr_mask == 0);
+                         arg_tpm2_public_key_pcr_mask = INDEX_TO_MASK(uint32_t, TPM2_PCR_KERNEL_BOOT);
+                 }
+-
+-                if (auto_hash_pcr_values && !arg_tpm2_pcrlock) { /* Only lock to PCR 7 by default if no pcrlock policy is around (which is a better replacement) */
+-                        assert(arg_tpm2_n_hash_pcr_values == 0);
+-
+-                        if (!GREEDY_REALLOC_APPEND(
+-                                            arg_tpm2_hash_pcr_values,
+-                                            arg_tpm2_n_hash_pcr_values,
+-                                            &TPM2_PCR_VALUE_MAKE(TPM2_PCR_INDEX_DEFAULT, /* hash= */ 0, /* value= */ {}),
+-                                            1))
+-                                return log_oom();
+-                }
+         }
+ 
+         return 1;
+diff --git a/src/cryptsetup/cryptsetup.c b/src/cryptsetup/cryptsetup.c
+index adeffae003..ba394c1650 100644
+--- a/src/cryptsetup/cryptsetup.c
++++ b/src/cryptsetup/cryptsetup.c
+@@ -1855,7 +1855,7 @@ static int attach_luks_or_plain_or_bitlk_by_tpm2(
+                         r = acquire_tpm2_key(
+                                         name,
+                                         arg_tpm2_device,
+-                                        arg_tpm2_pcr_mask == UINT32_MAX ? TPM2_PCR_MASK_DEFAULT : arg_tpm2_pcr_mask,
++                                        arg_tpm2_pcr_mask == UINT32_MAX ? TPM2_PCR_MASK_DEFAULT_LEGACY : arg_tpm2_pcr_mask,
+                                         UINT16_MAX,
+                                         /* pubkey= */ NULL,
+                                         /* pubkey_pcr_mask= */ 0,
+diff --git a/src/repart/repart.c b/src/repart/repart.c
+index b2a2bda2a2..4994886fa4 100644
+--- a/src/repart/repart.c
++++ b/src/repart/repart.c
+@@ -7959,7 +7959,7 @@ static int parse_argv(int argc, char *argv[], X509 **ret_certificate, EVP_PKEY *
+         _cleanup_(X509_freep) X509 *certificate = NULL;
+         _cleanup_(openssl_ask_password_ui_freep) OpenSSLAskPasswordUI *ui = NULL;
+         _cleanup_(EVP_PKEY_freep) EVP_PKEY *private_key = NULL;
+-        bool auto_hash_pcr_values = true, auto_public_key_pcr_mask = true, auto_pcrlock = true;
++        bool auto_public_key_pcr_mask = true, auto_pcrlock = true;
+         int c, r;
+ 
+         assert(argc >= 0);
+@@ -8188,7 +8188,6 @@ static int parse_argv(int argc, char *argv[], X509 **ret_certificate, EVP_PKEY *
+                         break;
+ 
+                 case ARG_TPM2_PCRS:
+-                        auto_hash_pcr_values = false;
+                         r = tpm2_parse_pcr_argument_append(optarg, &arg_tpm2_hash_pcr_values, &arg_tpm2_n_hash_pcr_values);
+                         if (r < 0)
+                                 return r;
+@@ -8464,17 +8463,6 @@ static int parse_argv(int argc, char *argv[], X509 **ret_certificate, EVP_PKEY *
+                 arg_tpm2_public_key_pcr_mask = INDEX_TO_MASK(uint32_t, TPM2_PCR_KERNEL_BOOT);
+         }
+ 
+-        if (auto_hash_pcr_values && !arg_tpm2_pcrlock) { /* Only lock to PCR 7 if no pcr policy is specified. */
+-                assert(arg_tpm2_n_hash_pcr_values == 0);
+-
+-                if (!GREEDY_REALLOC_APPEND(
+-                                    arg_tpm2_hash_pcr_values,
+-                                    arg_tpm2_n_hash_pcr_values,
+-                                    &TPM2_PCR_VALUE_MAKE(TPM2_PCR_INDEX_DEFAULT, /* hash= */ 0, /* value= */ {}),
+-                                    1))
+-                        return log_oom();
+-        }
+-
+         if (arg_pretty < 0 && isatty_safe(STDOUT_FILENO))
+                 arg_pretty = true;
+ 
+diff --git a/src/shared/tpm2-util.h b/src/shared/tpm2-util.h
+index 77cd7dbcaf..a0008d9b59 100644
+--- a/src/shared/tpm2-util.h
++++ b/src/shared/tpm2-util.h
+@@ -394,9 +394,12 @@ int tpm2_parse_pcr_json_array(sd_json_variant *v, uint32_t *ret);
+ int tpm2_make_luks2_json(int keyslot, uint32_t hash_pcr_mask, uint16_t pcr_bank, const struct iovec *pubkey, uint32_t pubkey_pcr_mask, uint16_t primary_alg, const struct iovec blobs[], size_t n_blobs, const struct iovec policy_hash[], size_t n_policy_hash, const struct iovec *salt, const struct iovec *srk, const struct iovec *pcrlock_nv, TPM2Flags flags, sd_json_variant **ret);
+ int tpm2_parse_luks2_json(sd_json_variant *v, int *ret_keyslot, uint32_t *ret_hash_pcr_mask, uint16_t *ret_pcr_bank, struct iovec *ret_pubkey, uint32_t *ret_pubkey_pcr_mask, uint16_t *ret_primary_alg, struct iovec **ret_blobs, size_t *ret_n_blobs, struct iovec **ret_policy_hash, size_t *ret_n_policy_hash, struct iovec *ret_salt, struct iovec *ret_srk, struct iovec *ret_pcrlock_nv, TPM2Flags *ret_flags);
+ 
+-/* Default to PCR 7 only */
+-#define TPM2_PCR_INDEX_DEFAULT UINT32_C(7)
+-#define TPM2_PCR_MASK_DEFAULT INDEX_TO_MASK(uint32_t, TPM2_PCR_INDEX_DEFAULT)
++/* Before v258 we used to bind to PCR 7 by default at various places if no explicit PCR mask was set. With
++ * v258 we stopped doing that (since the SecureBoot DB is as much subject to regular updates by tools such as
++ * fwupd as the firmware itself), but when unlocking to maintain compatibility when no mask is specified we
++ * still need to default to PCR 7. */
++#define TPM2_PCR_INDEX_DEFAULT_LEGACY TPM2_PCR_SECURE_BOOT_POLICY
++#define TPM2_PCR_MASK_DEFAULT_LEGACY INDEX_TO_MASK(uint32_t, TPM2_PCR_INDEX_DEFAULT_LEGACY)
+ 
+ /* We want the helpers below to work also if TPM2 libs are not available, hence define these four defines if
+  * they are missing. */
+diff --git a/test/units/TEST-70-TPM2.cryptsetup.sh b/test/units/TEST-70-TPM2.cryptsetup.sh
+index b5dd4dfe15..8c1a362fbc 100755
+--- a/test/units/TEST-70-TPM2.cryptsetup.sh
++++ b/test/units/TEST-70-TPM2.cryptsetup.sh
+@@ -49,10 +49,10 @@ chmod 0600 /tmp/passphrase
+ cryptsetup luksFormat -q --pbkdf pbkdf2 --pbkdf-force-iterations 1000 --use-urandom "$IMAGE" /tmp/passphrase
+ 
+ # Unlocking via keyfile
+-systemd-cryptenroll --unlock-key-file=/tmp/passphrase --tpm2-device=auto "$IMAGE"
++systemd-cryptenroll --unlock-key-file=/tmp/passphrase --tpm2-device=auto --tpm2-pcrs=7 "$IMAGE"
+ 
+-# Enroll unlock with default PCR policy
+-PASSWORD=passphrase systemd-cryptenroll --tpm2-device=auto "$IMAGE"
++# Enroll unlock with SecureBoot (PCR 7) PCR policy
++PASSWORD=passphrase systemd-cryptenroll --tpm2-device=auto --tpm2-pcrs=7 "$IMAGE"
+ systemd-cryptsetup attach test-volume "$IMAGE" - tpm2-device=auto,headless=1
+ systemd-cryptsetup detach test-volume
+ 
+@@ -62,7 +62,7 @@ tpm2_pcrextend 7:sha256=00000000000000000000000000000000000000000000000000000000
+ 
+ # Enroll unlock with PCR+PIN policy
+ systemd-cryptenroll --wipe-slot=tpm2 "$IMAGE"
+-PASSWORD=passphrase NEWPIN=123456 systemd-cryptenroll --tpm2-device=auto --tpm2-with-pin=true "$IMAGE"
++PASSWORD=passphrase NEWPIN=123456 systemd-cryptenroll --tpm2-device=auto --tpm2-with-pin=true --tpm2-pcrs=7 "$IMAGE"
+ PIN=123456 systemd-cryptsetup attach test-volume "$IMAGE" - tpm2-device=auto,headless=1
+ systemd-cryptsetup detach test-volume
+ 

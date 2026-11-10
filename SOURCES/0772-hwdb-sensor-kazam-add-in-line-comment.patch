@@ -1,0 +1,26 @@
+From e321304e210ba1ba821bcf62a69c6dfa39a7cbd3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 00:16:13 +0100
+Subject: [PATCH] hwdb: sensor: kazam add in-line comment
+
+(cherry picked from commit 99a83b502130371eb4ae7cf8f3703604d39d6bd0)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 5fc33da6c1..806b8dd9e9 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -617,7 +617,8 @@ sensor:modalias:acpi:KIOX000A:*:dmi:bvnAmericanMegatrendsInc.:bvrZB-BI-11.6-SF13
+ #########################################
+ # Kazam
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:bvnINSYDECorp.:bvrVISION.I22K*:svnKAZAM:pnVISION:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:bvnINSYDECorp.:bvrVISION.I22K*:svnKAZAM:pnVISION:*    # Vision (rebranded LINX Vision 8)
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ #########################################

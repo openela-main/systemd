@@ -1,0 +1,63 @@
+From de0e78a72f0c951d4bb21e4cc69803faf1869aa2 Mon Sep 17 00:00:00 2001
+From: LuK1337 <priv.luk@gmail.com>
+Date: Sun, 14 Jun 2026 17:55:13 +0200
+Subject: [PATCH] hwdb: Make Samsung download mode work out-of-the-box
+
+https://github.com/Benjamin-Dobell/Heimdall/blob/3997d5cc607e6c603c6e7c0d07e42e9868c62af2/heimdall/source/BridgeManager.h#L69-L79
+(cherry picked from commit 8d846837fce1f4ddfb4230f47864806399381e8b)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-debug-appliance.hwdb | 17 +++++++++++++++++
+ hwdb.d/meson.build             |  1 +
+ hwdb.d/parse_hwdb.py           |  1 +
+ 3 files changed, 19 insertions(+)
+ create mode 100644 hwdb.d/70-debug-appliance.hwdb
+
+diff --git a/hwdb.d/70-debug-appliance.hwdb b/hwdb.d/70-debug-appliance.hwdb
+new file mode 100644
+index 0000000000..8f535f750b
+--- /dev/null
++++ b/hwdb.d/70-debug-appliance.hwdb
+@@ -0,0 +1,17 @@
++# This file is part of systemd.
++#
++# Database for debug appliances.
++#
++# Permitted keys:
++#   ID_DEBUG_APPLIANCE=?*
++
++# Samsung devices in download mode
++# Used to interact with devices over Odin protocol, see:
++# https://en.wikipedia.org/wiki/Odin_(firmware_flashing_software)
++#
++# The idVendor and idProduct used are documented in source code here:
++# https://github.com/Benjamin-Dobell/Heimdall/blob/3997d5cc607e6c603c6e7c0d07e42e9868c62af2/heimdall/source/BridgeManager.h#L69-L79
++usb:v04E8p6601*
++usb:v04E8p685D*
++usb:v04E8p68C3*
++ ID_DEBUG_APPLIANCE=samsung_odin
+diff --git a/hwdb.d/meson.build b/hwdb.d/meson.build
+index ceb2768929..b082920843 100644
+--- a/hwdb.d/meson.build
++++ b/hwdb.d/meson.build
+@@ -29,6 +29,7 @@ hwdb_files_test = files(
+         '70-analyzers.hwdb',
+         '70-av-production.hwdb',
+         '70-cameras.hwdb',
++        '70-debug-appliance.hwdb',
+         '70-hardware-wallets.hwdb',
+         '70-joystick.hwdb',
+         '70-lights.hwdb',
+diff --git a/hwdb.d/parse_hwdb.py b/hwdb.d/parse_hwdb.py
+index 5b9d528119..3994656a56 100755
+--- a/hwdb.d/parse_hwdb.py
++++ b/hwdb.d/parse_hwdb.py
+@@ -187,6 +187,7 @@ def property_grammar():
+         ('ID_AUTOSUSPEND_DELAY_MS', INTEGER),
+         ('ID_AV_PRODUCTION_CONTROLLER', zero_one),
+         ('ID_AV_LIGHTS', zero_one),
++        ('ID_DEBUG_APPLIANCE', name_literal),
+         ('ID_PERSIST', zero_one),
+         ('ID_PDA', zero_one),
+         ('ID_INPUT', id_input_setting),

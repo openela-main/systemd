@@ -1,0 +1,28 @@
+From 20b119408789f03d67e8509b36227d7493ad7222 Mon Sep 17 00:00:00 2001
+From: kakolla <abhishekkakolla1@gmail.com>
+Date: Sun, 3 May 2026 01:01:24 -0700
+Subject: [PATCH] hwdb: add correct keyboard mapping for touchpad_toggle event
+ on msi gs66 stealth laptop
+
+(cherry picked from commit 6d4c714d88147f75c231b7fa004191962c4c0b1b)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 771b7dc43e..99006885f0 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1605,6 +1605,10 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMicro-Star*:pn*:*
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMICRO-STAR*:pnGF63*:*
+  KEYBOARD_KEY_85=touchpad_toggle                        # Toggle touchpad, sends meta+ctrl+toggle
+ 
++# MSI GS66 Stealth toggles touchpad using Fn+F3 where the keyboard key is 76
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMICRO-STAR*:pn*Stealth GS66*:*
++ KEYBOARD_KEY_76=touchpad_toggle                        # Toggle touchpad
++
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMICRO-STAR*:pnGE60*:*
+ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMICRO-STAR*:pnGE70*:*
+  KEYBOARD_KEY_c2=ejectcd

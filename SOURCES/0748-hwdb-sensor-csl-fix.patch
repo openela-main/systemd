@@ -1,0 +1,27 @@
+From 10926be928ec4fdb27d294468ea52c084926d4b4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 20:14:07 +0100
+Subject: [PATCH] hwdb: sensor: csl fix
+
+(cherry picked from commit e69ec28ac9b3a956a519b464a2c4df65f8a983ec)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 3ff4dab8d4..8cbbf40593 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -298,8 +298,8 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svnConnect:pnTablet9:*    # Connect Tablet
+ #########################################
+ # CSL Computer
+ #########################################
+-# CSL Panther Tab HD
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnCSL*Computer*:pnCSL*Panther*Tab*HD:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnCSLComputer*:pnCSLPantherTabHD:*    # CSL Panther Tab HD
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

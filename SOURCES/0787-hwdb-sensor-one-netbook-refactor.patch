@@ -1,0 +1,42 @@
+From ed9ba9bb9be9cce0ba7882d1aa20039e47fcbd7a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 16:31:55 +0100
+Subject: [PATCH] hwdb: sensor: one-netbook refactor
+
+(cherry picked from commit 9ebebd1f66278397bfcc95a11894e8336f4da6e3)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 173add5c2b..e279f65aba 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -839,21 +839,19 @@ sensor:modalias:acpi:SMO8500:*:dmi:bvnAmericanMegatrendsInc.:bvr5.6.5:bd07/25/20
+ # One-netbook OneMix 2s
+ # OneMix 2s has no product name filled, matching entire dmi-alias
+ # '*' in ":*svn" is there because kernels >= 5.8 have inserted a br field there
+-sensor:modalias:acpi:BOSC0200*:dmi:bvnAmericanMegatrendsInc.:bvr5.12:bd10/26/2018:*svnDefaultstring:pnDefaultstring:pvrDefaultstring:rvnDefaultstring:rnDefaultstring:rvrDefaultstring:cvnDefaultstring:ct3:cvrDefaultstring:*
++sensor:modalias:acpi:BOSC0200:*:dmi:bvnAmericanMegatrendsInc.:bvr5.12:bd10/26/2018:*svnDefaultstring:pnDefaultstring:pvrDefaultstring:rvnDefaultstring:rnDefaultstring:rvrDefaultstring:cvnDefaultstring:ct3:cvrDefaultstring:*
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ # One-netbook OneMix 3 Pro
+-sensor:modalias:acpi:BOSC0200*:dmi:*svnONE-NETBOOKTECHNOLOGYCO*:pnOne-Mix3Pro:*
+- ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+-
++sensor:modalias:acpi:BOSC0200:*:dmi:*svnONE-NETBOOKTECHNOLOGYCO*:pnOne-Mix3Pro:*
+ # One-netbook OneMix 3s
+ # OneMix 3s has no product name filled, matching entire dmi-alias
+ # '*' in ":*svn" is there because kernels >= 5.8 have inserted a br field there
+-sensor:modalias:acpi:BOSC0200*:dmi:bvnAmericanMegatrendsInc.:bvr5.12:bd07/17/2019:*svnDefaultstring:pnDefaultstring:pvrDefaultstring:rvnDefaultstring:rnDefaultstring:rvrDefaultstring:cvnDefaultstring:ct3:cvrDefaultstring:*
++sensor:modalias:acpi:BOSC0200:*:dmi:bvnAmericanMegatrendsInc.:bvr5.12:bd07/17/2019:*svnDefaultstring:pnDefaultstring:pvrDefaultstring:rvnDefaultstring:rnDefaultstring:rvrDefaultstring:cvnDefaultstring:ct3:cvrDefaultstring:*
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ # One-Netbook OneXPlayer Mini (and maybe others)
+-sensor:modalias:acpi:BMI0160*:dmi:*:rnONEXPLAYER:rvrV01:*
++sensor:modalias:acpi:BMI0160:*:dmi:*:rnONEXPLAYER:rvrV01:*
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, -1
+ 
+ #########################################

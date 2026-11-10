@@ -1,0 +1,25 @@
+From 730def2a4ac16d93d5e0e5050965b1a920e462b2 Mon Sep 17 00:00:00 2001
+From: Jelle van der Waa <jvanderwaa@redhat.com>
+Date: Tue, 3 Jun 2025 15:32:49 +0200
+Subject: [PATCH] repart: correct argument comment
+
+(cherry picked from commit 2b58550bd4aa154d43372a280312ca249b82619e)
+
+Related: RHEL-115813
+---
+ src/repart/repart.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/repart/repart.c b/src/repart/repart.c
+index 009f563c99..d78dc4f8de 100644
+--- a/src/repart/repart.c
++++ b/src/repart/repart.c
+@@ -4685,7 +4685,7 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
+                         r = tpm2_calculate_sealing_policy(
+                                         arg_tpm2_hash_pcr_values,
+                                         arg_tpm2_n_hash_pcr_values,
+-                                        /* pubkey= */ NULL,      /* Turn this one off for the 2nd shard */
++                                        /* public= */ NULL,      /* Turn this one off for the 2nd shard */
+                                         /* use_pin= */ false,
+                                         &pcrlock_policy,         /* But turn this one on */
+                                         policy_hash + 1);

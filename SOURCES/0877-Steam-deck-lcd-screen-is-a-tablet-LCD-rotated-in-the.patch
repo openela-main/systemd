@@ -1,0 +1,39 @@
+From 45eb2477836a9f7de49159f320cca84f251149e5 Mon Sep 17 00:00:00 2001
+From: doof <doof@localhost.localdomain>
+Date: Mon, 15 Jun 2026 07:28:10 -0400
+Subject: [PATCH] Steam deck lcd screen is a tablet LCD rotated in the kernel
+ into portrait mode.
+
+The IMU is not active in lizard mode. The command below disables
+lizard mode and activates the IMU.
+
+echo N | sudo tee /sys/module/hid_steam/parameters/lizard_mode
+
+Closes #42586
+
+(cherry picked from commit 0a0aa429d3cc01345ad8dbff1f44d4badefccc7f)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index a3d707901f..af5a81a51b 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -1100,6 +1100,14 @@ sensor:modalias:acpi:SMO8500*:dmi:*:svnUMAX:pnVisionBook10WiPlus:*
+ sensor:modalias:acpi:MXC6655*:dmi:*:svnUMAX:pnVisionbook12WrTab:*
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
++#########################################
++# Valve
++#########################################
++
++# Lizard mode must be off for the IMU to activate
++evdev:input:b0003v28DEp1205*
++ ACCEL_MOUNT_MATRIX=0, -1, 0; 1, 0, 0; 0, 0, 1
++
+ #########################################
+ # Voyo
+ #########################################

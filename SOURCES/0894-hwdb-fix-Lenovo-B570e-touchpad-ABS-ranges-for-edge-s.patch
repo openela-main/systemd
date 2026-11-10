@@ -1,0 +1,44 @@
+From 251bb1b9ce361451a40d5f71cfcf4b44043b328e Mon Sep 17 00:00:00 2001
+From: lzwind <100665065+lzwind@users.noreply.github.com>
+Date: Mon, 3 Aug 2026 12:43:45 +0800
+Subject: [PATCH] hwdb: fix Lenovo B570e touchpad ABS ranges for edge scrolling
+ (#43264)
+
+The Lenovo B570e touchpad (ETPS/2 Elantech) reports ABS ranges that
+are too wide by default, which makes edge scrolling trigger across
+roughly the right half of the touchpad instead of only at the right
+edge. Add an evdev hwdb entry in `60-evdev.hwdb` that overrides the
+ABS_X/ABS_Y (and the matching MT position) ranges with the calibrated
+values, following the same pattern already used for the Lenovo B590
+and L430 entries.
+
+Fixes #29666
+
+(cherry picked from commit 855285b07e8f4868da9870f9053033477df74e9c)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-evdev.hwdb | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/hwdb.d/60-evdev.hwdb b/hwdb.d/60-evdev.hwdb
+index e1e30700c4..7730bdc76b 100644
+--- a/hwdb.d/60-evdev.hwdb
++++ b/hwdb.d/60-evdev.hwdb
+@@ -566,6 +566,16 @@ evdev:name:SYNA3602:00 093A:35ED Touchpad:dmi:*svnInfinix:*pnY3Max**
+ # Lenovo
+ #########################################
+ 
++# Lenovo B570e
++# Fixes wrong touchpad edge-scroll area: without this override the
++# kernel reports wider ABS ranges, making edge scrolling trigger across the
++# right half of the touchpad.
++evdev:name:ETPS/2 Elantech Touchpad:dmi:*svnLENOVO*:pvrLenovoB570e:*
++ EVDEV_ABS_00=0:2934:29
++ EVDEV_ABS_01=-652:652:26
++ EVDEV_ABS_35=0:2934:29
++ EVDEV_ABS_36=-652:652:26
++
+ # Lenovo B590
+ evdev:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO*:pvrLenovoB590:*
+  EVDEV_ABS_00=1243:5759:48

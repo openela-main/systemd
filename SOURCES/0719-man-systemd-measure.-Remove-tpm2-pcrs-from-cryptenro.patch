@@ -1,0 +1,27 @@
+From 2e50c0aef45f848823fa065c888903272478e802 Mon Sep 17 00:00:00 2001
+From: cvlc12 <97767846+cvlc12@users.noreply.github.com>
+Date: Thu, 6 Nov 2025 21:54:06 +0100
+Subject: [PATCH] man: systemd-measure. Remove 'tpm2-pcrs=' from cryptenroll
+ command (#39590)
+
+This is now default since 4b840414be3b2d6520599d86d2b718a37574aabf.
+
+(cherry picked from commit c3e80f8f2bbd2b79350684f52638cedec00eb8ad)
+
+Related: RHEL-115813
+---
+ man/systemd-measure.xml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/man/systemd-measure.xml b/man/systemd-measure.xml
+index 368c94f700..5d697dd62f 100644
+--- a/man/systemd-measure.xml
++++ b/man/systemd-measure.xml
+@@ -328,7 +328,6 @@ $ ukify build \
+      <programlisting># systemd-cryptenroll --tpm2-device=auto \
+      --tpm2-public-key=tpm2-pcr-public-key.pem \
+      --tpm2-signature=tpm2-pcr-signature.json \
+-     --tpm2-pcrs="" \
+      /dev/sda5</programlisting>
+ 
+      <para>And then unlock the device with the signature:</para>

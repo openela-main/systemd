@@ -1,0 +1,73 @@
+From f9204b8dccc68a3256f1e03ac9aaa1db1721f9df Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Mon, 10 Feb 2025 20:24:22 +0100
+Subject: [PATCH] core/dbus-mount: add missing ReloadResult and CleanResult
+ properties
+
+(cherry picked from commit 0fa062f9836ea5ed09bc42026d2d576dfb52c409)
+
+Related: RHEL-143028
+---
+ man/org.freedesktop.systemd1.xml | 14 +++++++++++++-
+ src/core/dbus-mount.c            |  2 ++
+ 2 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/man/org.freedesktop.systemd1.xml b/man/org.freedesktop.systemd1.xml
+index 71d2a11d29..4e9d72be25 100644
+--- a/man/org.freedesktop.systemd1.xml
++++ b/man/org.freedesktop.systemd1.xml
+@@ -7002,6 +7002,8 @@ node /org/freedesktop/systemd1/unit/home_2emount {
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+       readonly b ReadWriteOnly = ...;
+       readonly s Result = '...';
++      readonly s ReloadResult = '...';
++      readonly s CleanResult = '...';
+       readonly u UID = ...;
+       readonly u GID = ...;
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+@@ -7602,6 +7604,10 @@ node /org/freedesktop/systemd1/unit/home_2emount {
+ 
+     <!--property ReadWriteOnly is not documented!-->
+ 
++    <!--property ReloadResult is not documented!-->
++
++    <!--property CleanResult is not documented!-->
++
+     <!--property UID is not documented!-->
+ 
+     <!--property GID is not documented!-->
+@@ -8150,6 +8156,10 @@ node /org/freedesktop/systemd1/unit/home_2emount {
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="Result"/>
+ 
++    <variablelist class="dbus-property" generated="True" extra-ref="ReloadResult"/>
++
++    <variablelist class="dbus-property" generated="True" extra-ref="CleanResult"/>
++
+     <variablelist class="dbus-property" generated="True" extra-ref="UID"/>
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="GID"/>
+@@ -12386,7 +12396,9 @@ $ gdbus introspect --system --dest org.freedesktop.systemd1 \
+       <varname>ManagedOOMMemoryPressureDurationUSec</varname>,
+       <varname>ProtectControlGroupsEx</varname>, and
+       <varname>PrivatePIDs</varname> were added in version 257.</para>
+-      <para><varname>GracefulOptions</varname> were added in version 258.</para>
++      <para><varname>GracefulOptions</varname>,
++      <varname>ReloadResult</varname>, and
++      <varname>CleanResult</varname> were added in version 258.</para>
+     </refsect2>
+     <refsect2>
+       <title>Swap Unit Objects</title>
+diff --git a/src/core/dbus-mount.c b/src/core/dbus-mount.c
+index 855300d025..72bd4c697a 100644
+--- a/src/core/dbus-mount.c
++++ b/src/core/dbus-mount.c
+@@ -73,6 +73,8 @@ const sd_bus_vtable bus_mount_vtable[] = {
+         SD_BUS_PROPERTY("ForceUnmount", "b", bus_property_get_bool, offsetof(Mount, force_unmount), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("ReadWriteOnly", "b", bus_property_get_bool, offsetof(Mount, read_write_only), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("Result", "s", property_get_result, offsetof(Mount, result), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
++        SD_BUS_PROPERTY("ReloadResult", "s", property_get_result, offsetof(Mount, reload_result), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
++        SD_BUS_PROPERTY("CleanResult", "s", property_get_result, offsetof(Mount, clean_result), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("UID", "u", bus_property_get_uid, offsetof(Unit, ref_uid), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("GID", "u", bus_property_get_gid, offsetof(Unit, ref_gid), SD_BUS_VTABLE_PROPERTY_EMITS_CHANGE),
+         SD_BUS_PROPERTY("GracefulOptions", "as", NULL, offsetof(Mount, graceful_options), SD_BUS_VTABLE_PROPERTY_CONST),

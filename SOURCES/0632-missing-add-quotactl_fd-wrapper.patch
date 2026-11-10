@@ -1,0 +1,139 @@
+From 125c2b786edaed0c11ef923e10cf0448909abf63 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 10 Jan 2025 11:33:03 +0100
+Subject: [PATCH] missing: add quotactl_fd() wrapper
+
+(cherry picked from commit 7adafb0832a709f4fcf1210602224cb049d02857)
+
+Related: RHEL-143028
+---
+ meson.build                     |  1 +
+ src/basic/missing_syscall.h     | 16 ++++++++
+ src/basic/missing_syscall_def.h | 68 +++++++++++++++++++++++++++++++++
+ src/basic/missing_syscalls.py   |  1 +
+ 4 files changed, 86 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index fa39da2d38..8b9818a202 100644
+--- a/meson.build
++++ b/meson.build
+@@ -675,6 +675,7 @@ foreach ident : [
+         ['fsmount',           '''#include <sys/mount.h>'''],
+         ['getdents64',        '''#include <dirent.h>'''],
+         ['pidfd_spawn',       '''#include <spawn.h>'''],
++        ['quotactl_fd',       '''#include <sys/quota.h>'''],
+ ]
+ 
+         have = cc.has_function(ident[0], prefix : ident[1], args : '-D_GNU_SOURCE')
+diff --git a/src/basic/missing_syscall.h b/src/basic/missing_syscall.h
+index e2cd8b4e35..8ac4c5288a 100644
+--- a/src/basic/missing_syscall.h
++++ b/src/basic/missing_syscall.h
+@@ -695,3 +695,19 @@ int __clone2(int (*fn)(void *), void *stack_base, size_t stack_size, int flags,
+  * at build time) and just define it. Once the kernel drops ia64 support, we can drop this too. */
+ #define HAVE_CLONE 1
+ #endif
++
++/* ======================================================================= */
++
++#if !HAVE_QUOTACTL_FD
++
++static inline int missing_quotactl_fd(int fd, int cmd, int id, void *addr) {
++#if defined __NR_quotactl_fd
++        return syscall(__NR_quotactl_fd, fd, cmd, id, addr);
++#else
++        errno = ENOSYS;
++        return -1;
++#endif
++}
++
++#  define quotactl_fd missing_quotactl_fd
++#endif
+diff --git a/src/basic/missing_syscall_def.h b/src/basic/missing_syscall_def.h
+index f679422a2e..cd22058cdd 100644
+--- a/src/basic/missing_syscall_def.h
++++ b/src/basic/missing_syscall_def.h
+@@ -1197,3 +1197,71 @@ assert_cc(__NR_statx == systemd_NR_statx);
+ #    endif
+ #  endif
+ #endif
++
++#ifndef __IGNORE_quotactl_fd
++#  if defined(__aarch64__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__alpha__)
++#    define systemd_NR_quotactl_fd 553
++#  elif defined(__arc__) || defined(__tilegx__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__arm__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__i386__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__ia64__)
++#    define systemd_NR_quotactl_fd 1467
++#  elif defined(__loongarch_lp64)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__m68k__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(_MIPS_SIM)
++#    if _MIPS_SIM == _MIPS_SIM_ABI32
++#      define systemd_NR_quotactl_fd 4443
++#    elif _MIPS_SIM == _MIPS_SIM_NABI32
++#      define systemd_NR_quotactl_fd 6443
++#    elif _MIPS_SIM == _MIPS_SIM_ABI64
++#      define systemd_NR_quotactl_fd 5443
++#    else
++#      error "Unknown MIPS ABI"
++#    endif
++#  elif defined(__hppa__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__powerpc__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__riscv)
++#    if __riscv_xlen == 32
++#      define systemd_NR_quotactl_fd 443
++#    elif __riscv_xlen == 64
++#      define systemd_NR_quotactl_fd 443
++#    else
++#      error "Unknown RISC-V ABI"
++#    endif
++#  elif defined(__s390__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__sparc__)
++#    define systemd_NR_quotactl_fd 443
++#  elif defined(__x86_64__)
++#    if defined(__ILP32__)
++#      define systemd_NR_quotactl_fd (443 | /* __X32_SYSCALL_BIT */ 0x40000000)
++#    else
++#      define systemd_NR_quotactl_fd 443
++#    endif
++#  elif !defined(missing_arch_template)
++#    warning "quotactl_fd() syscall number is unknown for your architecture"
++#  endif
++
++/* may be an (invalid) negative number due to libseccomp, see PR 13319 */
++#  if defined __NR_quotactl_fd && __NR_quotactl_fd >= 0
++#    if defined systemd_NR_quotactl_fd
++assert_cc(__NR_quotactl_fd == systemd_NR_quotactl_fd);
++#    endif
++#  else
++#    if defined __NR_quotactl_fd
++#      undef __NR_quotactl_fd
++#    endif
++#    if defined systemd_NR_quotactl_fd && systemd_NR_quotactl_fd >= 0
++#      define __NR_quotactl_fd systemd_NR_quotactl_fd
++#    endif
++#  endif
++#endif
+diff --git a/src/basic/missing_syscalls.py b/src/basic/missing_syscalls.py
+index 3749e89c4e..a15fed0358 100644
+--- a/src/basic/missing_syscalls.py
++++ b/src/basic/missing_syscalls.py
+@@ -20,6 +20,7 @@ SYSCALLS = [
+     'pidfd_open',
+     'pidfd_send_signal',
+     'pkey_mprotect',
++    'quotactl_fd',
+     'renameat2',
+     'setns',
+     'statx',

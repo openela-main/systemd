@@ -1,0 +1,413 @@
+From 58fc6c67b9723180f1c54e8b72e7f341e77a7591 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 31 Mar 2025 11:47:17 +0200
+Subject: [PATCH] homed: always use quotactl_fd() if its available
+
+Let's always prefer quotactl_fd() when it's available and use quotactl()
+only as as a fallback on old kernels.
+
+This way we can operate on the fds we typically already have open, or if
+needed we can open a new one, and use for multiple fs operation.
+
+In the long run we should really focus on operating exclusively by fd
+instead of by path, by device nor or otherwise. This gets us a step
+closer to that.
+
+(cherry picked from commit 5daca30b0f28ffdcfdd1e6b9df9691b89d1b6b0f)
+
+Related: RHEL-143028
+---
+ src/home/homed-home.c          | 16 +++++++---
+ src/home/homed-manager.c       | 12 ++++---
+ src/home/homework-directory.c  |  6 ++--
+ src/home/homework-fscrypt.c    |  2 +-
+ src/home/homework-quota.c      | 57 +++++++++++++++++++++++-----------
+ src/home/homework-quota.h      |  6 ++--
+ src/shared/quota-util.c        | 34 +++++++++-----------
+ src/shared/quota-util.h        |  3 +-
+ units/systemd-homed.service.in |  2 +-
+ 9 files changed, 80 insertions(+), 58 deletions(-)
+
+diff --git a/src/home/homed-home.c b/src/home/homed-home.c
+index 44e3274c42..84b2a4935e 100644
+--- a/src/home/homed-home.c
++++ b/src/home/homed-home.c
+@@ -29,7 +29,6 @@
+ #include "memfd-util.h"
+ #include "missing_magic.h"
+ #include "missing_mman.h"
+-#include "missing_syscall.h"
+ #include "mkdir.h"
+ #include "path-util.h"
+ #include "process-util.h"
+@@ -2414,6 +2413,7 @@ static int home_get_disk_status_directory(
+         uint64_t disk_size = UINT64_MAX, disk_usage = UINT64_MAX, disk_free = UINT64_MAX,
+                 disk_ceiling = UINT64_MAX, disk_floor = UINT64_MAX;
+         mode_t access_mode = MODE_INVALID;
++        _cleanup_close_ int fd = -EBADF;
+         statfs_f_type_t fstype = 0;
+         struct statfs sfs;
+         struct dqblk req;
+@@ -2435,7 +2435,13 @@ static int home_get_disk_status_directory(
+         if (!path)
+                 goto finish;
+ 
+-        if (statfs(path, &sfs) < 0)
++        fd = open(path, O_CLOEXEC|O_RDONLY);
++        if (fd < 0) {
++                log_debug_errno(errno, "Failed to open '%s', ignoring: %m", path);
++                goto finish;
++        }
++
++        if (fstatfs(fd, &sfs) < 0)
+                 log_debug_errno(errno, "Failed to statfs() %s, ignoring: %m", path);
+         else {
+                 disk_free = sfs.f_bsize * sfs.f_bavail;
+@@ -2449,13 +2455,13 @@ static int home_get_disk_status_directory(
+ 
+         if (IN_SET(h->record->storage, USER_CLASSIC, USER_DIRECTORY, USER_SUBVOLUME)) {
+ 
+-                r = btrfs_is_subvol(path);
++                r = btrfs_is_subvol_fd(fd);
+                 if (r < 0)
+                         log_debug_errno(r, "Failed to determine whether %s is a btrfs subvolume: %m", path);
+                 else if (r > 0) {
+                         BtrfsQuotaInfo qi;
+ 
+-                        r = btrfs_subvol_get_subtree_quota(path, 0, &qi);
++                        r = btrfs_subvol_get_subtree_quota_fd(fd, /* subvol_id= */ 0, &qi);
+                         if (r < 0)
+                                 log_debug_errno(r, "Failed to query btrfs subtree quota, ignoring: %m");
+                         else {
+@@ -2488,7 +2494,7 @@ static int home_get_disk_status_directory(
+         }
+ 
+         if (IN_SET(h->record->storage, USER_CLASSIC, USER_DIRECTORY, USER_FSCRYPT)) {
+-                r = quotactl_path(QCMD_FIXED(Q_GETQUOTA, USRQUOTA), path, h->uid, &req);
++                r = quotactl_fd_with_fallback(fd, QCMD_FIXED(Q_GETQUOTA, USRQUOTA), h->uid, &req);
+                 if (r < 0) {
+                         if (ERRNO_IS_NOT_SUPPORTED(r)) {
+                                 log_debug_errno(r, "No UID quota support on %s.", path);
+diff --git a/src/home/homed-manager.c b/src/home/homed-manager.c
+index 6b9e4fcf11..8d0e8514bf 100644
+--- a/src/home/homed-manager.c
++++ b/src/home/homed-manager.c
+@@ -55,6 +55,7 @@
+ #include "user-record.h"
+ #include "user-util.h"
+ #include "varlink-io.systemd.UserDatabase.h"
++#include "varlink-io.systemd.service.h"
+ #include "varlink-util.h"
+ 
+ /* Where to look for private/public keys that are used to sign the user records. We are not using
+@@ -513,14 +514,15 @@ static int search_quota(uid_t uid, const char *exclude_quota_path) {
+                 struct dqblk req;
+                 struct stat st;
+ 
+-                if (stat(where, &st) < 0) {
++                _cleanup_close_ int fd = open(where, O_RDONLY|O_CLOEXEC|O_DIRECTORY);
++                if (fd < 0) {
+                         log_full_errno(errno == ENOENT ? LOG_DEBUG : LOG_ERR, errno,
+-                                       "Failed to stat %s, ignoring: %m", where);
++                                       "Failed to open '%s', ignoring: %m", where);
+                         continue;
+                 }
+ 
+-                if (major(st.st_dev) == 0) {
+-                        log_debug("Directory %s is not on a real block device, not checking quota for UID use.", where);
++                if (fstat(fd, &st) < 0) {
++                        log_error_errno(errno, "Failed to stat '%s', ignoring: %m", where);
+                         continue;
+                 }
+ 
+@@ -539,7 +541,7 @@ static int search_quota(uid_t uid, const char *exclude_quota_path) {
+ 
+                 previous_devno = st.st_dev;
+ 
+-                r = quotactl_devnum(QCMD_FIXED(Q_GETQUOTA, USRQUOTA), st.st_dev, uid, &req);
++                r = quotactl_fd_with_fallback(fd, QCMD_FIXED(Q_GETQUOTA, USRQUOTA), uid, &req);
+                 if (r < 0) {
+                         if (ERRNO_IS_NOT_SUPPORTED(r))
+                                 log_debug_errno(r, "No UID quota support on %s, ignoring.", where);
+diff --git a/src/home/homework-directory.c b/src/home/homework-directory.c
+index ff88367e43..37bdba30a3 100644
+--- a/src/home/homework-directory.c
++++ b/src/home/homework-directory.c
+@@ -153,7 +153,7 @@ int home_create_directory_or_subvolume(UserRecord *h, HomeSetup *setup, UserReco
+                                 /* Actually configure the quota. We also ignore errors here, but we do log
+                                  * about them loudly, to keep things discoverable even though we don't
+                                  * consider lacking quota support in kernel fatal. */
+-                                (void) home_update_quota_btrfs(h, d);
++                                (void) home_update_quota_btrfs(h, /* fd= */ -EBADF, d);
+                         }
+ 
+                         break;
+@@ -169,7 +169,7 @@ int home_create_directory_or_subvolume(UserRecord *h, HomeSetup *setup, UserReco
+                 if (mkdir(d, 0700) < 0)
+                         return log_error_errno(errno, "Failed to create temporary home directory %s: %m", d);
+ 
+-                (void) home_update_quota_classic(h, d);
++                (void) home_update_quota_classic(h, /* fd= */ -EBADF, d);
+                 break;
+ 
+         default:
+@@ -285,7 +285,7 @@ int home_resize_directory(
+         if (r < 0)
+                 return r;
+ 
+-        r = home_update_quota_auto(h, NULL);
++        r = home_update_quota_auto(h, setup->root_fd, /* path= */ NULL);
+         if (ERRNO_IS_NEG_NOT_SUPPORTED(r))
+                 return -ESOCKTNOSUPPORT; /* make recognizable */
+         if (r < 0)
+diff --git a/src/home/homework-fscrypt.c b/src/home/homework-fscrypt.c
+index 3a9d4ea891..6e22fbd57c 100644
+--- a/src/home/homework-fscrypt.c
++++ b/src/home/homework-fscrypt.c
+@@ -629,7 +629,7 @@ int home_create_fscrypt(
+                 nr++;
+         }
+ 
+-        (void) home_update_quota_classic(h, temporary);
++        (void) home_update_quota_classic(h, setup->root_fd, temporary);
+ 
+         r = home_shift_uid(setup->root_fd, HOME_RUNTIME_WORK_DIR, h->uid, h->uid, &mount_fd);
+         if (r > 0)
+diff --git a/src/home/homework-quota.c b/src/home/homework-quota.c
+index c9516829d8..363be87104 100644
+--- a/src/home/homework-quota.c
++++ b/src/home/homework-quota.c
+@@ -4,6 +4,7 @@
+ #include "blockdev-util.h"
+ #include "btrfs-util.h"
+ #include "errno-util.h"
++#include "fd-util.h"
+ #include "format-util.h"
+ #include "homework-quota.h"
+ #include "missing_magic.h"
+@@ -11,23 +12,32 @@
+ #include "stat-util.h"
+ #include "user-util.h"
+ 
+-int home_update_quota_btrfs(UserRecord *h, const char *path) {
++int home_update_quota_btrfs(UserRecord *h, int fd, const char *path) {
+         int r;
+ 
+         assert(h);
+         assert(path);
+ 
++        _cleanup_close_ int _fd = -EBADF;
++        if (fd < 0) {
++                _fd = open(path, O_CLOEXEC|O_RDONLY);
++                if (_fd < 0)
++                        return log_error_errno(errno, "Failed to open '%s': %m", path);
++
++                fd = _fd;
++        }
++
+         if (h->disk_size == UINT64_MAX)
+                 return 0;
+ 
+         /* If the user wants quota, enable it */
+-        r = btrfs_quota_enable(path, true);
++        r = btrfs_quota_enable_fd(fd, true);
+         if (r == -ENOTTY)
+                 return log_error_errno(r, "No btrfs quota support on subvolume %s.", path);
+         if (r < 0)
+                 return log_error_errno(r, "Failed to enable btrfs quota support on %s.", path);
+ 
+-        r = btrfs_qgroup_set_limit(path, 0, h->disk_size);
++        r = btrfs_qgroup_set_limit_fd(fd, 0, h->disk_size);
+         if (r < 0)
+                 return log_error_errno(r, "Failed to set disk quota on subvolume %s: %m", path);
+ 
+@@ -36,25 +46,27 @@ int home_update_quota_btrfs(UserRecord *h, const char *path) {
+         return 0;
+ }
+ 
+-int home_update_quota_classic(UserRecord *h, const char *path) {
++int home_update_quota_classic(UserRecord *h, int fd, const char *path) {
+         struct dqblk req;
+-        dev_t devno;
+         int r;
+ 
+         assert(h);
+         assert(uid_is_valid(h->uid));
+         assert(path);
+ 
++        _cleanup_close_ int _fd = -EBADF;
++        if (fd < 0) {
++                _fd = open(path, O_CLOEXEC|O_RDONLY);
++                if (_fd < 0)
++                        return log_error_errno(errno, "Failed to open '%s': %m", path);
++
++                fd = _fd;
++        }
++
+         if (h->disk_size == UINT64_MAX)
+                 return 0;
+ 
+-        r = get_block_device(path, &devno);
+-        if (r < 0)
+-                return log_error_errno(r, "Failed to determine block device of %s: %m", path);
+-        if (devno == 0)
+-                return log_error_errno(SYNTHETIC_ERRNO(ENODEV), "File system %s not backed by a block device.", path);
+-
+-        r = quotactl_devnum(QCMD_FIXED(Q_GETQUOTA, USRQUOTA), devno, h->uid, &req);
++        r = quotactl_fd_with_fallback(fd, QCMD_FIXED(Q_GETQUOTA, USRQUOTA), h->uid, &req);
+         if (r == -ESRCH)
+                 zero(req);
+         else if (ERRNO_IS_NEG_NOT_SUPPORTED(r))
+@@ -70,7 +82,7 @@ int home_update_quota_classic(UserRecord *h, const char *path) {
+         req.dqb_valid = QIF_BLIMITS;
+         req.dqb_bsoftlimit = req.dqb_bhardlimit = h->disk_size / QIF_DQBLKSIZE;
+ 
+-        r = quotactl_devnum(QCMD_FIXED(Q_SETQUOTA, USRQUOTA), devno, h->uid, &req);
++        r = quotactl_fd_with_fallback(fd, QCMD_FIXED(Q_SETQUOTA, USRQUOTA), h->uid, &req);
+         if (r == -ESRCH)
+                 return log_error_errno(SYNTHETIC_ERRNO(ENOTTY), "UID quota not available on %s.", path);
+         if (r < 0)
+@@ -81,7 +93,7 @@ int home_update_quota_classic(UserRecord *h, const char *path) {
+         return 0;
+ }
+ 
+-int home_update_quota_auto(UserRecord *h, const char *path) {
++int home_update_quota_auto(UserRecord *h, int fd, const char *path) {
+         struct statfs sfs;
+         int r;
+ 
+@@ -96,22 +108,31 @@ int home_update_quota_auto(UserRecord *h, const char *path) {
+                         return log_error_errno(SYNTHETIC_ERRNO(EINVAL), "Home record lacks image path.");
+         }
+ 
+-        if (statfs(path, &sfs) < 0)
++        _cleanup_close_ int _fd = -EBADF;
++        if (fd < 0) {
++                _fd = open(path, O_CLOEXEC|O_RDONLY);
++                if (_fd < 0)
++                        return log_error_errno(errno, "Failed to open '%s': %m", path);
++
++                fd = _fd;
++        }
++
++        if (fstatfs(fd, &sfs) < 0)
+                 return log_error_errno(errno, "Failed to statfs() file system: %m");
+ 
+         if (is_fs_type(&sfs, XFS_SUPER_MAGIC) ||
+             is_fs_type(&sfs, EXT4_SUPER_MAGIC))
+-                return home_update_quota_classic(h, path);
++                return home_update_quota_classic(h, fd, path);
+ 
+         if (is_fs_type(&sfs, BTRFS_SUPER_MAGIC)) {
+ 
+-                r = btrfs_is_subvol(path);
++                r = btrfs_is_subvol_fd(fd);
+                 if (r < 0)
+                         return log_error_errno(r, "Failed to test if %s is a subvolume: %m", path);
+                 if (r == 0)
+                         return log_error_errno(SYNTHETIC_ERRNO(ENOTTY), "Directory %s is not a subvolume, cannot apply quota.", path);
+ 
+-                return home_update_quota_btrfs(h, path);
++                return home_update_quota_btrfs(h, fd, path);
+         }
+ 
+         return log_error_errno(SYNTHETIC_ERRNO(ENOTTY), "Type of directory %s not known, cannot apply quota.", path);
+diff --git a/src/home/homework-quota.h b/src/home/homework-quota.h
+index a21c9ba8b1..a03510c75e 100644
+--- a/src/home/homework-quota.h
++++ b/src/home/homework-quota.h
+@@ -3,6 +3,6 @@
+ 
+ #include "user-record.h"
+ 
+-int home_update_quota_btrfs(UserRecord *h, const char *path);
+-int home_update_quota_classic(UserRecord *h, const char *path);
+-int home_update_quota_auto(UserRecord *h, const char *path);
++int home_update_quota_btrfs(UserRecord *h, int fd, const char *path);
++int home_update_quota_classic(UserRecord *h, int fd, const char *path);
++int home_update_quota_auto(UserRecord *h, int fd, const char *path);
+diff --git a/src/shared/quota-util.c b/src/shared/quota-util.c
+index 4d014f847c..a698129adf 100644
+--- a/src/shared/quota-util.c
++++ b/src/shared/quota-util.c
+@@ -1,42 +1,36 @@
+ /* SPDX-License-Identifier: LGPL-2.1-or-later */
+ 
++#include <stdint.h>
+ #include <sys/quota.h>
+ #include <sys/stat.h>
+ 
+ #include "alloc-util.h"
+ #include "blockdev-util.h"
+ #include "device-util.h"
++#include "errno-util.h"
++#include "missing_syscall.h"
+ #include "quota-util.h"
+ 
+-int quotactl_devnum(int cmd, dev_t devnum, int id, void *addr) {
+-        _cleanup_free_ char *devnode = NULL;
++int quotactl_fd_with_fallback(int fd, int cmd, int id, void *addr) {
+         int r;
+ 
+-        /* Like quotactl() but takes a dev_t instead of a path to a device node, and fixes caddr_t → void*,
+-         * like we should, today */
++        /* Emulates quotactl_fd() on older kernels that lack it. (i.e. kernels < 5.14) */
+ 
+-        r = devname_from_devnum(S_IFBLK, devnum, &devnode);
+-        if (r < 0)
++        r = RET_NERRNO(quotactl_fd(fd, cmd, id, addr));
++        if (!ERRNO_IS_NEG_NOT_SUPPORTED(r))
+                 return r;
+ 
+-        if (quotactl(cmd, devnode, id, addr) < 0)
+-                return -errno;
+-
+-        return 0;
+-}
+-
+-int quotactl_path(int cmd, const char *path, int id, void *addr) {
+         dev_t devno;
+-        int r;
+-
+-        /* Like quotactl() but takes a path to some fs object, and changes the backing file system. I.e. the
+-         * argument shouldn't be a block device but a regular file system object */
+-
+-        r = get_block_device(path, &devno);
++        r = get_block_device_fd(fd, &devno);
+         if (r < 0)
+                 return r;
+         if (devno == 0) /* Doesn't have a block device */
+                 return -ENODEV;
+ 
+-        return quotactl_devnum(cmd, devno, id, addr);
++        _cleanup_free_ char *devnode = NULL;
++        r = devname_from_devnum(S_IFBLK, devno, &devnode);
++        if (r < 0)
++                return r;
++
++        return RET_NERRNO(quotactl(cmd, devnode, id, addr));
+ }
+diff --git a/src/shared/quota-util.h b/src/shared/quota-util.h
+index 14a390ebe4..ad97eede01 100644
+--- a/src/shared/quota-util.h
++++ b/src/shared/quota-util.h
+@@ -15,5 +15,4 @@ static inline int QCMD_FIXED(uint32_t cmd, uint32_t type) {
+         return (int) QCMD(cmd, type);
+ }
+ 
+-int quotactl_devnum(int cmd, dev_t devnum, int id, void *addr);
+-int quotactl_path(int cmd, const char *path, int id, void *addr);
++int quotactl_fd_with_fallback(int fd, int cmd, int id, void *addr);
+diff --git a/units/systemd-homed.service.in b/units/systemd-homed.service.in
+index b54e5d30b2..5687fc0ed4 100644
+--- a/units/systemd-homed.service.in
++++ b/units/systemd-homed.service.in
+@@ -33,7 +33,7 @@ StateDirectory=systemd/home
+ CacheDirectory=systemd/home
+ SystemCallArchitectures=native
+ SystemCallErrorNumber=EPERM
+-SystemCallFilter=@system-service @mount quotactl
++SystemCallFilter=@system-service @mount quotactl quotactl_fd
+ TimeoutStopSec=3min
+ {{SERVICE_WATCHDOG}}
+ 

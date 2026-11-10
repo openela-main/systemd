@@ -1,0 +1,26 @@
+From 09f83785b649898bd2eb2fddf4f56bf5843758b5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 22:30:38 +0100
+Subject: [PATCH] hwdb: sensor: gp add colon to sensor dmi
+
+(cherry picked from commit 24ae53dff44bb5ca8a6ad0469c83f2c8e984a25c)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index c63a57436c..de223e3e46 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -481,7 +481,8 @@ sensor:accel-base:modalias:platform:cros-ec-accel-legacy:*
+ #########################################
+ # GP-electronic
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:bvnINSYDECorp.:bvrBYT70A.YNCHENG.WIN.007:*:svnInsyde:pnT701:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:bvnINSYDECorp.:bvrBYT70A.YNCHENG.WIN.007:*:svnInsyde:pnT701:*
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

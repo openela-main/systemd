@@ -1,0 +1,25 @@
+From 66fb573d491e479eff79866d0709d0af29f6ba46 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Fri, 6 Mar 2026 17:30:52 +0100
+Subject: [PATCH] man: fix short option for userdbctl's --from-file=
+
+(cherry picked from commit ad1c7df5f93a2602e73ba5673e483b3e5d1b5422)
+
+Related: RHEL-155021
+---
+ man/userdbctl.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/userdbctl.xml b/man/userdbctl.xml
+index 4da9762ab0..aefeb740f2 100644
+--- a/man/userdbctl.xml
++++ b/man/userdbctl.xml
+@@ -254,7 +254,7 @@
+ 
+       <varlistentry>
+         <term><option>--from-file=PATH</option></term>
+-        <term><option>-f</option></term>
++        <term><option>-F</option></term>
+ 
+         <listitem><para>When used with the <command>user</command> or <command>group</command> command, read
+         the user definition in JSON format from the specified file, instead of querying it from the

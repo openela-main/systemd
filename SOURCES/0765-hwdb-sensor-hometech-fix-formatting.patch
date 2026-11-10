@@ -1,0 +1,27 @@
+From 5df411282b1854cddb7bcf107e22fa93adf8b05b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 15:08:00 +0100
+Subject: [PATCH] hwdb: sensor: hometech fix formatting
+
+(cherry picked from commit 40d6572cdb405f9381d6b4c09fc3b6e4844b8f37)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 926e2366ff..807e7fb6ca 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -524,8 +524,8 @@ sensor:modalias:acpi:MXC6655:*:dmi:*:svnGPD:pnG1688-*:*     # MicroPC 2
+ # Nobody bothered to use Linux on any device of this manufacturer
+ # so current marks might be too general and need fixes.
+ # These values are based on Wi101 model.
+-sensor:modalias:acpi:BMA250E*:dmi:*:svnInsyde*:pni101c:*
+- ACCEL_MOUNT_MATRIX=0,1,0;-1,0,0;-1,0,0
++sensor:modalias:acpi:BMA250E:*:dmi:*:svnInsyde*:pni101c:*
++ ACCEL_MOUNT_MATRIX=0, 1, 0; -1, 0, 0; -1, 0, 0
+ 
+ #########################################
+ # HP

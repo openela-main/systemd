@@ -1,0 +1,75 @@
+From 535334a89f042af82de1284f4142c5966fbf1519 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Tue, 13 Jan 2026 15:48:56 +0900
+Subject: [PATCH] udevadm: gracefully handle when a maked file is specified to
+ udevadm verify/cat
+
+Previously, since 7cb4508c5af465ab1be1b103e6c2b613eb58e63c, if a masked
+file is specified, the commands failed.
+Let's warn that the file is masked and ignore the file.
+
+(cherry picked from commit 782569afd05b97143938ec294b5a28b4f2ffb75c)
+
+Resolves: RHEL-180917
+---
+ src/udev/udevadm-util.c       | 11 +++++++++++
+ test/units/TEST-17-UDEV.10.sh |  2 +-
+ test/units/TEST-17-UDEV.11.sh |  3 +--
+ 3 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/src/udev/udevadm-util.c b/src/udev/udevadm-util.c
+index 4aa5e6b6d7..4c6c76dd54 100644
+--- a/src/udev/udevadm-util.c
++++ b/src/udev/udevadm-util.c
+@@ -149,6 +149,12 @@ static int search_rules_file_in_conf_dirs(const char *s, const char *root, char
+                 if (!path)
+                         return log_oom();
+ 
++                r = null_or_empty_path_with_root(path, root);
++                if (r > 0) {
++                        log_warning("File '%s%s' is a mask, ignoring.", empty_to_root(root), skip_leading_slash(path));
++                        return 1; /* Found masked file. */
++                }
++
+                 r = chase(path, root, CHASE_PREFIX_ROOT | CHASE_MUST_BE_REGULAR, &resolved, /* ret_fd = */ NULL);
+                 if (r == -ENOENT)
+                         continue;
+@@ -183,6 +189,11 @@ static int search_rules_file(const char *s, const char *root, char ***files) {
+         if (r < 0)
+                 return log_error_errno(r, "Failed to chase \"%s\": %m", s);
+ 
++        if (null_or_empty(&st)) {
++                log_warning("File '%s%s' is a mask, ignoring.", empty_to_root(root), skip_leading_slash(s));
++                return 0; /* Found masked file. */
++        }
++
+         r = stat_verify_regular(&st);
+         if (r == -EISDIR) {
+                 _cleanup_strv_free_ char **files_in_dir = NULL;
+diff --git a/test/units/TEST-17-UDEV.10.sh b/test/units/TEST-17-UDEV.10.sh
+index 68d310a8e5..b81b8a9b1f 100755
+--- a/test/units/TEST-17-UDEV.10.sh
++++ b/test/units/TEST-17-UDEV.10.sh
+@@ -38,7 +38,7 @@ udevadm cat 99-systemd
+ udevadm cat 99-systemd.rules
+ udevadm cat /usr/lib/udev/rules.d/99-systemd.rules
+ udevadm cat /usr/lib/udev/rules.d
+-(! udevadm cat /dev/null)
++udevadm cat /dev/null
+ udevadm cat --config
+ udevadm cat -h
+ 
+diff --git a/test/units/TEST-17-UDEV.11.sh b/test/units/TEST-17-UDEV.11.sh
+index f0ab20e5c9..ff15343827 100755
+--- a/test/units/TEST-17-UDEV.11.sh
++++ b/test/units/TEST-17-UDEV.11.sh
+@@ -116,8 +116,7 @@ assert_1 --resolve-names=now
+ assert_1 ./nosuchfile
+ # Failed to parse rules file ./nosuchfile: No such file or directory
+ assert_1 ./nosuchfile /dev/null
+-# '/dev/null' is neither a regular file nor a directory: File descriptor in bad state
+-assert_1 /dev/null
++assert_0 /dev/null
+ 
+ rules_dir='etc/udev/rules.d'
+ mkdir -p "${rules_dir}"

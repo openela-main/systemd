@@ -1,0 +1,28 @@
+From db3cce5b588ff3f005fa3757101c328a83362dd3 Mon Sep 17 00:00:00 2001
+From: "Mario Limonciello (AMD)" <superm1@kernel.org>
+Date: Sun, 15 Feb 2026 07:28:47 -0600
+Subject: [PATCH] Tag accel devices for uaccess-render
+
+accel devices are used for things like NPUs and should be tagged
+for the logged in user just like GPUs are.
+
+(cherry picked from commit e30c044c23c1dc7ef44ccb3892d942dc256d1b02)
+
+Resolves: RHEL-153030
+---
+ rules.d/70-uaccess.rules.in | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/rules.d/70-uaccess.rules.in b/rules.d/70-uaccess.rules.in
+index 046f169e44..6ba4200ff9 100644
+--- a/rules.d/70-uaccess.rules.in
++++ b/rules.d/70-uaccess.rules.in
+@@ -47,6 +47,8 @@ SUBSYSTEM=="drm", KERNEL=="card*", TAG+="uaccess"
+ {% if GROUP_RENDER_UACCESS %}
+ # DRI render nodes
+ SUBSYSTEM=="drm", KERNEL=="renderD*", TAG+="uaccess"
++# DRI accel nodes
++SUBSYSTEM=="accel", KERNEL=="accel*", TAG+="uaccess", TAG+="xaccess-accel"
+ {% endif %}
+ {% if DEV_KVM_UACCESS %}
+ # KVM

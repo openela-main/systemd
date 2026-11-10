@@ -1,0 +1,34 @@
+From 076e745633cb18feab993371dc71e18dda00349a Mon Sep 17 00:00:00 2001
+From: Christian Hesse <mail@eworm.de>
+Date: Wed, 1 Apr 2026 16:56:19 +0200
+Subject: [PATCH] hwdb/keyboard: fix enter key for X+ piccolo
+
+The main enter key gives a code for keypad one... Map it to
+regular enter key.
+
+(cherry picked from commit 7ae0a588154ad279deaa98f82c15470684189856)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index a83c7e4b94..771b7dc43e 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -2202,6 +2202,14 @@ evdev:name:FTSC1000:00 2808:509C Keyboard:dmi:*:svnXiaomiInc:pnMipad2:*
+ evdev:atkbd:dmi:bvnTIMI*:bvr*:bd*:svnTIMI*:pnMiNoteBookPro*:*
+  KEYBOARD_KEY_72=macro
+ 
++###########################################################
++# X+
++###########################################################
++
++# X+ piccolo series 81X (Intel N305, possibly more)
++evdev:input:b0011v0001p0001eAB83*
++ KEYBOARD_KEY_9c=enter                                  # KP_enter in the main area is wrong
++
+ ###########################################################
+ # Zepto
+ ###########################################################

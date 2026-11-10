@@ -1,0 +1,26 @@
+From 1ca90e51d06c90da642c980cc573a2c6bfd027a9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 20:13:45 +0100
+Subject: [PATCH] hwdb: sensor: connect fix
+
+(cherry picked from commit 0c6770e55ea28349406902357d0018ba2d8bf252)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 2930f1090c..3ff4dab8d4 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -291,7 +291,8 @@ sensor:modalias:acpi:MXC6655:*:dmi:*:svnCHUWIInnovationAndTechnology*:pnUBookX:*
+ #########################################
+ # Connect
+ #########################################
+-sensor:modalias:acpi:KIOX000A*:dmi:*:svnConnect:pnTablet9:*
++
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnConnect:pnTablet9:*    # Connect Tablet9
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ #########################################

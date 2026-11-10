@@ -1,0 +1,29 @@
+From 479657f49b258ffed2b70d52c5d89d8da9241bc5 Mon Sep 17 00:00:00 2001
+From: Hans de Goede <johannes.goede@oss.qualcomm.com>
+Date: Sun, 12 Jul 2026 13:32:02 +0200
+Subject: [PATCH] hwdb: sensor: Add Odys Windesk X10 accel mount matrix
+
+Add a mount matrix for the accelerometer on the Odys Windesk X10 tablet to
+fix auto-rotation.
+
+(cherry picked from commit 641c7026d71d4224b06b9bd8348189d8428814d1)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index af5a81a51b..7b57c18748 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -838,6 +838,9 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svnTMAX:pnTM101W610L:*    # Solo 10 Draw.
+ sensor:modalias:acpi:BOSC0200:*:dmi:bvnINSYDECorp.:bvrODYS.FUSIONWIN12:*    # Fusion Win 12 2in1
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnAXDIAInternationalGmbH:pnWindeskX10:*    # Windesk X10
++ ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
++
+ #########################################
+ # Onda
+ #########################################

@@ -1,0 +1,33 @@
+From 20ecfb0f0a927e0fbf985b47d3504109fef997e8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Thu, 19 Mar 2026 10:07:55 +0100
+Subject: [PATCH] hwdb: keyboard: erase entry that will never match
+
+The match in "AYA NEO" will never happen as dmi modalias will wipe blank
+spaces. Even more the intended match was covered before by "AYANEO".
+
+Actually there are contributions that rely on someone giving some data
+to other someone with no test at all.
+
+Should be consider to enforce the full udevadm info --export-db as
+mandatory requirement fot this kind of contributions.
+
+(cherry picked from commit 93f1546b930d7d20946c77ab0d88717207570267)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 936b7f7392..fcc4b063fb 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -320,7 +320,6 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnAYANEO:pnKUN:pvr*
+ # multi-scancode sequence. The specific preceding codes
+ # depend on the model, but the final scancode is always the
+ # same.
+-evdev:name:AT Translated Set 2 keyboard:dmi:*:svnAYA NEO:*
+ evdev:name:AT Translated Set 2 keyboard:dmi:*:svnAYADEVICE:*
+ evdev:name:AT Translated Set 2 keyboard:dmi:*:svnAYANEO:*
+  KEYBOARD_KEY_66=f15                                    # LC (All models)

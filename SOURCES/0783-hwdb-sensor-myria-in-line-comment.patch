@@ -1,0 +1,31 @@
+From e6c3ecc26aca033a324a65f4fa149ebea5b76c81 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 01:14:43 +0100
+Subject: [PATCH] hwdb: sensor: myria in-line comment
+
+(cherry picked from commit 9804d61c080fa62be903f4001c3242a5d163a944)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index ed236126e3..7d827e20e4 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -795,12 +795,10 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnMicro-StarInternationalCo.,Ltd.:pnS100:*
+ # MYRIA
+ #########################################
+ 
+-# MY8307
+-sensor:modalias:acpi:BOSC0200*:dmi:*:svnCompletElectroServ:pnMY8307:*
++sensor:modalias:acpi:BOSC0200:*:dmi:*:svnCompletElectroServ:pnMY8307:*      # MY8307
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+-# MY8312
+-sensor:modalias:acpi:KIOX010A*:dmi:*:svnCompletElectroServSA:pnMY8312:*
++sensor:modalias:acpi:KIOX010A:*:dmi:*:svnCompletElectroServSA:pnMY8312:*    # MY8312
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
+ #########################################

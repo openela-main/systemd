@@ -1,0 +1,51 @@
+From 80d9bdbe521da71997d2de3fbf69e15589e032e5 Mon Sep 17 00:00:00 2001
+From: drhydroxide <dr.eng.hydroxide@gmail.com>
+Date: Tue, 12 May 2026 20:27:02 +0700
+Subject: [PATCH] 60-sensor.hwdb iio/accel fix for Advan Evo-X 13 (#42037)
+
+Added fix for Advan Evo-X 13 2-in-1 laptop
+
+Relevant output of `udevadm info --export-db`
+```
+P: /devices/pci0000:00/0000:00:15.2/i2c_designware.3/i2c-2/i2c-NSA2513:00/iio:device0
+M: iio:device0
+R: 0
+J: +iio:iio:device0
+U: iio
+T: iio_device
+E: DEVPATH=/devices/pci0000:00/0000:00:15.2/i2c_designware.3/i2c-2/i2c-NSA2513:00/iio:device0
+E: DEVTYPE=iio_device
+E: SUBSYSTEM=iio
+E: USEC_INITIALIZED=5462149
+E: ACCEL_MOUNT_MATRIX=-1,0,0;0,-1,0;0,0,1
+E: IIO_SENSOR_PROXY_TYPE=iio-poll-accel
+E: SYSTEMD_WANTS=iio-sensor-proxy.service
+E: TAGS=:systemd:
+E: CURRENT_TAGS=:systemd:
+```
+
+(cherry picked from commit 1f4052a2f227a1e057ff68643098bcc09e34b760)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index a3f243a660..93e4c3b494 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -109,6 +109,13 @@ sensor:modalias:acpi:KIOX0009:*:dmi:*:svnAcer:*:rnOneS1003:*    # One 10 (S1003)
+ sensor:modalias:acpi:BMA250E:*:dmi:*:svnAcer:*:rnAigner:*       # Iconia Tab 8W (W1-810)
+  ACCEL_MOUNT_MATRIX=1, 0, 0; 0, -1, 0; 0, 0, 1
+ 
++#########################################
++# Advan
++#########################################
++
++sensor:modalias:acpi:NSA2513:*:dmi*:svnADVAN*:pn1301:*          # Evo-X 13 (Intel N150)
++ ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, -1, 0; 0, 0, 1
++
+ #########################################
+ # Aquarius
+ #########################################

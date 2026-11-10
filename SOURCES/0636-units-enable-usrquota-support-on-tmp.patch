@@ -1,0 +1,24 @@
+From bc192261e4801ad27a8610fea4e10010d705bfc0 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 14 Jan 2025 16:52:04 +0100
+Subject: [PATCH] units: enable usrquota support on /tmp/
+
+(cherry picked from commit c9f805674ace3e2d611596b871c2d12190457d87)
+
+Related: RHEL-143028
+---
+ units/tmp.mount | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/units/tmp.mount b/units/tmp.mount
+index d7beaa8d14..d347af56d3 100644
+--- a/units/tmp.mount
++++ b/units/tmp.mount
+@@ -23,6 +23,7 @@ What=tmpfs
+ Where=/tmp
+ Type=tmpfs
+ Options=mode=1777,strictatime,nosuid,nodev,size=50%%,nr_inodes=1m
++GracefulOptions=usrquota
+ 
+ # Make 'systemctl enable tmp.mount' work:
+ [Install]

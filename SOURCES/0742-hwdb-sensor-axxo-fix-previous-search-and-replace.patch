@@ -1,0 +1,25 @@
+From 37f64ef1f467f01049a38a99e376992b5d8c02ef Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Fri, 13 Feb 2026 13:37:20 +0100
+Subject: [PATCH] hwdb: sensor: axxo fix previous search and replace
+
+(cherry picked from commit 0da3957a1e5c90228021b4a7da287cf3528f9794)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 63af91b971..8a858fdaf3 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -182,7 +182,7 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnASUSTeK*:*:rnTP300LJ:*       # Transform
+ #########################################
+ # Axxo
+ #########################################
+-sensor:modalias:acpi:SMO8500*:dmi:*:svnStandard:pnWCBT1011::*
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnStandard:pnWCBT1011:*
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+ #########################################

@@ -1,0 +1,45 @@
+From 9c5c86bc726d041dd8b849cdc64c5f0bda405e22 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Wed, 18 Feb 2026 21:24:16 +0100
+Subject: [PATCH] udev: rules: integration add spi bus for input dev
+
+This bus is used for internal input devices let's set the ID_BUS
+property accordingly to tag devices over SPI as internal.
+
+Follow-up for a4381cae8bfacb1160967ac499c2919da7ff8c2b.
+
+(cherry picked from commit 17a3b387ae056a1f0cafe32213a32b42fd9fa377)
+
+Related: RHEL-72703
+---
+ rules.d/60-persistent-input.rules | 1 +
+ rules.d/65-integration.rules      | 4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/rules.d/60-persistent-input.rules b/rules.d/60-persistent-input.rules
+index 5ac23c6122..7ac43a8074 100644
+--- a/rules.d/60-persistent-input.rules
++++ b/rules.d/60-persistent-input.rules
+@@ -11,6 +11,7 @@ SUBSYSTEMS=="platform", ENV{ID_BUS}="platform"
+ SUBSYSTEMS=="i2c", ENV{ID_BUS}="i2c"
+ SUBSYSTEMS=="rmi4", ENV{ID_BUS}="rmi"
+ SUBSYSTEMS=="serio", ENV{ID_BUS}="i8042"
++SUBSYSTEMS=="spi", ENV{ID_BUS}="spi"
+ 
+ SUBSYSTEMS=="usb", ENV{ID_BUS}=="", IMPORT{builtin}="usb_id"
+ 
+diff --git a/rules.d/65-integration.rules b/rules.d/65-integration.rules
+index cd3dfdc783..4517ebcfe9 100644
+--- a/rules.d/65-integration.rules
++++ b/rules.d/65-integration.rules
+@@ -6,8 +6,8 @@
+ ACTION=="remove", GOTO="integration_end"
+ ENV{ID_BUS}=="", GOTO="integration_end"
+ 
+-# ACPI, platform, PS/2, I2C, RMI and PCI devices: Internal by default.
+-ENV{ID_BUS}=="acpi|platform|i8042|i2c|rmi|pci", ENV{ID_INTEGRATION}="internal"
++# ACPI, platform, PS/2, I2C, RMI, SPI and PCI devices: Internal by default.
++ENV{ID_BUS}=="acpi|platform|i8042|i2c|rmi|spi|pci", ENV{ID_INTEGRATION}="internal"
+ 
+ # Bluetooth devices: External by default.
+ ENV{ID_BUS}=="bluetooth", ENV{ID_INTEGRATION}="external"

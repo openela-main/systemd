@@ -1,0 +1,49 @@
+From 00a47b5ca3631bf40bee4b78ff37a256a7224705 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 29 Jan 2025 15:13:35 +0100
+Subject: [PATCH] cryptenroll,repart: print a log message if no access
+ restrictions are applied to TPM-based encryption
+
+(cherry picked from commit c205840fe0c3d0fe0ed47eddd98408842e7c423a)
+
+Related: RHEL-115813
+---
+ src/cryptenroll/cryptenroll.c | 7 +++++++
+ src/repart/repart.c           | 6 ++++++
+ 2 files changed, 13 insertions(+)
+
+diff --git a/src/cryptenroll/cryptenroll.c b/src/cryptenroll/cryptenroll.c
+index c40c0d402f..3b86519a80 100644
+--- a/src/cryptenroll/cryptenroll.c
++++ b/src/cryptenroll/cryptenroll.c
+@@ -697,6 +697,13 @@ static int parse_argv(int argc, char *argv[]) {
+                         assert(arg_tpm2_public_key_pcr_mask == 0);
+                         arg_tpm2_public_key_pcr_mask = INDEX_TO_MASK(uint32_t, TPM2_PCR_KERNEL_BOOT);
+                 }
++
++                if (arg_tpm2_n_hash_pcr_values == 0 &&
++                    !arg_tpm2_pin &&
++                    arg_tpm2_public_key_pcr_mask == 0 &&
++                    !arg_tpm2_pcrlock)
++                        log_notice("Notice: enrolling TPM2 with an empty policy, i.e. without any state or access restrictions.\n"
++                                   "Use --tpm2-public-key=, --tpm2-pcrlock=, --tpm2-with-pin= or --tpm2-pcrs= to enable one or more restrictions.");
+         }
+ 
+         return 1;
+diff --git a/src/repart/repart.c b/src/repart/repart.c
+index 4994886fa4..009f563c99 100644
+--- a/src/repart/repart.c
++++ b/src/repart/repart.c
+@@ -4592,6 +4592,12 @@ static int partition_encrypt(Context *context, Partition *p, PartitionTarget *ta
+                 int keyslot;
+                 TPM2Flags flags = 0;
+ 
++                if (arg_tpm2_n_hash_pcr_values == 0 &&
++                    arg_tpm2_public_key_pcr_mask == 0 &&
++                    !arg_tpm2_pcrlock)
++                        log_notice("Notice: encrypting future partition %" PRIu64 ", locking against TPM2 with an empty policy, i.e. without any state or access restrictions.\n"
++                                   "Use --tpm2-public-key=, --tpm2-pcrlock=, or --tpm2-pcrs= to enable one or more restrictions.", p->partno);
++
+                 if (arg_tpm2_public_key_pcr_mask != 0) {
+                         r = tpm2_load_pcr_public_key(arg_tpm2_public_key, &pubkey.iov_base, &pubkey.iov_len);
+                         if (r < 0) {

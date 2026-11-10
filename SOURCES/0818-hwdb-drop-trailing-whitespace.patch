@@ -1,0 +1,37 @@
+From 5490ec6c0b82659a516a13424760997cc01a6b95 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@amutable.com>
+Date: Thu, 26 Feb 2026 18:12:03 +0100
+Subject: [PATCH] hwdb: drop trailing whitespace
+
+Fixup for f6f695ba5ac73d0a28ea88697eeeecb7dbaaa9c7 and
+774e8059590fac45614a135161dee4669945e342.
+
+(cherry picked from commit d0a4c607ad5ee422258e95652ea40b3666ef3721)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 1b7bea51da..aec0a03e86 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -496,7 +496,7 @@ sensor:modalias:acpi:KIOX000A:*:dmi:bvnINSYDECorp.:bvrBYT70A.YNCHENG.WIN.007:*:s
+ # GPD
+ #########################################
+ 
+-# TODO: Now that we can match sku, try to search if it could be a better mach. 
++# TODO: Now that we can match sku, try to search if it could be a better match.
+ # GPD win (version 1, with the X5-Z8750 CPU)
+ # Note we match all dmi fields including the BIOS date checking for all known
+ # BIOS dates, since the strings are unfortunately very generic.
+@@ -718,7 +718,7 @@ sensor:modalias:acpi:KIOX000A:*:dmi:*:svnLINX:pnVISION004:*    # Vision 8
+ #########################################
+ # Mediacom
+ #########################################
+- 
++
+ sensor:modalias:acpi:BMA250:*:dmi:*:svnMEDIACOM:pnWinPad7W10-WPW700:*    # Winpad 7.0 W700
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 

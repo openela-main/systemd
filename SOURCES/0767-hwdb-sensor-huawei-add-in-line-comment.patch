@@ -1,0 +1,26 @@
+From d4f75c91165c025930eb8e51381fb5d7d78502bc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Mon, 16 Feb 2026 23:51:20 +0100
+Subject: [PATCH] hwdb: sensor: huawei add in-line comment
+
+(cherry picked from commit eae6322e50b293b7f80f60db386d9d24ea4c1508)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index 129ade9c7f..54b5b9a857 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -557,8 +557,7 @@ sensor:modalias:i2c:bmc150_accel:dmi:*:svnHewlett-Packard:pnHPProTablet408:*:rn8
+ # HUAWEI
+ #########################################
+ 
+-# HUAWEI MateBook D 15 AMD
+-sensor:modalias:acpi:SMO8840*:dmi:*:svnHUAWEI:pnBOHK-WAX9X:*
++sensor:modalias:acpi:SMO8840:*:dmi:*:svnHUAWEI:pnBOHK-WAX9X:*    # MateBook D 15 AMD
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+  ACCEL_LOCATION=base
+ 

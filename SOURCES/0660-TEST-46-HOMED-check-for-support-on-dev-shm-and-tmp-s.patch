@@ -1,0 +1,61 @@
+From e94a7c655a3493ddcd7bb68ac1b9112f8976e57c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 29 Mar 2025 09:24:34 +0100
+Subject: [PATCH] TEST-46-HOMED: check for support on /dev/shm and /tmp
+ separately
+
+The test fails in CI. My guess was this is because the enablement of quota on
+/tmp and /dev/shm is independent. The former fs is mounted by systemd in the
+host, while the latter is mounted in the initrd, so we can end up with quota
+support on one but not the other, which is the situation I had on my laptop.
+This wasn't actually the source of the problems in CI, but it's a reasonable
+change to make anyway.
+
+While at it, test both mountpoints separately.
+
+(cherry picked from commit cb86668f2cf7bc94ed28147fab7293b4795e6ab4)
+
+Related: RHEL-143028
+---
+ test/units/TEST-46-HOMED.sh | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
+
+diff --git a/test/units/TEST-46-HOMED.sh b/test/units/TEST-46-HOMED.sh
+index 3663e53908..4af79e971c 100755
+--- a/test/units/TEST-46-HOMED.sh
++++ b/test/units/TEST-46-HOMED.sh
+@@ -652,21 +652,20 @@ getent passwd aliastest@myrealm
+ getent passwd aliastest2@myrealm
+ getent passwd aliastest3@myrealm
+ 
+-if findmnt -n -o options /tmp | grep -q usrquota ; then
+-
+-    NEWPASSWORD=quux homectl create tmpfsquota --storage=subvolume --dev-shm-limit=50K -P
+-
+-    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/urandom of=/dev/shm/quotatestfile1 bs=1024 count=30
+-    (! run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/urandom of=/dev/shm/quotatestfile2 bs=1024 count=30)
+-    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm /dev/shm/quotatestfile1 /dev/shm/quotatestfile2
+-    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/urandom of=/dev/shm/quotatestfile1 bs=1024 count=30
+-    run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm /dev/shm/quotatestfile1
+-
+-    systemctl stop user@"$(id -u tmpfsquota)".service
++NEWPASSWORD=quux homectl create tmpfsquota --storage=subvolume --dev-shm-limit=50K --tmp-limit=50K -P
++for p in /dev/shm /tmp; do
++    if findmnt -n -o options "$p" | grep -q usrquota; then
++        run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/zero of="$p/quotatestfile1" bs=1024 count=30
++        (! run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/zero of="$p/quotatestfile2" bs=1024 count=30)
++        run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm "$p/quotatestfile1" "$p/quotatestfile2"
++        run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota dd if=/dev/zero of="$p/quotatestfile1" bs=1024 count=30
++        run0 --property=SetCredential=pam.authtok.systemd-run0:quux -u tmpfsquota rm "$p/quotatestfile1"
++    fi
++done
+ 
+-    wait_for_state tmpfsquota inactive
+-    homectl remove tmpfsquota
+-fi
++systemctl stop user@"$(id -u tmpfsquota)".service
++wait_for_state tmpfsquota inactive
++homectl remove tmpfsquota
+ 
+ systemd-analyze log-level info
+ 

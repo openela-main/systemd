@@ -1,0 +1,30 @@
+From 1b4bb23aaeaa3d74cf84a6c8c4924639209ed417 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 00:34:37 +0100
+Subject: [PATCH] hwdb: sensor: lamina add comments
+
+(cherry picked from commit c610bff933c285aa049e5bd89b52e6168d84c4c0)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index b8431f953c..e8f9d3bf8d 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -631,10 +631,11 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnKDInteractive:pnKurioSmart:*:rnKDM960BCP
+ #########################################
+ # Lamina
+ #########################################
+-sensor:modalias:acpi:SMO8500*:dmi:*svnLamina*:*pnT701BR.SE:*
++
++sensor:modalias:acpi:SMO8500:*:dmi:*:svnLamina:pnT701BR.SE:*      # I8270 7"
+  ACCEL_MOUNT_MATRIX=-1, 0, 0; 0, 1, 0; 0, 0, 1
+ 
+-sensor:modalias:acpi:KIOX000A*:dmi:*svnLAMINA:pnT-1016BNORD:*
++sensor:modalias:acpi:KIOX000A:*:dmi:*:svnLAMINA:pnT-1016BNORD:*    # T-1016B.NORD
+  ACCEL_MOUNT_MATRIX=0, 1, 0; 1, 0, 0; 0, 0, 1
+ 
+ #########################################

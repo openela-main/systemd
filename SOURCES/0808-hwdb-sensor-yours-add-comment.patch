@@ -1,0 +1,26 @@
+From c20dd778524db2f120e06b700a7c6a0206f8dbfc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?David=20Santamar=C3=ADa=20Rogado?= <howl.nsp@gmail.com>
+Date: Tue, 17 Feb 2026 04:11:59 +0100
+Subject: [PATCH] hwdb: sensor: yours add comment
+
+(cherry picked from commit 5e526f2df3b53b532e407bbac7e20e27e604c0bb)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-sensor.hwdb | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/hwdb.d/60-sensor.hwdb b/hwdb.d/60-sensor.hwdb
+index e2158e455f..bccef5fbdc 100644
+--- a/hwdb.d/60-sensor.hwdb
++++ b/hwdb.d/60-sensor.hwdb
+@@ -1106,7 +1106,8 @@ sensor:modalias:acpi:SMO8500:*:dmi:*:svnWortmann_AG:pnTERRA_PAD_1061:*     # TER
+ #########################################
+ # Yours
+ #########################################
+-sensor:modalias:acpi:BMA250E*:dmi:*:svnYOURS:pnY8W81:*
++
++sensor:modalias:acpi:BMA250E:*:dmi:*:svnYOURS:pnY8W81:*    # Y8W81
+  ACCEL_MOUNT_MATRIX=0, -1, 0; -1, 0, 0; 0, 0, 1
+ 
+ #########################################

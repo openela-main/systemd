@@ -1,0 +1,30 @@
+From ee8dd04d1d9759e0266f0802b033936542a469fe Mon Sep 17 00:00:00 2001
+From: Daan De Meyer <daan.j.demeyer@gmail.com>
+Date: Mon, 13 Oct 2025 10:43:16 +0200
+Subject: [PATCH] sd-id128: Drop _sd_const_ from sd_id128_in_setv()
+
+Both the const and pure attributes disallow modifying input arguments
+but sd_id128_in_setv() clearly modifies its ap input argument by iterating
+over it with va_arg() so drop the _sd_const_ attribute from
+sd_id128_in_setv().
+
+(cherry picked from commit 675fa49f69943b0f009c973ed3d1e90afc1d88b1)
+
+Related: RHEL-155454
+---
+ src/systemd/sd-id128.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/systemd/sd-id128.h b/src/systemd/sd-id128.h
+index d63e05e71d..8d4b6aec0a 100644
+--- a/src/systemd/sd-id128.h
++++ b/src/systemd/sd-id128.h
+@@ -134,7 +134,7 @@ static __inline__ int sd_id128_is_allf(sd_id128_t a) {
+ #define SD_ID128_NULL ((const sd_id128_t) { .qwords = { 0, 0 }})
+ #define SD_ID128_ALLF ((const sd_id128_t) { .qwords = { UINT64_C(0xFFFFFFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF) }})
+ 
+-_sd_const_ static __inline__ int sd_id128_in_setv(sd_id128_t a, va_list ap) {
++static __inline__ int sd_id128_in_setv(sd_id128_t a, va_list ap) {
+         for (;;) {
+                 sd_id128_t b = va_arg(ap, sd_id128_t);
+ 

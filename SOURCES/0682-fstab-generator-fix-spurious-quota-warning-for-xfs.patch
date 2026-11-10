@@ -1,0 +1,114 @@
+From af3475cf352f8f2b32690393197d91745d8588db Mon Sep 17 00:00:00 2001
+From: Vincent Mihalkovic <vmihalko@redhat.com>
+Date: Mon, 11 May 2026 13:52:49 +0200
+Subject: [PATCH] fstab-generator: fix spurious quota warning for xfs
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Filesystems like xfs, btrfs, gfs2 and ocfs2 handle quotas internally
+and do not need external quotacheck/quotaon services. When usrquota or
+grpquota mount options are used in fstab for these filesystems,
+generator_hook_up_quotacheck() falls through to the !fstype_needs_quota()
+branch and emits a misleading warning that quotas are "not supported"
+when they actually work fine — the kernel handles them internally.
+
+Add fstype_has_internal_quota() to return early with a debug message,
+and adopt a tri-state return convention so the caller skips quotaon
+when quotacheck was not needed.
+
+The buggy code path was introduced in #24824 and #24880.
+
+Co-developed-by: Claude Opus 4.6 <noreply@anthropic.com>
+(cherry picked from commit b5d536206993d0e3057c4cd1b9f46af7547f9e31)
+
+Resolves: RHEL-169955
+---
+ src/basic/mountpoint-util.c           | 11 +++++++++++
+ src/basic/mountpoint-util.h           |  1 +
+ src/fstab-generator/fstab-generator.c |  2 +-
+ src/shared/generator.c                | 13 ++++++++++---
+ 4 files changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/src/basic/mountpoint-util.c b/src/basic/mountpoint-util.c
+index 76f1a6d6b4..2361f4f294 100644
+--- a/src/basic/mountpoint-util.c
++++ b/src/basic/mountpoint-util.c
+@@ -479,6 +479,17 @@ bool fstype_needs_quota(const char *fstype) {
+                           "f2fs");
+ }
+ 
++bool fstype_has_internal_quota(const char *fstype) {
++        /* These filesystems have built-in quota support and do not need
++         * external quotacheck/quotaon services - see the "nothing needed"
++         * entries in fstype_needs_quota() above. */
++        return STR_IN_SET(fstype,
++                          "xfs",
++                          "gfs2",
++                          "ocfs2",
++                          "btrfs");
++}
++
+ bool fstype_is_api_vfs(const char *fstype) {
+         assert(fstype);
+ 
+diff --git a/src/basic/mountpoint-util.h b/src/basic/mountpoint-util.h
+index c01f290952..e703c67a80 100644
+--- a/src/basic/mountpoint-util.h
++++ b/src/basic/mountpoint-util.h
+@@ -57,6 +57,7 @@ static inline int path_is_mount_point(const char *path) {
+ 
+ bool fstype_is_network(const char *fstype);
+ bool fstype_needs_quota(const char *fstype);
++bool fstype_has_internal_quota(const char *fstype);
+ bool fstype_is_api_vfs(const char *fstype);
+ bool fstype_is_blockdev_backed(const char *fstype);
+ bool fstype_is_ro(const char *fsype);
+diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
+index 5c26c52666..bfe6c0012f 100644
+--- a/src/fstab-generator/fstab-generator.c
++++ b/src/fstab-generator/fstab-generator.c
+@@ -724,7 +724,7 @@ static int add_mount(
+                 if (r < 0) {
+                         if (r != -EOPNOTSUPP)
+                                 return r;
+-                } else {
++                } else if (r > 0) {
+                         r = generator_hook_up_quotaon(dest, where, target_unit);
+                         if (r < 0)
+                                 return r;
+diff --git a/src/shared/generator.c b/src/shared/generator.c
+index 9011532d6b..5ad5bc9492 100644
+--- a/src/shared/generator.c
++++ b/src/shared/generator.c
+@@ -725,12 +725,18 @@ int generator_hook_up_quotacheck(
+ 
+         if (isempty(fstype) || streq(fstype, "auto"))
+                 return log_warning_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "Couldn't determine filesystem type for %s, quota cannot be activated", what);
++        if (fstype_has_internal_quota(fstype)) {
++                log_debug("%s handles quotas internally, skipping quotacheck/quotaon setup for %s", fstype, what);
++                return 0;
++        }
+         if (!fstype_needs_quota(fstype))
+                 return log_warning_errno(SYNTHETIC_ERRNO(EOPNOTSUPP), "Quota was requested for %s, but not supported, ignoring: %s", what, fstype);
+ 
+         /* quotacheck unit for system root */
+-        if (path_equal(where, "/"))
+-                return generator_add_symlink(dir, SPECIAL_LOCAL_FS_TARGET, "wants", SYSTEM_DATA_UNIT_DIR "/" SPECIAL_QUOTACHECK_ROOT_SERVICE);
++        if (path_equal(where, "/")) {
++                r = generator_add_symlink(dir, SPECIAL_LOCAL_FS_TARGET, "wants", SYSTEM_DATA_UNIT_DIR "/" SPECIAL_QUOTACHECK_ROOT_SERVICE);
++                return r < 0 ? r : 1;
++        }
+ 
+         r = unit_name_path_escape(where, &instance);
+         if (r < 0)
+@@ -746,7 +752,8 @@ int generator_hook_up_quotacheck(
+         if (r < 0)
+                 return log_error_errno(r, "Failed to make unit name from path '%s': %m", where);
+ 
+-        return generator_add_symlink_full(dir, where_unit, "wants", SYSTEM_DATA_UNIT_DIR "/" SPECIAL_QUOTACHECK_SERVICE, instance);
++        r = generator_add_symlink_full(dir, where_unit, "wants", SYSTEM_DATA_UNIT_DIR "/" SPECIAL_QUOTACHECK_SERVICE, instance);
++        return r < 0 ? r : 1;
+ }
+ 
+ int generator_hook_up_quotaon(

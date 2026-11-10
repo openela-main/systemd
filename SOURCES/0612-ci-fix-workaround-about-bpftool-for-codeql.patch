@@ -1,4 +1,4 @@
-From d2d53b7781ffdc4d856a5a244d3f8a462e0ecff8 Mon Sep 17 00:00:00 2001
+From 9455ccb53a8cf50d9b7026e297f8afd8847a57e2 Mon Sep 17 00:00:00 2001
 From: Yu Watanabe <watanabe.yu+github@gmail.com>
 Date: Sat, 18 Oct 2025 10:39:13 +0900
 Subject: [PATCH] ci: fix workaround about bpftool for codeql
@@ -7,7 +7,7 @@ Follow-up for e9fd2bbfffc5c2c7cd1ea0a288d5435fc15e387f.
 
 (cherry picked from commit a6836cfa0bdf1bb1fcf05686c5af3f2b5ad97f6b)
 
-Related: RHEL-115001
+Related: RHEL-155454
 ---
  .github/workflows/codeql.yml | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

@@ -1,0 +1,89 @@
+From e6ed6b793155ab22ee920b0cf3db4e1ada8df9c6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 14 Oct 2025 11:17:27 +0200
+Subject: [PATCH] libsystemd: drop "const" decorators on public inline
+ functions
+
+The point of the "const" attribute is to give the compiler hints about
+behaviour of functions if it only has the function prototype but no body
+around. But inline functions are the ones where the compiler *always*
+has the body around, hence the "const" decorator is really just noise:
+the compuler can determine the constness on its own, just by looking at
+the code.
+
+Hence, drop the decorators, it's just noise. And a source of errors, as
+675fa49f69943b0f009c973ed3d1e90afc1d88b1 has shown.
+
+Follow-up for: #39289
+
+(cherry picked from commit 86d9498c8cf7aa1584dae85f3e1a570e44a81cfc)
+
+Related: RHEL-155454
+---
+ src/systemd/_sd-common.h | 4 ----
+ src/systemd/sd-id128.h   | 8 ++++----
+ src/systemd/sd-json.h    | 2 +-
+ 3 files changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/src/systemd/_sd-common.h b/src/systemd/_sd-common.h
+index 5792dd8106..dbe9fa035e 100644
+--- a/src/systemd/_sd-common.h
++++ b/src/systemd/_sd-common.h
+@@ -45,10 +45,6 @@ typedef void (*_sd_destroy_t)(void *userdata);
+ #  define _sd_pure_ __attribute__((__pure__))
+ #endif
+ 
+-#ifndef _sd_const_
+-#  define _sd_const_ __attribute__((__const__))
+-#endif
+-
+ /* Note that strictly speaking __deprecated__ has been available before GCC 6. However, starting with GCC 6
+  * it also works on enum values, which we are interested in. Since this is a developer-facing feature anyway
+  * (as opposed to build engineer-facing), let's hence conditionalize this to gcc 6, given that the developers
+diff --git a/src/systemd/sd-id128.h b/src/systemd/sd-id128.h
+index 7be690400d..d63e05e71d 100644
+--- a/src/systemd/sd-id128.h
++++ b/src/systemd/sd-id128.h
+@@ -117,17 +117,17 @@ int sd_id128_get_invocation_app_specific(sd_id128_t app_id, sd_id128_t *ret);
+ #define SD_ID128_MAKE_UUID_STR(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p) \
+         #a #b #c #d "-" #e #f "-" #g #h "-" #i #j "-" #k #l #m #n #o #p
+ 
+-_sd_const_ static __inline__ int sd_id128_equal(sd_id128_t a, sd_id128_t b) {
++static __inline__ int sd_id128_equal(sd_id128_t a, sd_id128_t b) {
+         return a.qwords[0] == b.qwords[0] && a.qwords[1] == b.qwords[1];
+ }
+ 
+ int sd_id128_string_equal(const char *s, sd_id128_t id);
+ 
+-_sd_const_ static __inline__ int sd_id128_is_null(sd_id128_t a) {
++static __inline__ int sd_id128_is_null(sd_id128_t a) {
+         return a.qwords[0] == 0 && a.qwords[1] == 0;
+ }
+ 
+-_sd_const_ static __inline__ int sd_id128_is_allf(sd_id128_t a) {
++static __inline__ int sd_id128_is_allf(sd_id128_t a) {
+         return a.qwords[0] == UINT64_C(0xFFFFFFFFFFFFFFFF) && a.qwords[1] == UINT64_C(0xFFFFFFFFFFFFFFFF);
+ }
+ 
+@@ -146,7 +146,7 @@ _sd_const_ static __inline__ int sd_id128_in_setv(sd_id128_t a, va_list ap) {
+         }
+ }
+ 
+-_sd_const_ static __inline__ int sd_id128_in_set_sentinel(sd_id128_t a, ...) {
++static __inline__ int sd_id128_in_set_sentinel(sd_id128_t a, ...) {
+         va_list ap;
+         int r;
+ 
+diff --git a/src/systemd/sd-json.h b/src/systemd/sd-json.h
+index 33817f2327..ac5a1b13e3 100644
+--- a/src/systemd/sd-json.h
++++ b/src/systemd/sd-json.h
+@@ -339,7 +339,7 @@ int sd_json_variant_strv(sd_json_variant *v, char ***ret);
+ int sd_json_variant_unbase64(sd_json_variant *v, void **ret, size_t *ret_size);
+ int sd_json_variant_unhex(sd_json_variant *v, void **ret, size_t *ret_size);
+ 
+-_sd_const_ static __inline__ int sd_json_format_enabled(sd_json_format_flags_t flags) {
++static __inline__ int sd_json_format_enabled(sd_json_format_flags_t flags) {
+         return !(flags & SD_JSON_FORMAT_OFF);
+ }
+ 

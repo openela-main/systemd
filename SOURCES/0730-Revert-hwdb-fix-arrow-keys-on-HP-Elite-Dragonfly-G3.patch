@@ -1,0 +1,66 @@
+From 86d45883c6e712ddcaf6927ae429dc2cefa5b2f9 Mon Sep 17 00:00:00 2001
+From: Han Sol Jin <hansol@hansol.ca>
+Date: Mon, 9 Feb 2026 02:23:03 -0800
+Subject: [PATCH] Revert "hwdb: fix arrow keys on HP Elite Dragonfly G3"
+
+Prior to this commit, the behaviour looked like this:
+
+| Keypress | Result       |
+| -------- | ------------ |
+| Up       | KEY_PAGEUP   |
+| Down     | KEY_PAGEDOWN |
+| Left     | KEY_LEFT     |
+| Right    | KEY_RIGHT    |
+| Fn+Up    | KEY_UP       |
+| Fn+Down  | KEY_DOWN     |
+| Fn+Left  | KEY_HOME     |
+| Fn+Right | KEY_END      |
+
+This commit would fix it so that PGUP/PGDN would also require the Fn
+key so that the arrow keys behave identically depending on whether Fn
+was pressed.
+
+Presumably after a BIOS update, HP seems to have fixed the order. This
+now means this commit is now behaving exactly as the table above.
+
+Revert the commit to restore the intended behaviour:
+
+| Keypress | Result       |
+| -------- | ------------ |
+| Up       | KEY_UP       |
+| Down     | KEY_DOWN     |
+| Left     | KEY_LEFT     |
+| Right    | KEY_RIGHT    |
+| Fn+Up    | KEY_PAGEUP   |
+| Fn+Down  | KEY_PAGEDOWN |
+| Fn+Left  | KEY_HOME     |
+| Fn+Right | KEY_END      |
+
+This reverts commit 4fd7c712dcba3c4ed7183ba327d0b88d9b0be9bb.
+
+Signed-off-by: Han Sol Jin <hansol@hansol.ca>
+(cherry picked from commit 09b9466e8c6fa8a898769bbbebda513b05251054)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 4244ebc5ab..2af76e1ca2 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -931,13 +931,6 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnHP*:pnHPEliteDragonflyG2*:pvr*
+ evdev:name:Intel HID events:dmi:bvn*:bvr*:bd*:svnHP*:pnHPEliteDragonflyG2*:pvr*
+  KEYBOARD_KEY_08=unknown                                # rfkill is also reported by HP Wireless hotkeys
+ 
+-# HP Elite Dragonfly G3
+-evdev:atkbd:dmi:bvn*:bvr*:bd*:svnHP:pnHPEliteDragonfly13.5inchG3NotebookPC:pvr*
+- KEYBOARD_KEY_c9=up
+- KEYBOARD_KEY_d1=down
+- KEYBOARD_KEY_c8=pageup
+- KEYBOARD_KEY_d0=pagedown
+-
+ # HP 430 Programmable Wireless Keypad
+ evdev:input:b0005v03F0p854Ae044C*
+  KEYBOARD_KEY_700f3=macro1

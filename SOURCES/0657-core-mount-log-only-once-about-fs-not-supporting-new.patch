@@ -1,0 +1,30 @@
+From 84f15472bcaa058a19bd63434cfb74eeb91d9cc6 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Tue, 11 Feb 2025 19:44:59 +0100
+Subject: [PATCH] core/mount: log only once about fs not supporting new mount
+ API
+
+(cherry picked from commit f565e5a94a778979172705e8c3a8581ec9f15865)
+
+Related: RHEL-143028
+---
+ src/core/mount.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 037902c91c..530d567a96 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1086,6 +1086,12 @@ static int mount_apply_graceful_options(Mount *m, const MountParameters *p, char
+                         return r;
+ 
+                 r = mount_option_supported(p->fstype, k ?: *o, v);
++                if (r == -EAGAIN) {
++                        log_unit_warning_errno(UNIT(m), r,
++                                               "x-systemd.graceful-option= used but not supported by file system %s, suppressing all.",
++                                               p->fstype);
++                        break;
++                }
+                 if (r < 0)
+                         log_unit_warning_errno(UNIT(m), r,
+                                                "x-systemd.graceful-option=%s specified, but cannot determine availability, suppressing: %m", *o);

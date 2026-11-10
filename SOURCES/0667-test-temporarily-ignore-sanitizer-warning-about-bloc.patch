@@ -1,0 +1,71 @@
+From 6ab021ea77231db4e983db6ad6263e261731d680 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Thu, 23 Apr 2026 15:11:01 +0200
+Subject: [PATCH] test: temporarily ignore sanitizer warning about blocked
+ ptrace()
+
+LLVM 22 introduced an additional check [0] for ptrace() syscall when
+invoking sanitizers [0] which currently produces a false-positive
+warning when running some of our units under sanitizers:
+
+[   47.524680] systemd-timedated[740]: ==740==WARNING: ptrace appears to be blocked (is seccomp enabled?). LeakSanitizer may hang.
+[   47.524680] systemd-timedated[740]: ==740==Child exited with signal 15.
+...
+[ 1555.734223] systemd-oomd[93]: ==93==WARNING: ptrace appears to be blocked (is seccomp enabled?). LeakSanitizer may hang.
+[ 1555.734223] systemd-oomd[93]: ==93==Child exited with signal 15.
+...
+
+It is a false positive because we disable the seccomp filters
+system-wide for our units in the sanitizer jobs.
+
+Now, from what I've seen so far this happens only in
+Type=notify(-reload) units that also utilize bus_event_loop_with_idle().
+This, combined with the fact that the ptrace()-check child process from
+[0] checks only if the child process was killed by _any_ signal, means
+that if the systemd unit exits on its own after becoming idle and then
+something sends it SIGTERM (either via explicit `systemctl stop` or
+during system shutdown), this SIGTERM might hit the ptrace()-check child
+process from the sanitizer handler (as we also send the signal to all
+processes in the target cgroup), which the parent process then
+mistakenly evaluates as a blocked ptrace() syscall, even though the
+check process wasn't killed by SIGSYS.
+
+I filed this as [1] to the LLVM project, but let's also temporarily
+ignore the warning in the sanitizer report processing, as it currently
+causes annoying test fails.
+
+[0] https://github.com/llvm/llvm-project/commit/a708b4bf21d7c2298224cdacf7d424abc3c8fed4
+[1] https://github.com/llvm/llvm-project/issues/193714
+
+(cherry picked from commit 445f9805489a575c9b1bc74daa173c4fdf9b1bf7)
+
+Related: RHEL-155454
+---
+ test/integration-test-wrapper.py | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/test/integration-test-wrapper.py b/test/integration-test-wrapper.py
+index 3e0cbbb678..064645223e 100755
+--- a/test/integration-test-wrapper.py
++++ b/test/integration-test-wrapper.py
+@@ -136,7 +136,19 @@ def process_sanitizer_report(args: argparse.Namespace, journal_file: Path) -> bo
+     fatal_end = re.compile(r'==[0-9]+==HINT:\s+\w+Sanitizer')
+ 
+     # 'Standard' errors:
+-    standard_begin = re.compile(r'([0-9]+: runtime error|==[0-9]+==.+?\w+Sanitizer)')
++    #
++    # TODO: there's currently a bug in LLVM 22 due to which certain systemd
++    # units can throw the following warning:
++    # [ 3366.747202] systemd-oomd[93]: ==93==WARNING: ptrace appears to be blocked (is seccomp enabled?).
++    #                LeakSanitizer may hang.
++    # [ 3366.747202] systemd-oomd[93]: ==93==Child exited with signal 15.
++    #
++    # which is then picked up by the following regex and causes the test to
++    # fail. Let's, temporarily, exclude this warning from the regex to mitigate
++    # this.
++    #
++    # See: https://github.com/llvm/llvm-project/issues/193714
++    standard_begin = re.compile(r'([0-9]+: runtime error|==[0-9]+==(?!WARNING: ptrace).+?\w+Sanitizer)')
+     standard_end = re.compile(r'SUMMARY:\s+(\w+)Sanitizer')
+ 
+     # extract COMM

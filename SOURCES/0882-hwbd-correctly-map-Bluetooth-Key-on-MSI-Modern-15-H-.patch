@@ -1,0 +1,37 @@
+From 1c91231e2cf6b7654420cefe847eb61c63251084 Mon Sep 17 00:00:00 2001
+From: Fede2782 <78815152+Fede2782@users.noreply.github.com>
+Date: Fri, 26 Jun 2026 10:06:26 +0200
+Subject: [PATCH] hwbd: correctly map Bluetooth Key on MSI Modern 15 H AI C1MG
+ laptop
+
+Previously the key was unknown so add the correct mapping as it does not follow the general
+case for MSI Laptops.
+
+  [  192.562000] atkbd serio0: Unknown key released (translated set 2, code 0xd7 on isa0060/serio0).
+  [  192.562011] atkbd serio0: Use 'setkeycodes e057 <keycode>' to make it known.
+
+Add it currently as a definition specific for this model but can be generalized to other MSI
+Laptops if this issue is present also elsewhere.
+
+(cherry picked from commit 313986f21d662fca33befe641c3ca4bfa53ed70f)
+
+Related: RHEL-72703
+---
+ hwdb.d/60-keyboard.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/hwdb.d/60-keyboard.hwdb b/hwdb.d/60-keyboard.hwdb
+index 5ada02b285..00cce0d255 100644
+--- a/hwdb.d/60-keyboard.hwdb
++++ b/hwdb.d/60-keyboard.hwdb
+@@ -1670,6 +1670,10 @@ evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMicro-Star*:pn*Modern*:*
+  KEYBOARD_KEY_97=unknown                                # Lid close
+  KEYBOARD_KEY_98=unknown                                # Lid open
+ 
++# Keymaps for MSI Modern 15 H AI C1MG
++evdev:atkbd:dmi:bvn*:bvr*:bd*:svnMicro-Star*:pnModern15HAIC1MG:*
++ KEYBOARD_KEY_d7=bluetooth                              # Fn+F6 Bluetooth key
++
+ # MSI Claw A1M, MSI Claw 7 AI+ A2VM, MSI Claw 8 AI+ A2VM, MSI Claw A8 BZ2EM
+ evdev:name:AT Translated Set 2 keyboard:dmi:*:rvnMicro-StarInternationalCo.,Ltd.:rnMS-1T41:*
+ evdev:name:AT Translated Set 2 keyboard:dmi:*:rvnMicro-StarInternationalCo.,Ltd.:rnMS-1T42:*

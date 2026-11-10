@@ -1,0 +1,30 @@
+From 4f35c0ad6df5636909694ad362e86b8a896433e4 Mon Sep 17 00:00:00 2001
+From: AsciiWolf <mail@asciiwolf.com>
+Date: Tue, 17 Feb 2026 15:04:38 +0100
+Subject: [PATCH] hwdb: add Vernier Go Direct sensors
+
+(cherry picked from commit b170564b7bc17913f1573eaf66d9eb06518d0c16)
+
+Related: RHEL-72703
+---
+ hwdb.d/70-analyzers.hwdb | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hwdb.d/70-analyzers.hwdb b/hwdb.d/70-analyzers.hwdb
+index f56ee97739..d023bbefc2 100644
+--- a/hwdb.d/70-analyzers.hwdb
++++ b/hwdb.d/70-analyzers.hwdb
+@@ -94,6 +94,13 @@ usb:v1679p3001*
+ usb:v1679p6003*
+  ID_SIGNAL_ANALYZER=1
+ 
++###########################################################
++# Vernier
++###########################################################
++# Go Direct sensors
++usb:v08F7p0010*
++ ID_SIGNAL_ANALYZER=1
++
+ ###########################################################
+ # XGecu
+ ###########################################################
