@@ -1,0 +1,423 @@
+From 219f89250a9d41c357eb1224f624ae3cf08cf4e9 Mon Sep 17 00:00:00 2001
+From: Richard Phibel <rphibel@googlemail.com>
+Date: Thu, 6 Jul 2023 14:33:52 +0200
+Subject: [PATCH] service: add new RestartMode option
+
+When this option is set to direct, the service restarts without entering a failed
+state. Dependent units are not notified of transitory failure.
+
+This is useful for the following use case:
+
+We have a target with Requires=my-service, After=my-service.
+my-service.service is a oneshot service and has Restart=on-failure in
+its definition.
+
+my-service.service can get stuck for various reasons and time out, in
+which case it is restarted. Currently, when it fails the first time, the
+target fails, even though my-service is restarted.
+
+The behavior we're looking for is that until my-service is not restarted
+anymore, the target stays pending waiting for my-service.service to
+start successfully or fail without being restarted anymore.
+
+(cherry picked from commit e568fea9fcd2189d4366df254a8a4031dc433762)
+
+Resolves: RHEL-137251
+---
+ man/org.freedesktop.systemd1.xml              |  6 +++++
+ man/systemd.service.xml                       | 22 +++++++++++++++++++
+ src/core/dbus-service.c                       |  6 +++++
+ src/core/load-fragment-gperf.gperf.in         |  1 +
+ src/core/load-fragment.c                      |  2 ++
+ src/core/load-fragment.h                      |  1 +
+ src/core/service.c                            | 10 ++++++++-
+ src/core/service.h                            | 11 ++++++++++
+ src/shared/bus-unit-util.c                    |  1 +
+ src/test/test-tables.c                        |  1 +
+ .../fails-on-restart-restartdirect.service    | 11 ++++++++++
+ .../fails-on-restart-restartdirect.target     |  3 +++
+ .../fails-on-restart.service                  | 11 ++++++++++
+ .../fails-on-restart.target                   |  3 +++
+ .../succeeds-on-restart-restartdirect.service |  6 +++++
+ .../succeeds-on-restart-restartdirect.target  |  3 +++
+ .../succeeds-on-restart.service               |  6 +++++
+ .../testsuite-03.units/succeeds-on-restart.sh | 10 +++++++++
+ .../succeeds-on-restart.target                |  3 +++
+ test/units/testsuite-03.sh                    | 13 +++++++++++
+ 20 files changed, 129 insertions(+), 1 deletion(-)
+ create mode 100644 test/testsuite-03.units/fails-on-restart-restartdirect.service
+ create mode 100755 test/testsuite-03.units/fails-on-restart-restartdirect.target
+ create mode 100644 test/testsuite-03.units/fails-on-restart.service
+ create mode 100755 test/testsuite-03.units/fails-on-restart.target
+ create mode 100755 test/testsuite-03.units/succeeds-on-restart-restartdirect.service
+ create mode 100755 test/testsuite-03.units/succeeds-on-restart-restartdirect.target
+ create mode 100755 test/testsuite-03.units/succeeds-on-restart.service
+ create mode 100755 test/testsuite-03.units/succeeds-on-restart.sh
+ create mode 100755 test/testsuite-03.units/succeeds-on-restart.target
+
+diff --git a/man/org.freedesktop.systemd1.xml b/man/org.freedesktop.systemd1.xml
+index e7b9b0a127..8298b726b7 100644
+--- a/man/org.freedesktop.systemd1.xml
++++ b/man/org.freedesktop.systemd1.xml
+@@ -2524,6 +2524,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+       readonly s Restart = '...';
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
++      readonly s RestartMode = '...';
++      @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+       readonly s PIDFile = '...';
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+       readonly s NotifyAccess = '...';
+@@ -3128,6 +3130,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
+ 
+     <!--property Restart is not documented!-->
+ 
++    <!--property RestartMode is not documented!-->
++
+     <!--property PIDFile is not documented!-->
+ 
+     <!--property NotifyAccess is not documented!-->
+@@ -3666,6 +3670,8 @@ node /org/freedesktop/systemd1/unit/avahi_2ddaemon_2eservice {
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="Restart"/>
+ 
++    <variablelist class="dbus-property" generated="True" extra-ref="RestartMode"/>
++
+     <variablelist class="dbus-property" generated="True" extra-ref="PIDFile"/>
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="NotifyAccess"/>
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index ae54332440..d2d6f589da 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -941,6 +941,28 @@
+         </listitem>
+       </varlistentry>
+ 
++      <varlistentry>
++        <term><varname>RestartMode=</varname></term>
++
++        <listitem>
++          <para>Takes a string value that specifies how a service should restart:
++            <itemizedlist>
++              <listitem><para>If set to <option>normal</option> (the default), the service restarts by
++              going through a failed/inactive state.</para></listitem>
++
++              <listitem><para>If set to <option>direct</option>, the service transitions to the activating
++              state directly during auto-restart, skipping failed/inactive state.
++              <varname>ExecStopPost=</varname> is invoked.
++              <varname>OnSuccess=</varname> and <varname>OnFailure=</varname> are skipped.</para></listitem>
++            </itemizedlist>
++          </para>
++
++          <para>This option is useful in cases where a dependency can fail temporarily
++          but we don't want these temporary failures to make the dependent units fail.
++          When this option is set to <option>direct</option>, dependent units are not notified of these temporary failures.</para>
++        </listitem>
++      </varlistentry>
++
+       <varlistentry>
+         <term><varname>SuccessExitStatus=</varname></term>
+ 
+diff --git a/src/core/dbus-service.c b/src/core/dbus-service.c
+index 3d130db66a..f8bf455707 100644
+--- a/src/core/dbus-service.c
++++ b/src/core/dbus-service.c
+@@ -31,6 +31,7 @@ static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_exit_type, service_exit_type, S
+ static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_result, service_result, ServiceResult);
+ static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_restart, service_restart, ServiceRestart);
+ static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_notify_access, notify_access, NotifyAccess);
++static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_restart_mode, service_restart_mode, ServiceRestartMode);
+ static BUS_DEFINE_PROPERTY_GET_ENUM(property_get_emergency_action, emergency_action, EmergencyAction);
+ static BUS_DEFINE_PROPERTY_GET(property_get_timeout_abort_usec, "t", Service, service_timeout_abort_usec);
+ static BUS_DEFINE_PROPERTY_GET(property_get_watchdog_usec, "t", Service, service_get_watchdog_usec);
+@@ -193,6 +194,7 @@ const sd_bus_vtable bus_service_vtable[] = {
+         SD_BUS_PROPERTY("Type", "s", property_get_type, offsetof(Service, type), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("ExitType", "s", property_get_exit_type, offsetof(Service, exit_type), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("Restart", "s", property_get_restart, offsetof(Service, restart), SD_BUS_VTABLE_PROPERTY_CONST),
++        SD_BUS_PROPERTY("RestartMode", "s", property_get_restart_mode, offsetof(Service, restart_mode), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("PIDFile", "s", NULL, offsetof(Service, pid_file), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("NotifyAccess", "s", property_get_notify_access, offsetof(Service, notify_access), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("RestartUSec", "t", bus_property_get_usec, offsetof(Service, restart_usec), SD_BUS_VTABLE_PROPERTY_CONST),
+@@ -372,6 +374,7 @@ static BUS_DEFINE_SET_TRANSIENT_PARSE(notify_access, NotifyAccess, notify_access
+ static BUS_DEFINE_SET_TRANSIENT_PARSE(service_type, ServiceType, service_type_from_string);
+ static BUS_DEFINE_SET_TRANSIENT_PARSE(service_exit_type, ServiceExitType, service_exit_type_from_string);
+ static BUS_DEFINE_SET_TRANSIENT_PARSE(service_restart, ServiceRestart, service_restart_from_string);
++static BUS_DEFINE_SET_TRANSIENT_PARSE(service_restart_mode, ServiceRestartMode, service_restart_mode_from_string);
+ static BUS_DEFINE_SET_TRANSIENT_PARSE(oom_policy, OOMPolicy, oom_policy_from_string);
+ static BUS_DEFINE_SET_TRANSIENT_STRING_WITH_CHECK(bus_name, sd_bus_service_name_is_valid);
+ static BUS_DEFINE_SET_TRANSIENT_PARSE(timeout_failure_mode, ServiceTimeoutFailureMode, service_timeout_failure_mode_from_string);
+@@ -511,6 +514,9 @@ static int bus_service_set_transient_property(
+         if (streq(name, "Restart"))
+                 return bus_set_transient_service_restart(u, name, &s->restart, message, flags, error);
+ 
++        if (streq(name, "RestartMode"))
++                return bus_set_transient_service_restart_mode(u, name, &s->restart_mode, message, flags, error);
++
+         if (streq(name, "RestartPreventExitStatus"))
+                 return bus_set_transient_exit_status(u, name, &s->restart_prevent_status, message, flags, error);
+ 
+diff --git a/src/core/load-fragment-gperf.gperf.in b/src/core/load-fragment-gperf.gperf.in
+index 53089d5590..602cd2befd 100644
+--- a/src/core/load-fragment-gperf.gperf.in
++++ b/src/core/load-fragment-gperf.gperf.in
+@@ -407,6 +407,7 @@ Service.RebootArgument,                  config_parse_unit_string_printf,
+ Service.Type,                            config_parse_service_type,                   0,                                  offsetof(Service, type)
+ Service.ExitType,                        config_parse_service_exit_type,              0,                                  offsetof(Service, exit_type)
+ Service.Restart,                         config_parse_service_restart,                0,                                  offsetof(Service, restart)
++Service.RestartMode,                     config_parse_service_restart_mode,           0,                                  offsetof(Service, restart_mode)
+ Service.PermissionsStartOnly,            config_parse_bool,                           0,                                  offsetof(Service, permissions_start_only)
+ Service.RootDirectoryStartOnly,          config_parse_bool,                           0,                                  offsetof(Service, root_directory_start_only)
+ Service.RemainAfterExit,                 config_parse_bool,                           0,                                  offsetof(Service, remain_after_exit)
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 2699ccf6ef..17863d7139 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -140,6 +140,7 @@ DEFINE_CONFIG_PARSE_ENUM(config_parse_runtime_preserve_mode, exec_preserve_mode,
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_service_type, service_type, ServiceType, "Failed to parse service type");
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_service_exit_type, service_exit_type, ServiceExitType, "Failed to parse service exit type");
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_service_restart, service_restart, ServiceRestart, "Failed to parse service restart specifier");
++DEFINE_CONFIG_PARSE_ENUM(config_parse_service_restart_mode, service_restart_mode, ServiceRestartMode, "Failed to parse service restart mode");
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_service_timeout_failure_mode, service_timeout_failure_mode, ServiceTimeoutFailureMode, "Failed to parse timeout failure mode");
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_socket_bind, socket_address_bind_ipv6_only_or_bool, SocketAddressBindIPv6Only, "Failed to parse bind IPv6 only value");
+ DEFINE_CONFIG_PARSE_ENUM(config_parse_oom_policy, oom_policy, OOMPolicy, "Failed to parse OOM policy");
+@@ -6166,6 +6167,7 @@ void unit_dump_config_items(FILE *f) {
+                 { config_parse_service_type,          "SERVICETYPE" },
+                 { config_parse_service_exit_type,     "SERVICEEXITTYPE" },
+                 { config_parse_service_restart,       "SERVICERESTART" },
++                { config_parse_service_restart_mode,  "SERVICERESTARTMODE" },
+                 { config_parse_service_timeout_failure_mode, "TIMEOUTMODE" },
+                 { config_parse_kill_mode,             "KILLMODE" },
+                 { config_parse_signal,                "SIGNAL" },
+diff --git a/src/core/load-fragment.h b/src/core/load-fragment.h
+index c57a6b2277..bdedbc51e2 100644
+--- a/src/core/load-fragment.h
++++ b/src/core/load-fragment.h
+@@ -39,6 +39,7 @@ CONFIG_PARSER_PROTOTYPE(config_parse_service_timeout_failure_mode);
+ CONFIG_PARSER_PROTOTYPE(config_parse_service_type);
+ CONFIG_PARSER_PROTOTYPE(config_parse_service_exit_type);
+ CONFIG_PARSER_PROTOTYPE(config_parse_service_restart);
++CONFIG_PARSER_PROTOTYPE(config_parse_service_restart_mode);
+ CONFIG_PARSER_PROTOTYPE(config_parse_socket_bindtodevice);
+ CONFIG_PARSER_PROTOTYPE(config_parse_exec_output);
+ CONFIG_PARSER_PROTOTYPE(config_parse_exec_input);
+diff --git a/src/core/service.c b/src/core/service.c
+index e6c0c71595..96f419bb47 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1884,7 +1884,8 @@ static void service_enter_dead(Service *s, ServiceResult f, bool allow_restart)
+                  * are only transitionary and followed by an automatic restart. We have fine-grained
+                  * low-level states for this though so that software can distinguish the permanent UNIT_INACTIVE
+                  * state from this transitionary UNIT_INACTIVE state by looking at the low-level states. */
+-                service_set_state(s, restart_state);
++                if (s->restart_mode != SERVICE_RESTART_MODE_DIRECT)
++                        service_set_state(s, restart_state);
+ 
+                 r = service_arm_timer(s, /* relative= */ true, s->restart_usec);
+                 if (r < 0)
+@@ -4771,6 +4772,13 @@ static const char* const service_restart_table[_SERVICE_RESTART_MAX] = {
+ 
+ DEFINE_STRING_TABLE_LOOKUP(service_restart, ServiceRestart);
+ 
++static const char* const service_restart_mode_table[_SERVICE_RESTART_MODE_MAX] = {
++        [SERVICE_RESTART_MODE_NORMAL] = "normal",
++        [SERVICE_RESTART_MODE_DIRECT]  = "direct",
++};
++
++DEFINE_STRING_TABLE_LOOKUP(service_restart_mode, ServiceRestartMode);
++
+ static const char* const service_type_table[_SERVICE_TYPE_MAX] = {
+         [SERVICE_SIMPLE]        = "simple",
+         [SERVICE_FORKING]       = "forking",
+diff --git a/src/core/service.h b/src/core/service.h
+index 58780ebd41..bfbb3261a8 100644
+--- a/src/core/service.h
++++ b/src/core/service.h
+@@ -90,6 +90,13 @@ typedef enum ServiceTimeoutFailureMode {
+         _SERVICE_TIMEOUT_FAILURE_MODE_INVALID = -EINVAL,
+ } ServiceTimeoutFailureMode;
+ 
++typedef enum ServiceRestartMode {
++        SERVICE_RESTART_MODE_NORMAL,
++        SERVICE_RESTART_MODE_DIRECT,
++        _SERVICE_RESTART_MODE_MAX,
++        _SERVICE_RESTART_MODE_INVALID = -EINVAL,
++} ServiceRestartMode;
++
+ struct ServiceFDStore {
+         Service *service;
+ 
+@@ -107,6 +114,7 @@ struct Service {
+         ServiceType type;
+         ServiceExitType exit_type;
+         ServiceRestart restart;
++        ServiceRestartMode restart_mode;
+         ExitStatusSet restart_prevent_status;
+         ExitStatusSet restart_force_status;
+         ExitStatusSet success_status;
+@@ -238,6 +246,9 @@ void service_close_socket_fd(Service *s);
+ const char* service_restart_to_string(ServiceRestart i) _const_;
+ ServiceRestart service_restart_from_string(const char *s) _pure_;
+ 
++const char* service_restart_mode_to_string(ServiceRestartMode i) _const_;
++ServiceRestartMode service_restart_mode_from_string(const char *s) _pure_;
++
+ const char* service_type_to_string(ServiceType i) _const_;
+ ServiceType service_type_from_string(const char *s) _pure_;
+ 
+diff --git a/src/shared/bus-unit-util.c b/src/shared/bus-unit-util.c
+index a9844e1cc3..43abdce1b4 100644
+--- a/src/shared/bus-unit-util.c
++++ b/src/shared/bus-unit-util.c
+@@ -2156,6 +2156,7 @@ static int bus_append_service_property(sd_bus_message *m, const char *field, con
+                               "Type",
+                               "ExitType",
+                               "Restart",
++                              "RestartMode",
+                               "BusName",
+                               "NotifyAccess",
+                               "USBFunctionDescriptors",
+diff --git a/src/test/test-tables.c b/src/test/test-tables.c
+index d47d3d75cc..0be3c43cde 100644
+--- a/src/test/test-tables.c
++++ b/src/test/test-tables.c
+@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
+         test_table(scope_state, SCOPE_STATE);
+         test_table(service_exec_command, SERVICE_EXEC_COMMAND);
+         test_table(service_restart, SERVICE_RESTART);
++        test_table(service_restart_mode, SERVICE_RESTART_MODE);
+         test_table(service_result, SERVICE_RESULT);
+         test_table(service_state, SERVICE_STATE);
+         test_table(service_type, SERVICE_TYPE);
+diff --git a/test/testsuite-03.units/fails-on-restart-restartdirect.service b/test/testsuite-03.units/fails-on-restart-restartdirect.service
+new file mode 100644
+index 0000000000..60ffd7a600
+--- /dev/null
++++ b/test/testsuite-03.units/fails-on-restart-restartdirect.service
+@@ -0,0 +1,11 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Unit]
++Description=Fail on restart
++StartLimitIntervalSec=1m
++StartLimitBurst=3
++
++[Service]
++Type=oneshot
++ExecStart=false
++Restart=on-failure
++RestartMode=direct
+diff --git a/test/testsuite-03.units/fails-on-restart-restartdirect.target b/test/testsuite-03.units/fails-on-restart-restartdirect.target
+new file mode 100755
+index 0000000000..58e2561039
+--- /dev/null
++++ b/test/testsuite-03.units/fails-on-restart-restartdirect.target
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Unit]
++Requires=fails-on-restart-restartdirect.service
+diff --git a/test/testsuite-03.units/fails-on-restart.service b/test/testsuite-03.units/fails-on-restart.service
+new file mode 100644
+index 0000000000..fb7e7aeb4c
+--- /dev/null
++++ b/test/testsuite-03.units/fails-on-restart.service
+@@ -0,0 +1,11 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Unit]
++Description=Fail on restart
++StartLimitIntervalSec=1m
++StartLimitBurst=3
++
++[Service]
++Type=oneshot
++ExecStart=false
++Restart=on-failure
++RestartMode=normal
+diff --git a/test/testsuite-03.units/fails-on-restart.target b/test/testsuite-03.units/fails-on-restart.target
+new file mode 100755
+index 0000000000..865fb2af44
+--- /dev/null
++++ b/test/testsuite-03.units/fails-on-restart.target
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Unit]
++Requires=fails-on-restart.service
+diff --git a/test/testsuite-03.units/succeeds-on-restart-restartdirect.service b/test/testsuite-03.units/succeeds-on-restart-restartdirect.service
+new file mode 100755
+index 0000000000..b05f2f8dcf
+--- /dev/null
++++ b/test/testsuite-03.units/succeeds-on-restart-restartdirect.service
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Service]
++Type=oneshot
++ExecStart=/usr/lib/systemd/tests/testdata/testsuite-03.units/succeeds-on-restart.sh
++Restart=on-failure
++RestartMode=direct
+diff --git a/test/testsuite-03.units/succeeds-on-restart-restartdirect.target b/test/testsuite-03.units/succeeds-on-restart-restartdirect.target
+new file mode 100755
+index 0000000000..2cf3c60d2a
+--- /dev/null
++++ b/test/testsuite-03.units/succeeds-on-restart-restartdirect.target
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Unit]
++Requires=succeeds-on-restart-restartdirect.service
+diff --git a/test/testsuite-03.units/succeeds-on-restart.service b/test/testsuite-03.units/succeeds-on-restart.service
+new file mode 100755
+index 0000000000..d7b3c7a210
+--- /dev/null
++++ b/test/testsuite-03.units/succeeds-on-restart.service
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Service]
++Type=oneshot
++ExecStart=/usr/lib/systemd/tests/testdata/testsuite-03.units/succeeds-on-restart.sh
++Restart=on-failure
++RestartMode=normal
+diff --git a/test/testsuite-03.units/succeeds-on-restart.sh b/test/testsuite-03.units/succeeds-on-restart.sh
+new file mode 100755
+index 0000000000..1428b186e5
+--- /dev/null
++++ b/test/testsuite-03.units/succeeds-on-restart.sh
+@@ -0,0 +1,10 @@
++#!/usr/bin/env bash
++# SPDX-License-Identifier: LGPL-2.1-or-later
++if [[ ! -f "/succeeds-on-restart.ko" ]]
++then
++    touch "/succeeds-on-restart.ko"
++    exit 1
++else
++    rm "/succeeds-on-restart.ko"
++    exit 0
++fi
+diff --git a/test/testsuite-03.units/succeeds-on-restart.target b/test/testsuite-03.units/succeeds-on-restart.target
+new file mode 100755
+index 0000000000..eb82f47aa3
+--- /dev/null
++++ b/test/testsuite-03.units/succeeds-on-restart.target
+@@ -0,0 +1,3 @@
++# SPDX-License-Identifier: LGPL-2.1-or-later
++[Unit]
++Requires=succeeds-on-restart.service
+diff --git a/test/units/testsuite-03.sh b/test/units/testsuite-03.sh
+index 1d4bf3aaaa..ec51b20bf0 100755
+--- a/test/units/testsuite-03.sh
++++ b/test/units/testsuite-03.sh
+@@ -110,4 +110,17 @@ ELAPSED=$((END_SEC-START_SEC))
+ [[ "$ELAPSED" -ge 3 ]] && [[ "$ELAPSED" -le 5 ]] || exit 1
+ [[ "$RESULT" -ne 0 ]] || exit 1
+ 
++# Test restart mode direct
++systemctl start succeeds-on-restart-restartdirect.target
++assert_rc 0 systemctl --quiet is-active succeeds-on-restart-restartdirect.target
++
++systemctl start fails-on-restart-restartdirect.target || :
++assert_rc 3 systemctl --quiet is-active fails-on-restart-restartdirect.target
++
++systemctl start succeeds-on-restart.target || :
++assert_rc 3 systemctl --quiet is-active succeeds-on-restart.target
++
++systemctl start fails-on-restart.target || :
++assert_rc 3 systemctl --quiet is-active fails-on-restart.target
++
+ touch /testok

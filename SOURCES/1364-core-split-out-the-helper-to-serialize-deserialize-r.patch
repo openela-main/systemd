@@ -1,0 +1,128 @@
+From b8dabd7117205eadc185c9b86fcaa10e1d0e5f84 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 15 Nov 2023 17:17:12 +0100
+Subject: [PATCH] core: split out the helper to serialize/deserialize
+ ratelimits
+
+(cherry picked from commit 07a6647abbd74288a00b1b8f17ec9a9cce080ae4)
+
+Related: RHEL-213655
+---
+ src/core/manager-serialize.c | 23 ++---------------------
+ src/shared/serialize.c       | 27 +++++++++++++++++++++++++++
+ src/shared/serialize.h       |  3 +++
+ 3 files changed, 32 insertions(+), 21 deletions(-)
+
+diff --git a/src/core/manager-serialize.c b/src/core/manager-serialize.c
+index a87d490219..74853181b7 100644
+--- a/src/core/manager-serialize.c
++++ b/src/core/manager-serialize.c
+@@ -164,13 +164,7 @@ int manager_serialize(
+                 (void) serialize_item_format(f, "user-lookup", "%i %i", copy0, copy1);
+         }
+ 
+-        (void) serialize_item_format(f,
+-                                     "dump-ratelimit",
+-                                     USEC_FMT " " USEC_FMT " %u %u",
+-                                     m->dump_ratelimit.begin,
+-                                     m->dump_ratelimit.interval,
+-                                     m->dump_ratelimit.num,
+-                                     m->dump_ratelimit.burst);
++        (void) serialize_ratelimit(f, "dump-ratelimit", &m->dump_ratelimit);
+ 
+         bus_track_serialize(m->subscribed, f, "subscribed");
+ 
+@@ -558,20 +552,7 @@ int manager_deserialize(Manager *m, FILE *f, FDSet *fds) {
+                         if (deserialize_varlink_sockets)
+                                 (void) varlink_server_deserialize_one(m->varlink_server, val, fds);
+                 } else if ((val = startswith(l, "dump-ratelimit="))) {
+-                        usec_t begin, interval;
+-                        unsigned num, burst;
+-
+-                        if (sscanf(val, USEC_FMT " " USEC_FMT " %u %u", &begin, &interval, &num, &burst) != 4)
+-                                log_notice("Failed to parse dump ratelimit, ignoring: %s", val);
+-                        else {
+-                                /* If we changed the values across versions, flush the counter */
+-                                if (interval != m->dump_ratelimit.interval || burst != m->dump_ratelimit.burst)
+-                                        m->dump_ratelimit.num = 0;
+-                                else
+-                                        m->dump_ratelimit.num = num;
+-                                m->dump_ratelimit.begin = begin;
+-                        }
+-
++                        deserialize_ratelimit(&m->dump_ratelimit, "dump-ratelimit", val);
+                 } else {
+                         ManagerTimestamp q;
+ 
+diff --git a/src/shared/serialize.c b/src/shared/serialize.c
+index cd48286355..5c73fc5f8e 100644
+--- a/src/shared/serialize.c
++++ b/src/shared/serialize.c
+@@ -130,6 +130,17 @@ int serialize_strv(FILE *f, const char *key, char **l) {
+         return ret;
+ }
+ 
++int serialize_ratelimit(FILE *f, const char *key, const RateLimit *rl) {
++        assert(rl);
++
++        return serialize_item_format(f, key,
++                                     USEC_FMT " " USEC_FMT " %u %u",
++                                     rl->begin,
++                                     rl->interval,
++                                     rl->num,
++                                     rl->burst);
++}
++
+ int deserialize_usec(const char *value, usec_t *ret) {
+         int r;
+ 
+@@ -194,6 +205,22 @@ int deserialize_environment(const char *value, char ***list) {
+         return 0;
+ }
+ 
++void deserialize_ratelimit(RateLimit *rl, const char *name, const char *value) {
++        usec_t begin, interval;
++        unsigned num, burst;
++
++        assert(rl);
++        assert(name);
++        assert(value);
++
++        if (sscanf(value, USEC_FMT " " USEC_FMT " %u %u", &begin, &interval, &num, &burst) != 4)
++                return log_notice("Failed to parse %s, ignoring: %s", name, value);
++
++        /* Preserve the counter only if the configuration didn't change. */
++        rl->num = (interval == rl->interval && burst == rl->burst) ? num : 0;
++        rl->begin = begin;
++}
++
+ int open_serialization_fd(const char *ident) {
+         int fd;
+ 
+diff --git a/src/shared/serialize.h b/src/shared/serialize.h
+index 6d4f1ef418..3fc1e60911 100644
+--- a/src/shared/serialize.h
++++ b/src/shared/serialize.h
+@@ -5,6 +5,7 @@
+ 
+ #include "fdset.h"
+ #include "macro.h"
++#include "ratelimit.h"
+ #include "string-util.h"
+ #include "time-util.h"
+ 
+@@ -15,6 +16,7 @@ int serialize_fd(FILE *f, FDSet *fds, const char *key, int fd);
+ int serialize_usec(FILE *f, const char *key, usec_t usec);
+ int serialize_dual_timestamp(FILE *f, const char *key, const dual_timestamp *t);
+ int serialize_strv(FILE *f, const char *key, char **l);
++int serialize_ratelimit(FILE *f, const char *key, const RateLimit *rl);
+ 
+ static inline int serialize_bool(FILE *f, const char *key, bool b) {
+         return serialize_item(f, key, yes_no(b));
+@@ -23,5 +25,6 @@ static inline int serialize_bool(FILE *f, const char *key, bool b) {
+ int deserialize_usec(const char *value, usec_t *timestamp);
+ int deserialize_dual_timestamp(const char *value, dual_timestamp *t);
+ int deserialize_environment(const char *value, char ***environment);
++void deserialize_ratelimit(RateLimit *rl, const char *name, const char *value);
+ 
+ int open_serialization_fd(const char *ident);

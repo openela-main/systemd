@@ -1,0 +1,244 @@
+From 9d258e84de4235fe807990782752f8b9d8e54c59 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Wed, 13 May 2026 16:20:55 +0200
+Subject: [PATCH] core: make manager event loop rate limit configurable
+
+Co-developed-by: Claude Opus 4.6 <noreply@anthropic.com>
+(cherry picked from commit e1c63fd4c0657a7fc7b749c64283ab4dbc6fb39e)
+
+Resolves: RHEL-213655
+---
+ man/org.freedesktop.systemd1.xml | 12 ++++++++++++
+ man/systemd-system.conf.xml      | 15 +++++++++++++++
+ src/core/dbus-manager.c          |  2 ++
+ src/core/main.c                  | 31 +++++++++++++++++++++++++++++++
+ src/core/manager-serialize.c     |  4 ++++
+ src/core/manager.c               |  3 +--
+ src/core/manager.h               |  3 +++
+ src/core/system.conf.in          |  2 ++
+ src/core/user.conf.in            |  2 ++
+ 9 files changed, 72 insertions(+), 2 deletions(-)
+
+diff --git a/man/org.freedesktop.systemd1.xml b/man/org.freedesktop.systemd1.xml
+index 8298b726b7..51e017bf10 100644
+--- a/man/org.freedesktop.systemd1.xml
++++ b/man/org.freedesktop.systemd1.xml
+@@ -524,6 +524,10 @@ node /org/freedesktop/systemd1 {
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("false")
+       readonly t DefaultTasksMax = ...;
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
++      readonly t EventLoopRateLimitIntervalUSec = ...;
++      @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
++      readonly u EventLoopRateLimitBurst = ...;
++      @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+       readonly t TimerSlackNSec = ...;
+       @org.freedesktop.DBus.Property.EmitsChangedSignal("const")
+       readonly s DefaultOOMPolicy = '...';
+@@ -776,6 +780,10 @@ node /org/freedesktop/systemd1 {
+ 
+     <!--property DefaultTasksMax is not documented!-->
+ 
++    <!--property EventLoopRateLimitIntervalUSec is not documented!-->
++
++    <!--property EventLoopRateLimitBurst is not documented!-->
++
+     <!--property TimerSlackNSec is not documented!-->
+ 
+     <!--property DefaultOOMPolicy is not documented!-->
+@@ -1200,6 +1208,10 @@ node /org/freedesktop/systemd1 {
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="DefaultTasksMax"/>
+ 
++    <variablelist class="dbus-property" generated="True" extra-ref="EventLoopRateLimitIntervalUSec"/>
++
++    <variablelist class="dbus-property" generated="True" extra-ref="EventLoopRateLimitBurst"/>
++
+     <variablelist class="dbus-property" generated="True" extra-ref="TimerSlackNSec"/>
+ 
+     <variablelist class="dbus-property" generated="True" extra-ref="DefaultOOMPolicy"/>
+diff --git a/man/systemd-system.conf.xml b/man/systemd-system.conf.xml
+index 00de04d426..e563be8615 100644
+--- a/man/systemd-system.conf.xml
++++ b/man/systemd-system.conf.xml
+@@ -550,6 +550,21 @@
+         <para>If the value is <literal>/</literal>, only labels specified with <varname>SmackProcessLabel=</varname>
+         are assigned and the compile-time default is ignored.</para></listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><varname>EventLoopRateLimitIntervalSec=</varname></term>
++        <term><varname>EventLoopRateLimitBurst=</varname></term>
++
++        <listitem><para>Configures the rate limiting applied to the manager's main event loop. If the event
++        loop iterates more than <varname>EventLoopRateLimitBurst=</varname> times within
++        <varname>EventLoopRateLimitIntervalSec=</varname>, event processing is briefly paused to prevent
++        excessive CPU usage. <varname>EventLoopRateLimitIntervalSec=</varname> defaults to 1s.
++        <varname>EventLoopRateLimitBurst=</varname> defaults to 50000. These settings can also be set on the
++        kernel command line via
++        <varname>systemd.event_loop_ratelimit_interval_sec=</varname> and
++        <varname>systemd.event_loop_ratelimit_burst=</varname>.</para></listitem>
++      </varlistentry>
++
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 16c9680d80..2537c4adf8 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -2911,6 +2911,8 @@ const sd_bus_vtable bus_manager_vtable[] = {
+         SD_BUS_PROPERTY("DefaultLimitRTTIME", "t", bus_property_get_rlimit, offsetof(Manager, rlimit[RLIMIT_RTTIME]), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("DefaultLimitRTTIMESoft", "t", bus_property_get_rlimit, offsetof(Manager, rlimit[RLIMIT_RTTIME]), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("DefaultTasksMax", "t", bus_property_get_tasks_max, offsetof(Manager, default_tasks_max), 0),
++        SD_BUS_PROPERTY("EventLoopRateLimitIntervalUSec", "t", bus_property_get_usec, offsetof(Manager, event_loop_ratelimit.interval), SD_BUS_VTABLE_PROPERTY_CONST),
++        SD_BUS_PROPERTY("EventLoopRateLimitBurst", "u", bus_property_get_unsigned, offsetof(Manager, event_loop_ratelimit.burst), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("TimerSlackNSec", "t", property_get_timer_slack_nsec, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("DefaultOOMPolicy", "s", bus_property_get_oom_policy, offsetof(Manager, default_oom_policy), SD_BUS_VTABLE_PROPERTY_CONST),
+         SD_BUS_PROPERTY("DefaultOOMScoreAdjust", "i", property_get_oom_score_adjust, 0, SD_BUS_VTABLE_PROPERTY_CONST),
+diff --git a/src/core/main.c b/src/core/main.c
+index 18f5781126..1e45ed6bd6 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -173,6 +173,8 @@ static size_t arg_random_seed_size;
+ static int arg_default_oom_score_adjust;
+ static bool arg_default_oom_score_adjust_set;
+ static char *arg_default_smack_process_label;
++static usec_t arg_event_loop_ratelimit_interval_sec;
++static unsigned arg_event_loop_ratelimit_burst;
+ 
+ /* A copy of the original environment block */
+ static char **saved_env = NULL;
+@@ -483,6 +485,28 @@ static int parse_proc_cmdline_item(const char *key, const char *value, void *dat
+                 arg_random_seed = sz > 0 ? p : mfree(p);
+                 arg_random_seed_size = sz;
+ 
++        } else if (proc_cmdline_key_streq(key, "systemd.event_loop_ratelimit_interval_sec")) {
++
++                if (proc_cmdline_value_missing(key, value))
++                        return 0;
++
++                r = parse_sec(value, &arg_event_loop_ratelimit_interval_sec);
++                if (r < 0) {
++                        log_warning_errno(r, "Failed to parse systemd.event_loop_ratelimit_interval_sec= argument '%s', ignoring: %m", value);
++                        return 0;
++                }
++
++        } else if (proc_cmdline_key_streq(key, "systemd.event_loop_ratelimit_burst")) {
++
++                if (proc_cmdline_value_missing(key, value))
++                        return 0;
++
++                r = safe_atou(value, &arg_event_loop_ratelimit_burst);
++                if (r < 0) {
++                        log_warning_errno(r, "Failed to parse systemd.event_loop_ratelimit_burst= argument '%s', ignoring: %m", value);
++                        return 0;
++                }
++
+         } else if (streq(key, "quiet") && !value) {
+ 
+                 if (arg_show_status == _SHOW_STATUS_INVALID)
+@@ -662,6 +686,8 @@ static int parse_config_file(void) {
+                 { "Manager", "CtrlAltDelBurstAction",        config_parse_emergency_action,      arg_runtime_scope,        &arg_cad_burst_action             },
+                 { "Manager", "DefaultOOMPolicy",             config_parse_oom_policy,            0,                        &arg_default_oom_policy           },
+                 { "Manager", "DefaultOOMScoreAdjust",        config_parse_oom_score_adjust,      0,                        NULL                              },
++                { "Manager", "EventLoopRateLimitIntervalSec",     config_parse_sec,                   0,                        &arg_event_loop_ratelimit_interval_sec                 },
++                { "Manager", "EventLoopRateLimitBurst",           config_parse_unsigned,              0,                        &arg_event_loop_ratelimit_burst                        },
+ #if ENABLE_SMACK
+                 { "Manager", "DefaultSmackProcessLabel",     config_parse_string,                0,                        &arg_default_smack_process_label  },
+ #else
+@@ -764,6 +790,8 @@ static void set_manager_settings(Manager *m) {
+         m->confirm_spawn = arg_confirm_spawn;
+         m->service_watchdogs = arg_service_watchdogs;
+         m->cad_burst_action = arg_cad_burst_action;
++        m->event_loop_ratelimit.interval = arg_event_loop_ratelimit_interval_sec;
++        m->event_loop_ratelimit.burst = arg_event_loop_ratelimit_burst;
+ 
+         manager_set_watchdog(m, WATCHDOG_RUNTIME, arg_runtime_watchdog);
+         manager_set_watchdog(m, WATCHDOG_REBOOT, arg_reboot_watchdog);
+@@ -2495,6 +2523,9 @@ static void reset_arguments(void) {
+ 
+         arg_default_oom_score_adjust_set = false;
+         arg_default_smack_process_label = mfree(arg_default_smack_process_label);
++        arg_event_loop_ratelimit_interval_sec = 1 * USEC_PER_SEC;
++        arg_event_loop_ratelimit_burst = 50000;
++
+ }
+ 
+ static void determine_default_oom_score_adjust(void) {
+diff --git a/src/core/manager-serialize.c b/src/core/manager-serialize.c
+index 74853181b7..125783a48f 100644
+--- a/src/core/manager-serialize.c
++++ b/src/core/manager-serialize.c
+@@ -166,6 +166,8 @@ int manager_serialize(
+ 
+         (void) serialize_ratelimit(f, "dump-ratelimit", &m->dump_ratelimit);
+ 
++        (void) serialize_ratelimit(f, "event-loop-ratelimit", &m->event_loop_ratelimit);
++
+         bus_track_serialize(m->subscribed, f, "subscribed");
+ 
+         r = dynamic_user_serialize(m, f, fds);
+@@ -553,6 +555,8 @@ int manager_deserialize(Manager *m, FILE *f, FDSet *fds) {
+                                 (void) varlink_server_deserialize_one(m->varlink_server, val, fds);
+                 } else if ((val = startswith(l, "dump-ratelimit="))) {
+                         deserialize_ratelimit(&m->dump_ratelimit, "dump-ratelimit", val);
++                } else if ((val = startswith(l, "event-loop-ratelimit="))) {
++                        deserialize_ratelimit(&m->event_loop_ratelimit, "event-loop-ratelimit", val);
+                 } else {
+                         ManagerTimestamp q;
+ 
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 79408b18dc..ebfc4d3a9a 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -3024,7 +3024,6 @@ static int manager_dispatch_jobs_in_progress(sd_event_source *source, usec_t use
+ }
+ 
+ int manager_loop(Manager *m) {
+-        RateLimit rl = { .interval = 1*USEC_PER_SEC, .burst = 50000 };
+         int r;
+ 
+         assert(m);
+@@ -3041,7 +3040,7 @@ int manager_loop(Manager *m) {
+ 
+                 (void) watchdog_ping();
+ 
+-                if (!ratelimit_below(&rl)) {
++                if (!ratelimit_below(&m->event_loop_ratelimit)) {
+                         /* Yay, something is going seriously wrong, pause a little */
+                         log_warning("Looping too fast. Throttling execution a little.");
+                         sleep(1);
+diff --git a/src/core/manager.h b/src/core/manager.h
+index 4d5b2e0602..b7917732b5 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -465,6 +465,9 @@ struct Manager {
+ 
+         /* Dump*() are slow, so always rate limit them to 10 per 10 minutes */
+         RateLimit dump_ratelimit;
++
++        /* Rate limit for the manager event loop */
++        RateLimit event_loop_ratelimit;
+ };
+ 
+ static inline usec_t manager_default_timeout_abort_usec(Manager *m) {
+diff --git a/src/core/system.conf.in b/src/core/system.conf.in
+index 5d1f6d24f0..31f0f95b7a 100644
+--- a/src/core/system.conf.in
++++ b/src/core/system.conf.in
+@@ -75,3 +75,5 @@
+ #DefaultLimitRTTIME=
+ #DefaultOOMPolicy=stop
+ #DefaultSmackProcessLabel=
++#EventLoopRateLimitIntervalSec=1s
++#EventLoopRateLimitBurst=50000
+diff --git a/src/core/user.conf.in b/src/core/user.conf.in
+index b69974978e..0da7ae8be3 100644
+--- a/src/core/user.conf.in
++++ b/src/core/user.conf.in
+@@ -48,3 +48,5 @@
+ #DefaultLimitRTPRIO=
+ #DefaultLimitRTTIME=
+ #DefaultSmackProcessLabel=
++#EventLoopRateLimitIntervalSec=1s
++#EventLoopRateLimitBurst=50000

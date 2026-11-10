@@ -1,0 +1,44 @@
+From 598acc4d04be90d4c88efabec5063955992eaa36 Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <frantisek@sumsal.cz>
+Date: Tue, 11 Aug 2026 14:18:32 +0200
+Subject: [PATCH] test: drop forgotten `set +e`
+
+This was introduced all the way back in 2019 where this particular test
+case was the last one in the file, so it worked as intended.
+Unfortunately, since then we added new tests after this one, which means
+this particular `set +e` masked fails in any of them (except for
+assert_*() calls, which call exit on fail).
+
+(cherry picked from commit 143c2845676fa5838ac4abf6b6fb9de80e12915e)
+
+Related: RHEL-155457
+---
+ test/units/testsuite-03.sh | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/test/units/testsuite-03.sh b/test/units/testsuite-03.sh
+index a08a0b1f0e..7dee3cb707 100755
+--- a/test/units/testsuite-03.sh
++++ b/test/units/testsuite-03.sh
+@@ -105,13 +105,10 @@ ELAPSED=$((END_SEC-START_SEC))
+ 
+ # Test time-limited scopes
+ START_SEC=$(date -u '+%s')
+-set +e
+-systemd-run --scope --property=RuntimeMaxSec=3s sleep 10
+-RESULT=$?
++(! systemd-run --scope --property=RuntimeMaxSec=3s sleep 10)
+ END_SEC=$(date -u '+%s')
+ ELAPSED=$((END_SEC-START_SEC))
+ [[ "$ELAPSED" -ge 3 ]] && [[ "$ELAPSED" -le 5 ]] || exit 1
+-[[ "$RESULT" -ne 0 ]] || exit 1
+ 
+ # Test restart mode direct
+ systemctl start succeeds-on-restart-restartdirect.target
+@@ -126,4 +123,6 @@ assert_rc 3 systemctl --quiet is-active succeeds-on-restart.target
+ systemctl start fails-on-restart.target || :
+ assert_rc 3 systemctl --quiet is-active fails-on-restart.target
+ 
++systemctl stop fails-on-restart.service
++
+ touch /testok

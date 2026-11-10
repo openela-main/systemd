@@ -1,4 +1,4 @@
-From 0cab1e6254b62e39459e33ad814a6143730d3a85 Mon Sep 17 00:00:00 2001
+From db8eba6c0d1d34086173657cfcd72737d94e8e20 Mon Sep 17 00:00:00 2001
 From: Ludwig Nussel <ludwig.nussel@suse.de>
 Date: Wed, 15 Mar 2023 10:20:59 +0100
 Subject: [PATCH] manager: fix scope for environment generators
@@ -7,7 +7,7 @@ fixes regression introduced by 4870133bfa
 
 (cherry picked from commit 361cacf49e8fd6b0fc983f0ee507c1d22fa00103)
 
-Resolves: RHEL-154262
+Resolves: RHEL-159230
 ---
  src/core/manager.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

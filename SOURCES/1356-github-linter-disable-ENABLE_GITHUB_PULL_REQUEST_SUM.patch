@@ -1,4 +1,4 @@
-From 6135f5e91f0ee267c6210303a30b189e7bab6e83 Mon Sep 17 00:00:00 2001
+From ded04794fb290b8bb4ce918fb72dac618f54fc9b Mon Sep 17 00:00:00 2001
 From: Yu Watanabe <watanabe.yu+github@gmail.com>
 Date: Tue, 3 Feb 2026 08:59:38 +0900
 Subject: [PATCH] github/linter: disable
@@ -17,7 +17,7 @@ So, let's disable the feature.
 
 (cherry picked from commit 90c71778d2bcccbdc70e740a8d706dadd49b8e69)
 
-Related: RHEL-212086
+Related: RHEL-155457
 ---
  .github/workflows/linter.yml | 1 +
  1 file changed, 1 insertion(+)

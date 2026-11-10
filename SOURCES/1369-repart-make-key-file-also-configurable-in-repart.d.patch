@@ -1,0 +1,196 @@
+From 068788ddbadbfa7fe3583b732a2957dc4bfc60c5 Mon Sep 17 00:00:00 2001
+From: Emanuele Giuseppe Esposito <eesposit@redhat.com>
+Date: Mon, 14 Jul 2025 05:51:49 -0400
+Subject: [PATCH] repart: make --key-file also configurable in repart.d/*
+
+Add repart.d KeyFile= option with the same syntax as --key-file.
+This allows a per-partition key file encryption, and not rely on a global key
+applicable to all partitions.
+
+The global --key-file overrides KeyFile config. If none of them is
+defined, rely on default.
+
+(cherry picked from commit eb44fa4d198d1da11c998f77bc88f95aaf67e186)
+
+Resolves: RHEL-212610
+---
+ man/repart.d.xml       | 11 +++++++
+ man/systemd-repart.xml |  9 ++---
+ src/partition/repart.c | 74 +++++++++++++++++++++++++++++++++---------
+ 3 files changed, 74 insertions(+), 20 deletions(-)
+
+diff --git a/man/repart.d.xml b/man/repart.d.xml
+index 6cc60e53a2..a4f49af39b 100644
+--- a/man/repart.d.xml
++++ b/man/repart.d.xml
+@@ -593,6 +593,17 @@
+         This option will be overridden by the global <varname>--tpm2-pcrs=</varname> option.</para>
+         </listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><varname>KeyFile=</varname></term>
++
++        <listitem><para>Takes a file system path. This path must be absolute, otherwise the option is ignored.
++        Configures the encryption key to use when setting up LUKS2 volumes configured with the
++        <varname>Encrypt=key-file</varname> setting in partition files. Please refer to the documentation of
++        <varname>--key-file=</varname> for more details. This option will be overridden by the global
++        <varname>--key-file=</varname> option.</para>
++        </listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/man/systemd-repart.xml b/man/systemd-repart.xml
+index 3585cbf107..f33e2d772a 100644
+--- a/man/systemd-repart.xml
++++ b/man/systemd-repart.xml
+@@ -306,10 +306,11 @@
+         <listitem><para>Takes a file system path. Configures the encryption key to use when setting up LUKS2
+         volumes configured with the <varname>Encrypt=key-file</varname> setting in partition files. Should
+         refer to a regular file containing the key, or an <constant>AF_UNIX</constant> stream socket in the
+-        file system. In the latter case a connection is made to it and the key read from it. If this switch
+-        is not specified the empty key (i.e. zero length key) is used. This behaviour is useful for setting
+-        up encrypted partitions during early first boot that receive their user-supplied password only in a
+-        later setup step.</para></listitem>
++        file system. In the latter case, a connection is made to it and the key read from it. If this switch
++        is not specified, and no <varname>KeyFile=</varname> is specified in the partition file, the empty
++        key (i.e. zero length key) is used. This behaviour is useful for setting up encrypted partitions during
++        early first boot that receive their user-supplied password only in a later setup step.</para>
++        </listitem>
+       </varlistentry>
+ 
+       <varlistentry>
+diff --git a/src/partition/repart.c b/src/partition/repart.c
+index d3fcf3b86b..c2643231c3 100644
+--- a/src/partition/repart.c
++++ b/src/partition/repart.c
+@@ -198,6 +198,7 @@ struct Partition {
+         char **copy_files;
+         char **make_directories;
+         EncryptMode encrypt;
++        struct iovec key;
+         Tpm2PCRValue *tpm2_hash_pcr_values;
+         size_t tpm2_n_hash_pcr_values;
+         VerityMode verity;
+@@ -333,6 +334,8 @@ static Partition* partition_free(Partition *p) {
+         free(p->tpm2_hash_pcr_values);
+         free(p->verity_match_key);
+ 
++        iovec_done_erase(&p->key);
++
+         free(p->roothash);
+ 
+         free(p->split_name_format);
+@@ -360,6 +363,8 @@ static void partition_foreignize(Partition *p) {
+         p->tpm2_hash_pcr_values = mfree(p->tpm2_hash_pcr_values);
+         p->verity_match_key = mfree(p->verity_match_key);
+ 
++        iovec_done_erase(&p->key);
++
+         p->new_uuid = SD_ID128_NULL;
+         p->new_uuid_is_set = false;
+         p->priority = 0;
+@@ -1501,6 +1506,51 @@ static int config_parse_tpm2_pcrs(
+                                               &partition->tpm2_n_hash_pcr_values);
+ }
+ 
++static int parse_key_file(const char *filename, struct iovec *key) {
++        _cleanup_(erase_and_freep) char *k = NULL;
++        size_t n = 0;
++        int r;
++
++        r = read_full_file_full(
++                        AT_FDCWD, filename,
++                        /* offset= */ UINT64_MAX,
++                        /* size= */ SIZE_MAX,
++                        READ_FULL_FILE_SECURE|READ_FULL_FILE_WARN_WORLD_READABLE|READ_FULL_FILE_CONNECT_SOCKET,
++                        /* bind_name= */ NULL,
++                        &k, &n);
++        if (r < 0)
++                return log_error_errno(r, "Failed to read key file '%s': %m", filename);
++
++        iovec_done_erase(key);
++        *key = IOVEC_MAKE(TAKE_PTR(k), n);
++
++        return 0;
++}
++
++static int config_parse_key_file(
++                const char *unit,
++                const char *filename,
++                unsigned line,
++                const char *section,
++                unsigned section_line,
++                const char *lvalue,
++                int ltype,
++                const char *rvalue,
++                void *data,
++                void *userdata) {
++
++        Partition *partition = ASSERT_PTR(userdata);
++
++        assert(rvalue);
++
++        if (isempty(rvalue)) {
++                iovec_done_erase(&partition->key);
++                return 0;
++        }
++
++        return parse_key_file(rvalue, &partition->key);
++}
++
+ static DEFINE_CONFIG_PARSE_ENUM_WITH_DEFAULT(config_parse_verity, verity_mode, VerityMode, VERITY_OFF, "Invalid verity mode");
+ 
+ static int partition_read_definition(Partition *p, const char *path, const char *const *conf_file_dirs) {
+@@ -1530,6 +1580,7 @@ static int partition_read_definition(Partition *p, const char *path, const char
+                 { "Partition", "GrowFileSystem",  config_parse_tristate,    0, &p->growfs            },
+                 { "Partition", "SplitName",       config_parse_string,      0, &p->split_name_format },
+                 { "Partition", "TPM2PCRs",        config_parse_tpm2_pcrs,   0, p                     },
++                { "Partition", "KeyFile",         config_parse_key_file,    0, p                     },
+                 {}
+         };
+         int r;
+@@ -3037,13 +3088,16 @@ static int partition_encrypt(
+                 return log_error_errno(r, "Failed to LUKS2 format future partition: %m");
+ 
+         if (IN_SET(p->encrypt, ENCRYPT_KEY_FILE, ENCRYPT_KEY_FILE_TPM2)) {
++                /* Use partition-specific key if available, otherwise fall back to global key */
++                struct iovec *iovec_key = arg_key.iov_base ? &arg_key : &p->key;
++
+                 r = sym_crypt_keyslot_add_by_volume_key(
+                                 cd,
+                                 CRYPT_ANY_SLOT,
+                                 volume_key,
+                                 volume_key_size,
+-                                strempty(arg_key.iov_base),
+-                                arg_key.iov_len);
++                                strempty(iovec_key->iov_base),
++                                iovec_key->iov_len);
+                 if (r < 0)
+                         return log_error_errno(r, "Failed to add LUKS2 key: %m");
+         }
+@@ -5270,21 +5324,9 @@ static int parse_argv(int argc, char *argv[]) {
+                         break;
+ 
+                 case ARG_KEY_FILE: {
+-                        struct iovec key = {};
+-
+-                        r = read_full_file_full(
+-                                        AT_FDCWD, optarg,
+-                                        /* offset= */ UINT64_MAX,
+-                                        /* size= */ SIZE_MAX,
+-                                        READ_FULL_FILE_SECURE|READ_FULL_FILE_WARN_WORLD_READABLE|READ_FULL_FILE_CONNECT_SOCKET,
+-                                        /* bind_name= */ NULL,
+-                                        (char **) &key.iov_base,
+-                                        &key.iov_len);
++                        r = parse_key_file(optarg, &arg_key);
+                         if (r < 0)
+-                                return log_error_errno(r, "Failed to read key file '%s': %m", optarg);
+-
+-                        iovec_done_erase(&arg_key);
+-                        arg_key = key;
++                                return r;
+                         break;
+                 }
+ 

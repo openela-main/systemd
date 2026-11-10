@@ -1,4 +1,4 @@
-From 3e4c712b1f9c36c83698117c4016d91e5a8341b5 Mon Sep 17 00:00:00 2001
+From 420652432af30cbb55e716d8bc9895cbfc17db97 Mon Sep 17 00:00:00 2001
 From: Frantisek Sumsal <fsumsal@redhat.com>
 Date: Mon, 20 Jul 2026 19:10:23 +0200
 Subject: [PATCH] ci: bump super-linter to v8.7.0
@@ -8,8 +8,7 @@ So it recognizes the ubuntu-24.04 label.
 Taken from systemd/systemd@b82af8adcf4bdb27f35bc357e200dc3af4171bc7.
 
 rhel-only: ci
-
-Related: RHEL-212086
+Related: RHEL-155457
 ---
  .github/workflows/linter.yml | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

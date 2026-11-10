@@ -1,0 +1,37 @@
+From 01efd088ea54f56ec5e8c7077be2e05dc5b316e4 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Wed, 12 Feb 2025 17:38:47 +0100
+Subject: [PATCH] core/service: drop unneeded unit_add_to_gc_queue()
+
+Follow-up for a1d315730ffddf283d4bb9d73878fbcd97a4d244
+and 6ac62d61db737b01ad3776a7688d8a4c57b3f7d9
+
+With the aforementioned commits, unit_release_resources()
+is dispatched in a dedicated queue, and Service.n_keep_fd_store
+has been dropped, hence the comment is outdated. Moreover,
+the unit is added to GC queue in unit_notify() already.
+No other unit types do this in corresponding _enter_dead()
+functions, nor does Service need it anymore.
+
+(cherry picked from commit 818315ae61370998a4df7b92d89c338c9442c6df)
+
+Related: RHEL-137251
+---
+ src/core/service.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/src/core/service.c b/src/core/service.c
+index 96f419bb47..0da2af7c35 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1900,10 +1900,6 @@ static void service_enter_dead(Service *s, ServiceResult f, bool allow_restart)
+                 s->flush_n_restarts = true;
+         }
+ 
+-        /* The new state is in effect, let's decrease the fd store ref counter again. Let's also re-add us to the GC
+-         * queue, so that the fd store is possibly gc'ed again */
+-        unit_add_to_gc_queue(UNIT(s));
+-
+         /* The next restart might not be a manual stop, hence reset the flag indicating manual stops */
+         s->forbid_restart = false;
+ 

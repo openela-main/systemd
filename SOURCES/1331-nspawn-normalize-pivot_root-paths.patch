@@ -1,4 +1,4 @@
-From bd8f4b9ed6ed3ae5f8d4f6f7bce34ea9c2e8e5f4 Mon Sep 17 00:00:00 2001
+From cfb234e332fe820ef843fb817598ebbbdffdd05f Mon Sep 17 00:00:00 2001
 From: Luca Boccassi <luca.boccassi@gmail.com>
 Date: Wed, 11 Mar 2026 13:27:14 +0000
 Subject: [PATCH] nspawn: normalize pivot_root paths
@@ -10,7 +10,7 @@ Follow-up for b53ede699cdc5233041a22591f18863fb3fe2672
 
 (cherry picked from commit 7b85f5498a958e5bb660c703b8f4a71cceed3373)
 
-Resolves: RHEL-163870
+Resolves: RHEL-163871
 ---
  src/nspawn/nspawn-mount.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)

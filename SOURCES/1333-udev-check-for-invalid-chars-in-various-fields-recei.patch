@@ -1,4 +1,4 @@
-From 87663c17b8529c4b4d216ec996c23c022999789e Mon Sep 17 00:00:00 2001
+From 967b7954b78bc59e0247e908ea74b19da7112b39 Mon Sep 17 00:00:00 2001
 From: Luca Boccassi <luca.boccassi@gmail.com>
 Date: Fri, 6 Mar 2026 19:32:35 +0000
 Subject: [PATCH] udev: check for invalid chars in various fields received from
@@ -6,7 +6,7 @@ Subject: [PATCH] udev: check for invalid chars in various fields received from
 
 (cherry picked from commit 16325b35fa6ecb25f66534a562583ce3b96d52f3)
 
-Resolves: RHEL-163876
+Resolves: RHEL-163877
 ---
  src/udev/dmi_memory_id/dmi_memory_id.c | 3 ++-
  src/udev/scsi_id/scsi_id.c             | 5 +++--

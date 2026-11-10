@@ -1,4 +1,4 @@
-From 98d2d13e452da79efd40bff17143cbb6b8b9af81 Mon Sep 17 00:00:00 2001
+From 9c200c01eeb947d2300da421e8994ef9d286183e Mon Sep 17 00:00:00 2001
 From: Frantisek Sumsal <fsumsal@redhat.com>
 Date: Wed, 19 Aug 2026 09:56:52 +0200
 Subject: [PATCH] test: rename the start limit subtest
@@ -11,9 +11,9 @@ Also, unmask & enable the systemd-resolved service, as the old testing
 framework masks it by default.
 
 rhel-only: ci
-Related: RHEL-212086
+Related: RHEL-164539
 
-Follow-up for f18478c89e0f88eab88bb7f79ac021b6ebd28cb4.
+Follow-up for 4060cdad388b0ae658f2024633b842a46c37962e.
 ---
  ...{TEST-07-PID1.start-limit.sh => testsuite-07.start-limit.sh} | 2 ++
  1 file changed, 2 insertions(+)

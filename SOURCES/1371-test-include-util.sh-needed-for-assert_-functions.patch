@@ -1,0 +1,33 @@
+From 9b0799c1faaf2e7fde0625e0f915b8a4bc83728d Mon Sep 17 00:00:00 2001
+From: Frantisek Sumsal <fsumsal@redhat.com>
+Date: Tue, 11 Aug 2026 19:18:23 +0200
+Subject: [PATCH] test: include util.sh needed for assert_*() functions
+
+This is needed by the test backported by
+219f89250a9d41c357eb1224f624ae3cf08cf4e9.
+
+In upstream the include was introduced as part of
+5db456d06511ed537e5f6870e9d6b1afe50587c8, but we don't have the
+necessary prerequisites in RHEL 9, so let's add just the include
+manually.
+
+rhel-only: ci
+Related: RHEL-155457
+---
+ test/units/testsuite-03.sh | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/test/units/testsuite-03.sh b/test/units/testsuite-03.sh
+index ec51b20bf0..a08a0b1f0e 100755
+--- a/test/units/testsuite-03.sh
++++ b/test/units/testsuite-03.sh
+@@ -3,6 +3,9 @@
+ set -eux
+ set -o pipefail
+ 
++# shellcheck source=test/units/util.sh
++. "$(dirname "$0")"/util.sh
++
+ # Simple test for that daemon-reexec works in container.
+ # See: https://github.com/systemd/systemd/pull/23883
+ systemctl daemon-reexec

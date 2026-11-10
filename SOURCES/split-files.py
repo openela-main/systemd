@@ -60,7 +60,7 @@ for file in files(buildroot):
         o = o_rpm_macros
     elif '/usr/lib/systemd/tests' in n:
         o = o_tests
-    elif 'ukify' in n:
+    elif 'ukify' in n and '/man/' not in n:
         o = o_ukify
     elif re.search(r'/libsystemd-(shared|core)-.*\.so$', n):
         o = o_main

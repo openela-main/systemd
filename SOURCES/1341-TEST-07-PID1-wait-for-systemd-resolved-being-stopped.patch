@@ -1,4 +1,4 @@
-From 6c62e1d9b259d39f0f934f51bbbcf3d1247e567e Mon Sep 17 00:00:00 2001
+From 769a4fd1ad342ff84e985f0b73f23e03bbb677db Mon Sep 17 00:00:00 2001
 From: Yu Watanabe <watanabe.yu+github@gmail.com>
 Date: Tue, 28 Oct 2025 13:20:58 +0900
 Subject: [PATCH] TEST-07-PID1: wait for systemd-resolved being stopped
@@ -17,7 +17,7 @@ Fixes https://github.com/systemd/systemd/pull/39388#issuecomment-3439277442.
 
 (cherry picked from commit 6454fde83eef8da7391ad18a1b1a3248402f9214)
 
-Related: RHEL-212086
+Related: RHEL-164539
 ---
  test/units/TEST-07-PID1.start-limit.sh | 3 +++
  1 file changed, 3 insertions(+)

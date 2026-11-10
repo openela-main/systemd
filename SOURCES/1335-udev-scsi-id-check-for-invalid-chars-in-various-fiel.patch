@@ -1,4 +1,4 @@
-From 023f021259fb5fff8b8f40ea53694a36479d26e3 Mon Sep 17 00:00:00 2001
+From a7e7bf455cb22e95c4487c91cd040e3c27fa64e7 Mon Sep 17 00:00:00 2001
 From: Luca Boccassi <luca.boccassi@gmail.com>
 Date: Fri, 10 Apr 2026 19:04:04 +0100
 Subject: [PATCH] udev/scsi-id: check for invalid chars in various fields
@@ -8,7 +8,7 @@ Follow-up for 16325b35fa6ecb25f66534a562583ce3b96d52f3
 
 (cherry picked from commit 5f700d148c44063c0f0dbb9fc136866339cd3fa7)
 
-Related: RHEL-163876
+Related: RHEL-163877
 ---
  src/udev/scsi_id/scsi_id.c | 12 ++++++++----
  1 file changed, 8 insertions(+), 4 deletions(-)

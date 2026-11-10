@@ -1,0 +1,41 @@
+From b7156edf92d815ad3bf84fbcaaa7a4a94a648999 Mon Sep 17 00:00:00 2001
+From: Peter Rajnoha <prajnoha@redhat.com>
+Date: Thu, 5 Sep 2024 12:31:20 +0200
+Subject: [PATCH] udev: allow persistent storage rules for rbd devices
+
+The RADOS Block Device (rbd) can be used as any other block device with
+further layers on top of it, hence allow the common persistent storage
+rules to apply, including watching for changes.
+
+(cherry picked from commit cbe65d38cf0a2e55cdba75871de108bc505a7095)
+
+Resolves: RHEL-3631
+---
+ rules.d/60-block.rules              | 2 +-
+ rules.d/60-persistent-storage.rules | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/rules.d/60-block.rules b/rules.d/60-block.rules
+index 3134ab995e..13f88e92c8 100644
+--- a/rules.d/60-block.rules
++++ b/rules.d/60-block.rules
+@@ -9,5 +9,5 @@ ACTION=="change", SUBSYSTEM=="scsi", ENV{DEVTYPE}=="scsi_device", TEST=="block",
+ 
+ # watch metadata changes, caused by tools closing the device node which was opened for writing
+ ACTION!="remove", SUBSYSTEM=="block", \
+-  KERNEL=="loop*|mmcblk*[0-9]|msblk*[0-9]|mspblk*[0-9]|nvme*|sd*|vd*|xvd*|bcache*|cciss*|dasd*|ubd*|ubi*|scm*|pmem*|nbd*|zd*", \
++  KERNEL=="loop*|mmcblk*[0-9]|msblk*[0-9]|mspblk*[0-9]|nvme*|sd*|vd*|xvd*|bcache*|cciss*|dasd*|ubd*|ubi*|scm*|pmem*|nbd*|zd*|rbd*", \
+   OPTIONS+="watch"
+diff --git a/rules.d/60-persistent-storage.rules b/rules.d/60-persistent-storage.rules
+index 10b347e191..3aa365bec4 100644
+--- a/rules.d/60-persistent-storage.rules
++++ b/rules.d/60-persistent-storage.rules
+@@ -7,7 +7,7 @@ ACTION=="remove", GOTO="persistent_storage_end"
+ ENV{UDEV_DISABLE_PERSISTENT_STORAGE_RULES_FLAG}=="1", GOTO="persistent_storage_end"
+ 
+ SUBSYSTEM!="block|ubi", GOTO="persistent_storage_end"
+-KERNEL!="loop*|mmcblk*[0-9]|msblk*[0-9]|mspblk*[0-9]|nvme*|sd*|sr*|vd*|xvd*|bcache*|cciss*|dasd*|ubd*|ubi*|scm*|pmem*|nbd*|zd*", GOTO="persistent_storage_end"
++KERNEL!="loop*|mmcblk*[0-9]|msblk*[0-9]|mspblk*[0-9]|nvme*|sd*|sr*|vd*|xvd*|bcache*|cciss*|dasd*|ubd*|ubi*|scm*|pmem*|nbd*|zd*|rbd*", GOTO="persistent_storage_end"
+ 
+ # ignore partitions that span the entire disk
+ TEST=="whole_disk", GOTO="persistent_storage_end"

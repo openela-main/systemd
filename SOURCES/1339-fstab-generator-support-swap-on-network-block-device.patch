@@ -1,4 +1,4 @@
-From e9dcdc8a757636eb96e7ae99b3b4f55dab289261 Mon Sep 17 00:00:00 2001
+From e5e4bfa6dcdc2502e57c813ea0d0a72ee37fb337 Mon Sep 17 00:00:00 2001
 From: Frantisek Sumsal <frantisek@sumsal.cz>
 Date: Tue, 7 Apr 2026 11:16:42 +0200
 Subject: [PATCH] fstab-generator: support swap on network block devices
@@ -11,7 +11,7 @@ regular mounts in both the fstab-generator and the core
 Co-developed-by: Claude Opus 4.6 <noreply@anthropic.com>
 (cherry picked from commit 3d5bd67a2259e7a4edc27476d4cae049653c4414)
 
-Resolves: RHEL-166186
+Resolves: RHEL-166187
 ---
  man/systemd.swap.xml                          | 28 +++++++++--
  src/core/swap.c                               | 46 ++++++++++++++++---

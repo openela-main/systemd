@@ -18,10 +18,13 @@
 %bcond_without tests
 %bcond_without lto
 
+# Build docs on 64-bit architectures only
+%bcond docs      %[%{?__isa_bits} >= 64]
+
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        67%{?dist}.6
+Release:        79%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1408,28 +1411,60 @@ Patch1322: 1322-tmpfiles-teach-tmpfiles-the-new-XDG_STATE_HOME-varia.patch
 Patch1323: 1323-test-use-XDG_STATE_HOME-for-S-and-L.patch
 Patch1324: 1324-man-fully-adopt-.local-state.patch
 Patch1325: 1325-core-only-activate-transaction-that-contain-useful-j.patch
-Patch1326: 1326-manager-fix-scope-for-environment-generators.patch
-Patch1327: 1327-core-validate-input-cgroup-path-more-prudently.patch
-Patch1328: 1328-nspawn-apply-BindUser-Ephemeral-from-settings-file-o.patch
-Patch1329: 1329-nspawn-normalize-pivot_root-paths.patch
-Patch1330: 1330-udev-check-for-invalid-chars-in-various-fields-recei.patch
-Patch1331: 1331-udev-fix-review-mixup.patch
-Patch1332: 1332-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
-Patch1333: 1333-fstab-generator-support-swap-on-network-block-device.patch
-Patch1334: 1334-core-increment-start-limit-counter-only-when-we-can-.patch
-Patch1335: 1335-TEST-07-PID1-wait-for-systemd-resolved-being-stopped.patch
-Patch1336: 1336-test-extend-start-limit-interval.patch
-Patch1337: 1337-ci-bump-the-mkosi-job-to-Ubuntu-Noble.patch
-Patch1338: 1338-ci-bump-super-linter-to-v8.7.0.patch
-Patch1339: 1339-ci-explicitly-disable-multi-status-for-Super-Linter.patch
-Patch1340: 1340-github-linter-disable-ENABLE_GITHUB_PULL_REQUEST_SUM.patch
-Patch1341: 1341-test-install-iscsi-gen-initiatorname-from-iscsi-init.patch
-Patch1342: 1342-test-rename-the-start-limit-subtest.patch
-Patch1343: 1343-ci-install-GPG-keys-for-Fedora-42.patch
+Patch1326: 1326-integritysetup-Add-support-for-hmac-sha512.patch
+Patch1327: 1327-integritysetup-Add-PHMAC-algorithm-to-list-of-known-.patch
+Patch1328: 1328-manager-fix-scope-for-environment-generators.patch
+Patch1329: 1329-core-validate-input-cgroup-path-more-prudently.patch
+Patch1330: 1330-nspawn-apply-BindUser-Ephemeral-from-settings-file-o.patch
+Patch1331: 1331-nspawn-normalize-pivot_root-paths.patch
+Patch1332: 1332-core-service-do-not-propagate-reload-for-combined-RE.patch
+Patch1333: 1333-udev-check-for-invalid-chars-in-various-fields-recei.patch
+Patch1334: 1334-udev-fix-review-mixup.patch
+Patch1335: 1335-udev-scsi-id-check-for-invalid-chars-in-various-fiel.patch
+Patch1336: 1336-core-cleanup-unit-s-dropin-directories-from-global-c.patch
+Patch1337: 1337-udev-allow-persistent-storage-rules-for-rbd-devices.patch
+Patch1338: 1338-udev-net_id-introduce-naming-scheme-for-RHEL-9.9.patch
+Patch1339: 1339-fstab-generator-support-swap-on-network-block-device.patch
+Patch1340: 1340-core-increment-start-limit-counter-only-when-we-can-.patch
+Patch1341: 1341-TEST-07-PID1-wait-for-systemd-resolved-being-stopped.patch
+Patch1342: 1342-test-extend-start-limit-interval.patch
+Patch1343: 1343-man-reword-the-description-of-secure-pager-handling.patch
+Patch1344: 1344-pager-also-check-for-SUDO_UID.patch
+Patch1345: 1345-hwdb-make-three-more-hwdb-files-parsed-by-parse_hwdb.patch
+Patch1346: 1346-nss-systemd-avoid-ELF-TLS-for-recursion-guard.patch
+Patch1347: 1347-udev-builtin-net-id-print-cescaped-bad-attributes.patch
+Patch1348: 1348-udev-drop-redundant-checks.patch
+Patch1349: 1349-Revert-udev-builtin-net-id-print-cescaped-bad-attrib.patch
+Patch1350: 1350-hwdb-rules-add-82-net-auto-link-local.-hwdb-rules-to.patch
+Patch1351: 1351-test-reenable-test-for-cg_get_keyed_attribute.patch
+Patch1352: 1352-Revert-hwdb-fix-arrow-keys-on-HP-Elite-Dragonfly-G3.patch
+Patch1353: 1353-ci-bump-the-mkosi-job-to-Ubuntu-Noble.patch
+Patch1354: 1354-ci-bump-super-linter-to-v8.7.0.patch
+Patch1355: 1355-ci-explicitly-disable-multi-status-for-Super-Linter.patch
+Patch1356: 1356-github-linter-disable-ENABLE_GITHUB_PULL_REQUEST_SUM.patch
+Patch1357: 1357-test-install-iscsi-gen-initiatorname-from-iscsi-init.patch
+Patch1358: 1358-resolved-replace-assert-with-error-return-in-DNSSEC-.patch
+Patch1359: 1359-pid1-introduce-new-SERVICE_-DEAD-FAILED-_BEFORE_AUTO.patch
+Patch1360: 1360-service-add-new-RestartMode-option.patch
+Patch1361: 1361-core-service-drop-unneeded-unit_add_to_gc_queue.patch
+Patch1362: 1362-core-get-rid-of-unused-Service.will_auto_restart-log.patch
+Patch1363: 1363-core-drop-UnitNotifyFlags.patch
+Patch1364: 1364-core-split-out-the-helper-to-serialize-deserialize-r.patch
+Patch1365: 1365-core-make-manager-event-loop-rate-limit-configurable.patch
+Patch1366: 1366-iovec-util-add-some-useful-helpers-for-dealing-with-.patch
+Patch1367: 1367-repart-use-iovec-structure-for-key-file.patch
+Patch1368: 1368-repart-make-tpm2-pcrs-also-configurable-in-repart.d.patch
+Patch1369: 1369-repart-make-key-file-also-configurable-in-repart.d.patch
+Patch1370: 1370-man-repart-fix-typo.patch
+Patch1371: 1371-test-include-util.sh-needed-for-assert_-functions.patch
+Patch1372: 1372-test-drop-forgotten-set-e.patch
+Patch1373: 1373-journal-treble-field-hash-table-size.patch
+Patch1374: 1374-test-rename-the-start-limit-subtest.patch
+Patch1375: 1375-ci-install-GPG-keys-for-Fedora-42.patch
 
 # Downstream-only patches (9000–9999)
 
-%ifarch %{ix86} x86_64 aarch64
+%ifarch x86_64 aarch64
 %global have_gnu_efi 1
 %endif
 
@@ -1853,7 +1888,7 @@ CONFIGURE_OPTS=(
         -Db_lto=false
 %endif
         -Db_ndebug=false
-        -Dman=true
+        -Dman=%[%{with docs}?"true":"false"]
         -Dversion-tag=%{version}-%{release}
 %if 0%{?fedora}
         -Dfallback-hostname=fedora
@@ -2303,35 +2338,77 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
-* Wed Aug 19 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.6
-- test: rename the start limit subtest (RHEL-212086)
-- ci: install GPG keys for Fedora 42 (RHEL-212086)
+* Wed Sep 02 2026 Frantisek Sumsal <fsumsal@redhat.com> - 252-79
+- Build docs on 64-bit architectures only (RHEL-212998)
 
-* Mon Aug 03 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.5
-- core: increment start limit counter only when we can start the unit (RHEL-212086)
-- TEST-07-PID1: wait for systemd-resolved being stopped (RHEL-212086)
-- test: extend start limit interval (RHEL-212086)
-- ci: bump the mkosi job to Ubuntu Noble (RHEL-212086)
-- ci: bump super-linter to v8.7.0 (RHEL-212086)
-- ci: explicitly disable multi status for Super-Linter (RHEL-212086)
-- github/linter: disable ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT for super-linter (RHEL-212086)
-- test: install iscsi-gen-initiatorname from iscsi-initiator-utils (RHEL-212086)
+* Wed Aug 19 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-78
+- test: rename the start limit subtest (RHEL-164539)
+- ci: install GPG keys for Fedora 42 (RHEL-155457)
 
-* Tue May 12 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.4
-- fstab-generator: support swap on network block devices (RHEL-166186)
+* Tue Aug 18 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-77
+- test: include util.sh needed for assert_*() functions (RHEL-155457)
+- test: drop forgotten `set +e` (RHEL-155457)
+- journal: treble field hash table size (RHEL-105520)
 
-* Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.3
-- nspawn: apply BindUser/Ephemeral from settings file only if trusted (RHEL-163870)
-- nspawn: normalize pivot_root paths (RHEL-163870)
-- udev: check for invalid chars in various fields received from the kernel (RHEL-163876)
-- udev: fix review mixup (RHEL-163876)
-- udev/scsi-id: check for invalid chars in various fields received from the kernel (RHEL-163876)
+* Wed Aug 05 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-76
+- resolved: replace assert() with error return in DNSSEC verify functions (RHEL-208860)
+- pid1: introduce new SERVICE_{DEAD|FAILED}_BEFORE_AUTO_RESTART service substates (RHEL-137251)
+- service: add new RestartMode option (RHEL-137251)
+- core/service: drop unneeded unit_add_to_gc_queue() (RHEL-137251)
+- core: get rid of unused Service.will_auto_restart logic (RHEL-118224)
+- core: drop UnitNotifyFlags (RHEL-118224)
+- core: split out the helper to serialize/deserialize ratelimits (RHEL-213655)
+- core: make manager event loop rate limit configurable (RHEL-213655)
+- iovec-util: add some useful helpers for dealing with iovecs that refer to dynamic memory (RHEL-212610)
+- repart: use iovec structure for --key-file (RHEL-212610)
+- repart: make --tpm2-pcrs also configurable in repart.d/* (RHEL-212610)
+- repart: make --key-file also configurable in repart.d/* (RHEL-212610)
+- man/repart: fix typo (RHEL-212610)
 
-* Thu Apr 02 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.2
-- core: validate input cgroup path more prudently (RHEL-152082)
+* Tue Jul 21 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-73
+- hwdb,rules: add 82-net-auto-link-local.{hwdb,rules} to build (RHEL-180938)
+- test: reenable test for cg_get_keyed_attribute() (RHEL-180940)
+- Revert "hwdb: fix arrow keys on HP Elite Dragonfly G3" (RHEL-180939)
+- ci: bump the mkosi job to Ubuntu Noble (RHEL-155457)
+- ci: bump super-linter to v8.7.0 (RHEL-155457)
+- ci: explicitly disable multi status for Super-Linter (RHEL-155457)
+- github/linter: disable ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT for super-linter (RHEL-155457)
+- test: install iscsi-gen-initiatorname from iscsi-initiator-utils (RHEL-155457)
 
-* Tue Mar 24 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67.1
-- manager: fix scope for environment generators (RHEL-154262)
+* Thu Jul 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-72
+- man: reword the description of "secure pager" handling (RHEL-102941)
+- pager: also check for $SUDO_UID (RHEL-102941)
+- hwdb: make three more hwdb files parsed by parse_hwdb.py (RHEL-180937)
+- nss-systemd: avoid ELF TLS for recursion guard (RHEL-193714)
+- udev-builtin-net-id: print cescaped bad attributes (RHEL-180934)
+- udev: drop redundant checks (RHEL-180934)
+- Revert "udev-builtin-net-id: print cescaped bad attributes" (RHEL-180934)
+
+* Tue Jun 09 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-71
+- Do not build efi stub on i686 anymore (RHEL-176073)
+
+* Tue May 12 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-70
+- core: cleanup unit's dropin directories from global cache (RHEL-127425)
+- udev: allow persistent storage rules for rbd devices (RHEL-3631)
+- udev/net_id: introduce naming scheme for RHEL-9.9 (RHEL-25518)
+- fstab-generator: support swap on network block devices (RHEL-166187)
+- core: increment start limit counter only when we can start the unit (RHEL-164539)
+- TEST-07-PID1: wait for systemd-resolved being stopped (RHEL-164539)
+- test: extend start limit interval (RHEL-164539)
+
+* Thu Apr 16 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-69
+- nspawn: apply BindUser/Ephemeral from settings file only if trusted (RHEL-163871)
+- nspawn: normalize pivot_root paths (RHEL-163871)
+- core/service: do not propagate reload for combined RELOADING=1 + READY=1 when notify-reload (RHEL-108575)
+- udev: check for invalid chars in various fields received from the kernel (RHEL-163877)
+- udev: fix review mixup (RHEL-163877)
+- udev/scsi-id: check for invalid chars in various fields received from the kernel (RHEL-163877)
+
+* Wed Apr 08 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-68
+- integritysetup: Add support for hmac-sha512 (RHEL-50213)
+- integritysetup: Add PHMAC algorithm to list of known algorithms (RHEL-50213)
+- manager: fix scope for environment generators (RHEL-159230)
+- core: validate input cgroup path more prudently (RHEL-155393)
 
 * Mon Feb 23 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-67
 - core: only activate transaction that contain useful jobs (RHEL-143727)

@@ -1,0 +1,29 @@
+From ece01612cf57d48488f6dfa26d1681a391115722 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Sat, 30 Aug 2025 08:08:04 +0900
+Subject: [PATCH] test: reenable test for cg_get_keyed_attribute()
+
+The test case was mistakenly disabled by
+a412a1b92ab234a57c646f6779471772b2c355ec.
+
+Co-authored-by: Natalie Vock <natalie.vock@gmx.de>
+(cherry picked from commit 194e05642f74993d7be80724f2560f1a698931ec)
+
+Resolves: RHEL-180940
+---
+ src/test/test-cgroup-util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/test/test-cgroup-util.c b/src/test/test-cgroup-util.c
+index c6439e2fbb..7ac0ba0a77 100644
+--- a/src/test/test-cgroup-util.c
++++ b/src/test/test-cgroup-util.c
+@@ -367,7 +367,7 @@ TEST(cg_get_keyed_attribute) {
+         int i, r;
+ 
+         r = cg_get_keyed_attribute("cpu", "/init.scope", "no_such_file", STRV_MAKE("no_such_attr"), &val);
+-        if (IN_SET(r, -ENOMEDIUM, -ENOENT) || ERRNO_IS_PRIVILEGE(r)) {
++        if (r == -ENOMEDIUM || ERRNO_IS_PRIVILEGE(r)) {
+                 log_info_errno(r, "Skipping most of %s, /sys/fs/cgroup not accessible: %m", __func__);
+                 return;
+         }

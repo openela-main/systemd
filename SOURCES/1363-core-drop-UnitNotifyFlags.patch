@@ -1,0 +1,239 @@
+From 762a8cff390322bb578b5844326a2b654e9d2c23 Mon Sep 17 00:00:00 2001
+From: Mike Yuan <me@yhndnzj.com>
+Date: Mon, 22 May 2023 08:35:53 +0800
+Subject: [PATCH] core: drop UnitNotifyFlags
+
+This essentially reverts 2ad2e41a72ec19159c0746a78e15ff880fe32a63.
+
+No longer needed after dropping UNIT_NOTIFY_WILL_AUTO_RESTART.
+
+(cherry picked from commit 96b09de500f9d658b2e49abf3be15e06f9bd1ca6)
+
+Related: RHEL-118224
+---
+ src/core/automount.c |  2 +-
+ src/core/device.c    |  2 +-
+ src/core/mount.c     |  3 +--
+ src/core/path.c      |  2 +-
+ src/core/scope.c     |  2 +-
+ src/core/service.c   |  3 +--
+ src/core/slice.c     |  2 +-
+ src/core/socket.c    |  2 +-
+ src/core/swap.c      |  2 +-
+ src/core/target.c    |  2 +-
+ src/core/timer.c     |  2 +-
+ src/core/unit.c      | 10 +++++-----
+ src/core/unit.h      |  6 +-----
+ 13 files changed, 17 insertions(+), 23 deletions(-)
+
+diff --git a/src/core/automount.c b/src/core/automount.c
+index ae8399d1af..f559454a88 100644
+--- a/src/core/automount.c
++++ b/src/core/automount.c
+@@ -283,7 +283,7 @@ static void automount_set_state(Automount *a, AutomountState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(a), "Changed %s -> %s", automount_state_to_string(old_state), automount_state_to_string(state));
+ 
+-        unit_notify(UNIT(a), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(a), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static int automount_coldplug(Unit *u) {
+diff --git a/src/core/device.c b/src/core/device.c
+index f007bdfd9b..31f014d94b 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -174,7 +174,7 @@ static void device_set_state(Device *d, DeviceState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(d), "Changed %s -> %s", device_state_to_string(old_state), device_state_to_string(state));
+ 
+-        unit_notify(UNIT(d), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(d), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static void device_found_changed(Device *d, DeviceFound previous, DeviceFound now) {
+diff --git a/src/core/mount.c b/src/core/mount.c
+index 5789a253cd..1a6aca0aa8 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -753,8 +753,7 @@ static void mount_set_state(Mount *m, MountState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(m), "Changed %s -> %s", mount_state_to_string(old_state), mount_state_to_string(state));
+ 
+-        unit_notify(UNIT(m), state_translation_table[old_state], state_translation_table[state],
+-                    m->reload_result == MOUNT_SUCCESS ? 0 : UNIT_NOTIFY_RELOAD_FAILURE);
++        unit_notify(UNIT(m), state_translation_table[old_state], state_translation_table[state], m->reload_result == MOUNT_SUCCESS);
+ }
+ 
+ static int mount_coldplug(Unit *u) {
+diff --git a/src/core/path.c b/src/core/path.c
+index 6f850244f1..6b548d40bc 100644
+--- a/src/core/path.c
++++ b/src/core/path.c
+@@ -475,7 +475,7 @@ static void path_set_state(Path *p, PathState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(p), "Changed %s -> %s", path_state_to_string(old_state), path_state_to_string(state));
+ 
+-        unit_notify(UNIT(p), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(p), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static void path_enter_waiting(Path *p, bool initial, bool from_trigger_notify);
+diff --git a/src/core/scope.c b/src/core/scope.c
+index 4e1a954c6c..1be18c21d6 100644
+--- a/src/core/scope.c
++++ b/src/core/scope.c
+@@ -126,7 +126,7 @@ static void scope_set_state(Scope *s, ScopeState state) {
+         if (state != old_state)
+                 log_debug("%s changed %s -> %s", UNIT(s)->id, scope_state_to_string(old_state), scope_state_to_string(state));
+ 
+-        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static int scope_add_default_dependencies(Scope *s) {
+diff --git a/src/core/service.c b/src/core/service.c
+index 55e8bf5182..a3c6b1380f 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1159,8 +1159,7 @@ static void service_set_state(Service *s, ServiceState state) {
+         if (old_state != state)
+                 log_unit_debug(UNIT(s), "Changed %s -> %s", service_state_to_string(old_state), service_state_to_string(state));
+ 
+-        unit_notify(UNIT(s), table[old_state], table[state],
+-                    s->reload_result == SERVICE_SUCCESS ? 0 : UNIT_NOTIFY_RELOAD_FAILURE);
++        unit_notify(UNIT(s), table[old_state], table[state], s->reload_result == SERVICE_SUCCESS);
+ }
+ 
+ static usec_t service_coldplug_timeout(Service *s) {
+diff --git a/src/core/slice.c b/src/core/slice.c
+index 8f913a8d45..cb6670ff45 100644
+--- a/src/core/slice.c
++++ b/src/core/slice.c
+@@ -43,7 +43,7 @@ static void slice_set_state(Slice *t, SliceState state) {
+                           slice_state_to_string(old_state),
+                           slice_state_to_string(state));
+ 
+-        unit_notify(UNIT(t), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(t), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static int slice_add_parent_slice(Slice *s) {
+diff --git a/src/core/socket.c b/src/core/socket.c
+index ebb83cd5b0..c916ff7ee5 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -1838,7 +1838,7 @@ static void socket_set_state(Socket *s, SocketState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(s), "Changed %s -> %s", socket_state_to_string(old_state), socket_state_to_string(state));
+ 
+-        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static int socket_coldplug(Unit *u) {
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 458c935b0c..535657d3b5 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -586,7 +586,7 @@ static void swap_set_state(Swap *s, SwapState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(s), "Changed %s -> %s", swap_state_to_string(old_state), swap_state_to_string(state));
+ 
+-        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(s), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ 
+         /* If there other units for the same device node have a job
+            queued it might be worth checking again if it is runnable
+diff --git a/src/core/target.c b/src/core/target.c
+index 6225df5b0d..3519b4b653 100644
+--- a/src/core/target.c
++++ b/src/core/target.c
+@@ -31,7 +31,7 @@ static void target_set_state(Target *t, TargetState state) {
+                           target_state_to_string(old_state),
+                           target_state_to_string(state));
+ 
+-        unit_notify(UNIT(t), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(t), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static int target_add_default_dependencies(Target *t) {
+diff --git a/src/core/timer.c b/src/core/timer.c
+index b96e88af90..310bc79903 100644
+--- a/src/core/timer.c
++++ b/src/core/timer.c
+@@ -298,7 +298,7 @@ static void timer_set_state(Timer *t, TimerState state) {
+         if (state != old_state)
+                 log_unit_debug(UNIT(t), "Changed %s -> %s", timer_state_to_string(old_state), timer_state_to_string(state));
+ 
+-        unit_notify(UNIT(t), state_translation_table[old_state], state_translation_table[state], 0);
++        unit_notify(UNIT(t), state_translation_table[old_state], state_translation_table[state], /* reload_success = */ true);
+ }
+ 
+ static void timer_enter_waiting(Timer *t, bool time_change);
+diff --git a/src/core/unit.c b/src/core/unit.c
+index c076b5126f..53098c5b08 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2017,7 +2017,7 @@ int unit_reload(Unit *u) {
+ 
+         if (!UNIT_VTABLE(u)->reload) {
+                 /* Unit doesn't have a reload function, but we need to propagate the reload anyway */
+-                unit_notify(u, unit_active_state(u), unit_active_state(u), 0);
++                unit_notify(u, unit_active_state(u), unit_active_state(u), /* reload_success = */ true);
+                 return 0;
+         }
+ 
+@@ -2547,7 +2547,7 @@ static void unit_emit_audit_stop(Unit *u, UnitActiveState state) {
+         }
+ }
+ 
+-static bool unit_process_job(Job *j, UnitActiveState ns, UnitNotifyFlags flags) {
++static bool unit_process_job(Job *j, UnitActiveState ns, bool reload_success) {
+         bool unexpected = false;
+         JobResult result;
+ 
+@@ -2590,7 +2590,7 @@ static bool unit_process_job(Job *j, UnitActiveState ns, UnitNotifyFlags flags)
+ 
+                 if (j->state == JOB_RUNNING) {
+                         if (ns == UNIT_ACTIVE)
+-                                job_finish_and_invalidate(j, (flags & UNIT_NOTIFY_RELOAD_FAILURE) ? JOB_FAILED : JOB_DONE, true, false);
++                                job_finish_and_invalidate(j, reload_success ? JOB_DONE : JOB_FAILED, true, false);
+                         else if (!IN_SET(ns, UNIT_ACTIVATING, UNIT_RELOADING)) {
+                                 unexpected = true;
+ 
+@@ -2621,7 +2621,7 @@ static bool unit_process_job(Job *j, UnitActiveState ns, UnitNotifyFlags flags)
+         return unexpected;
+ }
+ 
+-void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, UnitNotifyFlags flags) {
++void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_success) {
+         const char *reason;
+         Manager *m;
+ 
+@@ -2686,7 +2686,7 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, UnitNotifyFlag
+ 
+                 /* Let's propagate state changes to the job */
+                 if (u->job)
+-                        unexpected = unit_process_job(u->job, ns, flags);
++                        unexpected = unit_process_job(u->job, ns, reload_success);
+                 else
+                         unexpected = true;
+ 
+diff --git a/src/core/unit.h b/src/core/unit.h
+index 77cc429803..08969d4cb9 100644
+--- a/src/core/unit.h
++++ b/src/core/unit.h
+@@ -901,11 +901,7 @@ int unit_kill_common(Unit *u, KillWho who, int signo, pid_t main_pid, pid_t cont
+ 
+ void unit_notify_cgroup_oom(Unit *u, bool managed_oom);
+ 
+-typedef enum UnitNotifyFlags {
+-        UNIT_NOTIFY_RELOAD_FAILURE    = 1 << 0,
+-} UnitNotifyFlags;
+-
+-void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, UnitNotifyFlags flags);
++void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_success);
+ 
+ int unit_watch_pid(Unit *u, pid_t pid, bool exclusive);
+ void unit_unwatch_pid(Unit *u, pid_t pid);

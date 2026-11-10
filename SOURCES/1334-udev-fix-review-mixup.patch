@@ -1,4 +1,4 @@
-From 62af15ed46544eec6453ad2bac8926e292e5d189 Mon Sep 17 00:00:00 2001
+From 320ca2d881198cab52b4c6dd073967f2d4b2e919 Mon Sep 17 00:00:00 2001
 From: Luca Boccassi <luca.boccassi@gmail.com>
 Date: Fri, 13 Mar 2026 11:10:47 +0000
 Subject: [PATCH] udev: fix review mixup
@@ -12,7 +12,7 @@ Follow-up for 16325b35fa6ecb25f66534a562583ce3b96d52f3
 
 (cherry picked from commit 54f880b02ecf7362e630ffc885d1466df6ee6820)
 
-Resolves: RHEL-163876
+Resolves: RHEL-163877
 ---
  src/udev/scsi_id/scsi_id.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

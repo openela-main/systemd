@@ -1,0 +1,37 @@
+From 010019fa40cb709ea8b111c04301d9a5e7dbbde0 Mon Sep 17 00:00:00 2001
+From: Yu Watanabe <watanabe.yu+github@gmail.com>
+Date: Thu, 12 Mar 2026 07:16:46 +0900
+Subject: [PATCH] udev: drop redundant checks
+
+This partially reverts 16325b35fa6ecb25f66534a562583ce3b96d52f3,
+as bad characters are already filtered.
+
+(cherry picked from commit c5a04f59d912fb2c3451994279dea3ae3064f6c7)
+
+Resolves: RHEL-180934
+---
+ src/udev/udev-builtin-net_id.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/src/udev/udev-builtin-net_id.c b/src/udev/udev-builtin-net_id.c
+index 8003f48eba..de2c1fe782 100644
+--- a/src/udev/udev-builtin-net_id.c
++++ b/src/udev/udev-builtin-net_id.c
+@@ -40,7 +40,6 @@
+ #include "strv.h"
+ #include "strxcpyx.h"
+ #include "udev-builtin.h"
+-#include "utf8.h"
+ 
+ #define ONBOARD_14BIT_INDEX_MAX ((1U << 14) - 1)
+ #define ONBOARD_16BIT_INDEX_MAX ((1U << 16) - 1)
+@@ -1196,9 +1195,6 @@ static int get_link_info(sd_device *dev, LinkInfo *info) {
+ 
+         r = device_get_sysattr_value_filtered(dev, "phys_port_name", &info->phys_port_name);
+         if (r >= 0) {
+-                if (!utf8_is_valid(info->phys_port_name) || string_has_cc(info->phys_port_name, /* ok= */ NULL))
+-                        return log_invalid_device_attr(dev, "phys_port_name", info->phys_port_name);
+-
+                 /* Check if phys_port_name indicates virtual device representor */
+                 (void) sscanf(info->phys_port_name, "pf%*uvf%d", &info->vf_representor_id);
+         }

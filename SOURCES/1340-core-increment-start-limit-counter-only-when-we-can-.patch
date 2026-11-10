@@ -1,4 +1,4 @@
-From f18478c89e0f88eab88bb7f79ac021b6ebd28cb4 Mon Sep 17 00:00:00 2001
+From 4060cdad388b0ae658f2024633b842a46c37962e Mon Sep 17 00:00:00 2001
 From: Yu Watanabe <watanabe.yu+github@gmail.com>
 Date: Mon, 20 Oct 2025 19:40:28 +0900
 Subject: [PATCH] core: increment start limit counter only when we can start
@@ -19,7 +19,7 @@ Fixes #39247.
 
 (cherry picked from commit 8eefd0f4debc0bcfeea89dd39c43e3318f3f7ae7)
 
-Resolves: RHEL-212086
+Resolves: RHEL-164539
 ---
  src/core/automount.c                   |  6 ++--
  src/core/mount.c                       | 25 +++++----------
@@ -154,7 +154,7 @@ index 3a46e44928..6f850244f1 100644
  
  const ActivationDetailsVTable activation_details_path_vtable = {
 diff --git a/src/core/service.c b/src/core/service.c
-index 9c938aee91..5f0a400181 100644
+index 53f40b2d78..e152fb6227 100644
 --- a/src/core/service.c
 +++ b/src/core/service.c
 @@ -2557,17 +2557,6 @@ static int service_start(Unit *u) {
@@ -175,7 +175,7 @@ index 9c938aee91..5f0a400181 100644
          /* A service that will be restarted must be stopped first to
           * trigger BindsTo and/or OnFailure dependencies. If a user
           * does not want to wait for the holdoff time to elapse, the
-@@ -4702,12 +4691,19 @@ static const char *service_finished_job(Unit *u, JobType t, JobResult result) {
+@@ -4707,12 +4696,19 @@ static const char *service_finished_job(Unit *u, JobType t, JobResult result) {
          return NULL;
  }
  
@@ -196,7 +196,7 @@ index 9c938aee91..5f0a400181 100644
          /* Make sure we don't enter a busy loop of some kind. */
          r = unit_test_start_limit(u);
          if (r < 0) {
-@@ -4715,7 +4711,7 @@ static int service_can_start(Unit *u) {
+@@ -4720,7 +4716,7 @@ static int service_can_start(Unit *u) {
                  return r;
          }
  
@@ -205,7 +205,7 @@ index 9c938aee91..5f0a400181 100644
  }
  
  static const char* const service_restart_table[_SERVICE_RESTART_MAX] = {
-@@ -4891,5 +4887,5 @@ const UnitVTable service_vtable = {
+@@ -4896,5 +4892,5 @@ const UnitVTable service_vtable = {
                  .finished_job = service_finished_job,
          },
  
@@ -367,10 +367,10 @@ index 8fb79bc0cb..b96e88af90 100644
  
  const ActivationDetailsVTable activation_details_timer_vtable = {
 diff --git a/src/core/unit.c b/src/core/unit.c
-index 7f321c911d..34e908259a 100644
+index 790f4023a2..0b58d0498b 100644
 --- a/src/core/unit.c
 +++ b/src/core/unit.c
-@@ -1840,7 +1840,7 @@ int unit_start(Unit *u, ActivationDetails *details) {
+@@ -1846,7 +1846,7 @@ int unit_start(Unit *u, ActivationDetails *details) {
          state = unit_active_state(u);
          if (UNIT_IS_ACTIVE_OR_RELOADING(state))
                  return -EALREADY;
@@ -379,7 +379,7 @@ index 7f321c911d..34e908259a 100644
                  return -EAGAIN;
  
          /* Units that aren't loaded cannot be started */
-@@ -1883,10 +1883,11 @@ int unit_start(Unit *u, ActivationDetails *details) {
+@@ -1889,10 +1889,11 @@ int unit_start(Unit *u, ActivationDetails *details) {
                  return unit_start(following, details);
          }
  

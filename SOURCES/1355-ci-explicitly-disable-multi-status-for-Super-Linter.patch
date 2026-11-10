@@ -1,4 +1,4 @@
-From 1bc496b69c93fd05a822f37f9355fb92479caeb6 Mon Sep 17 00:00:00 2001
+From 6850151e8df81aafeb24f726e79f6820aa072bd1 Mon Sep 17 00:00:00 2001
 From: Frantisek Sumsal <frantisek@sumsal.cz>
 Date: Thu, 2 May 2024 09:45:02 +0200
 Subject: [PATCH] ci: explicitly disable multi status for Super-Linter
@@ -11,7 +11,7 @@ feature.
 
 (cherry picked from commit b160ac9c126d904358a83a18542e0a37d9ca0d5c)
 
-Related: RHEL-212086
+Related: RHEL-155457
 ---
  .github/workflows/linter.yml | 1 +
  1 file changed, 1 insertion(+)
