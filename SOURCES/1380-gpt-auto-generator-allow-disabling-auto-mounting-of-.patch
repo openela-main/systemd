@@ -1,0 +1,74 @@
+From 28b138e9f2006003e4626cbc6f55c33489c699bc Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Mon, 9 Nov 2026 16:08:51 +0100
+Subject: [PATCH] gpt-auto-generator: allow disabling auto-mounting of /srv
+
+rhel-only: feature
+
+Related: RHEL-303708
+---
+ man/systemd-gpt-auto-generator.xml          | 11 +++++++++++
+ src/gpt-auto-generator/gpt-auto-generator.c | 14 +++++++++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd-gpt-auto-generator.xml b/man/systemd-gpt-auto-generator.xml
+index a9a3a45248..a09732ca08 100644
+--- a/man/systemd-gpt-auto-generator.xml
++++ b/man/systemd-gpt-auto-generator.xml
+@@ -298,6 +298,17 @@
+         <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
+         systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><varname>systemd.rhel.gpt_auto_srv=</varname></term>
++
++        <listitem><para>Takes a boolean argument or enables the option if specified without an argument.
++        If disabled, automatic discovery of the server data partition based on GPT partition type is
++        disabled, i.e. <filename>/srv/</filename> is not mounted automatically. Defaults to enabled.</para>
++
++        <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
++        systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
+index e97367f803..5d60d40ae8 100644
+--- a/src/gpt-auto-generator/gpt-auto-generator.c
++++ b/src/gpt-auto-generator/gpt-auto-generator.c
+@@ -43,6 +43,7 @@ static bool arg_root_enabled = true;
+ static bool arg_swap_enabled = true;
+ static bool arg_rhel_home_enabled = true;
+ static bool arg_rhel_var_enabled = true;
++static bool arg_rhel_srv_enabled = true;
+ static int arg_root_rw = -1;
+ 
+ static int add_cryptsetup(
+@@ -740,7 +741,7 @@ static int enumerate_partitions(dev_t devnum) {
+                         r = k;
+         }
+ 
+-        if (m->partitions[PARTITION_SRV].found) {
++        if (m->partitions[PARTITION_SRV].found && arg_rhel_srv_enabled) {
+                 k = add_partition_mount(m->partitions + PARTITION_SRV, "srv", "/srv", "Server Data Partition");
+                 if (k < 0)
+                         r = k;
+@@ -881,6 +882,17 @@ static int parse_proc_cmdline_item(const char *key, const char *value, void *dat
+                 if (!arg_rhel_var_enabled)
+                         log_debug("Disabling var partition auto-detection, systemd.rhel.gpt_auto_var=no is defined.");
+ 
++        } else if (proc_cmdline_key_streq(key, "systemd.rhel.gpt_auto_srv")) {
++
++                r = value ? parse_boolean(value) : 1;
++                if (r < 0)
++                        log_warning_errno(r, "Failed to parse gpt-auto srv switch \"%s\", ignoring: %m", value);
++                else
++                        arg_rhel_srv_enabled = r;
++
++                if (!arg_rhel_srv_enabled)
++                        log_debug("Disabling srv partition auto-detection, systemd.rhel.gpt_auto_srv=no is defined.");
++
+         }
+ 
+         return 0;

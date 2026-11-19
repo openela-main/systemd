@@ -1,0 +1,74 @@
+From 1bbc0576485f07d29f9857f9104ae00b2fc137f7 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Thu, 29 Oct 2026 11:29:17 +0100
+Subject: [PATCH] gpt-auto-generator: allow disabling auto-mounting of /home
+
+rhel-only: feature
+
+Related: RHEL-303708
+---
+ man/systemd-gpt-auto-generator.xml          | 11 +++++++++++
+ src/gpt-auto-generator/gpt-auto-generator.c | 14 +++++++++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd-gpt-auto-generator.xml b/man/systemd-gpt-auto-generator.xml
+index 9870dac5d2..ecf77a9c44 100644
+--- a/man/systemd-gpt-auto-generator.xml
++++ b/man/systemd-gpt-auto-generator.xml
+@@ -276,6 +276,17 @@
+         If disabled, automatic discovery of swap partition(s) based on GPT partition type is disabled.
+         Defaults to enabled.</para></listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><varname>systemd.rhel.gpt_auto_home=</varname></term>
++
++        <listitem><para>Takes a boolean argument or enables the option if specified without an argument.
++        If disabled, automatic discovery of the home partition based on GPT partition type is disabled,
++        i.e. <filename>/home/</filename> is not mounted automatically. Defaults to enabled.</para>
++
++        <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
++        systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
+index 84d6b2be77..7bd71ffa98 100644
+--- a/src/gpt-auto-generator/gpt-auto-generator.c
++++ b/src/gpt-auto-generator/gpt-auto-generator.c
+@@ -41,6 +41,7 @@ static const char *arg_dest = NULL;
+ static bool arg_enabled = true;
+ static bool arg_root_enabled = true;
+ static bool arg_swap_enabled = true;
++static bool arg_rhel_home_enabled = true;
+ static int arg_root_rw = -1;
+ 
+ static int add_cryptsetup(
+@@ -732,7 +733,7 @@ static int enumerate_partitions(dev_t devnum) {
+                         r = k;
+         }
+ 
+-        if (m->partitions[PARTITION_HOME].found) {
++        if (m->partitions[PARTITION_HOME].found && arg_rhel_home_enabled) {
+                 k = add_partition_mount(m->partitions + PARTITION_HOME, "home", "/home", "Home Partition");
+                 if (k < 0)
+                         r = k;
+@@ -857,6 +858,17 @@ static int parse_proc_cmdline_item(const char *key, const char *value, void *dat
+                 if (!arg_swap_enabled)
+                         log_debug("Disabling swap partitions auto-detection, systemd.swap=no is defined.");
+ 
++        } else if (proc_cmdline_key_streq(key, "systemd.rhel.gpt_auto_home")) {
++
++                r = value ? parse_boolean(value) : 1;
++                if (r < 0)
++                        log_warning_errno(r, "Failed to parse gpt-auto home switch \"%s\", ignoring: %m", value);
++                else
++                        arg_rhel_home_enabled = r;
++
++                if (!arg_rhel_home_enabled)
++                        log_debug("Disabling home partition auto-detection, systemd.rhel.gpt_auto_home=no is defined.");
++
+         }
+ 
+         return 0;

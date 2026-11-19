@@ -1,0 +1,74 @@
+From 581b9294b4a4ce368678ccb123ad95a044ee45c3 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Mon, 9 Nov 2026 16:09:04 +0100
+Subject: [PATCH] gpt-auto-generator: allow disabling auto-mounting of /var/tmp
+
+rhel-only: feature
+
+Related: RHEL-303708
+---
+ man/systemd-gpt-auto-generator.xml          | 11 +++++++++++
+ src/gpt-auto-generator/gpt-auto-generator.c | 14 +++++++++++++-
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd-gpt-auto-generator.xml b/man/systemd-gpt-auto-generator.xml
+index a09732ca08..7599c91eb0 100644
+--- a/man/systemd-gpt-auto-generator.xml
++++ b/man/systemd-gpt-auto-generator.xml
+@@ -309,6 +309,17 @@
+         <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
+         systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><varname>systemd.rhel.gpt_auto_tmp=</varname></term>
++
++        <listitem><para>Takes a boolean argument or enables the option if specified without an argument.
++        If disabled, automatic discovery of the temporary data partition based on GPT partition type is
++        disabled, i.e. <filename>/var/tmp/</filename> is not mounted automatically. Defaults to enabled.</para>
++
++        <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
++        systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
+index 5d60d40ae8..53002920c9 100644
+--- a/src/gpt-auto-generator/gpt-auto-generator.c
++++ b/src/gpt-auto-generator/gpt-auto-generator.c
+@@ -44,6 +44,7 @@ static bool arg_swap_enabled = true;
+ static bool arg_rhel_home_enabled = true;
+ static bool arg_rhel_var_enabled = true;
+ static bool arg_rhel_srv_enabled = true;
++static bool arg_rhel_tmp_enabled = true;
+ static int arg_root_rw = -1;
+ 
+ static int add_cryptsetup(
+@@ -753,7 +754,7 @@ static int enumerate_partitions(dev_t devnum) {
+                         r = k;
+         }
+ 
+-        if (m->partitions[PARTITION_TMP].found) {
++        if (m->partitions[PARTITION_TMP].found && arg_rhel_tmp_enabled) {
+                 k = add_partition_mount(m->partitions + PARTITION_TMP, "var-tmp", "/var/tmp", "Temporary Data Partition");
+                 if (k < 0)
+                         r = k;
+@@ -893,6 +894,17 @@ static int parse_proc_cmdline_item(const char *key, const char *value, void *dat
+                 if (!arg_rhel_srv_enabled)
+                         log_debug("Disabling srv partition auto-detection, systemd.rhel.gpt_auto_srv=no is defined.");
+ 
++        } else if (proc_cmdline_key_streq(key, "systemd.rhel.gpt_auto_tmp")) {
++
++                r = value ? parse_boolean(value) : 1;
++                if (r < 0)
++                        log_warning_errno(r, "Failed to parse gpt-auto tmp switch \"%s\", ignoring: %m", value);
++                else
++                        arg_rhel_tmp_enabled = r;
++
++                if (!arg_rhel_tmp_enabled)
++                        log_debug("Disabling tmp partition auto-detection, systemd.rhel.gpt_auto_tmp=no is defined.");
++
+         }
+ 
+         return 0;

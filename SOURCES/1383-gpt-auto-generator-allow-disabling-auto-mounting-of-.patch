@@ -1,0 +1,75 @@
+From 7b0f39ac2a176e8eae2064d1979c2112b4d42a66 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Mon, 9 Nov 2026 17:32:17 +0100
+Subject: [PATCH] gpt-auto-generator: allow disabling auto-mounting of XBOOTLDR
+
+rhel-only: feature
+
+Related: RHEL-303708
+---
+ man/systemd-gpt-auto-generator.xml          | 12 ++++++++++++
+ src/gpt-auto-generator/gpt-auto-generator.c | 14 +++++++++++++-
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd-gpt-auto-generator.xml b/man/systemd-gpt-auto-generator.xml
+index 5647d71fea..d0e58616a0 100644
+--- a/man/systemd-gpt-auto-generator.xml
++++ b/man/systemd-gpt-auto-generator.xml
+@@ -332,6 +332,18 @@
+         <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
+         systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
+       </varlistentry>
++
++      <varlistentry>
++        <term><varname>systemd.rhel.gpt_auto_xbootldr=</varname></term>
++
++        <listitem><para>Takes a boolean argument or enables the option if specified without an argument.
++        If disabled, automatic discovery of the Extended Boot Loader partition (XBOOTLDR) based on GPT
++        partition type is disabled, i.e. <filename>/boot/</filename> is not mounted automatically from it.
++        Defaults to enabled.</para>
++
++        <para>Note that this option is specific to Red Hat Enterprise Linux 9 and is not available in upstream
++        systemd. It will not be supported in newer Red Hat Enterprise Linux versions.</para></listitem>
++      </varlistentry>
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
+index 04afc75ebf..e6893e3b8d 100644
+--- a/src/gpt-auto-generator/gpt-auto-generator.c
++++ b/src/gpt-auto-generator/gpt-auto-generator.c
+@@ -46,6 +46,7 @@ static bool arg_rhel_var_enabled = true;
+ static bool arg_rhel_srv_enabled = true;
+ static bool arg_rhel_tmp_enabled = true;
+ static bool arg_rhel_esp_enabled = true;
++static bool arg_rhel_xbootldr_enabled = true;
+ static int arg_root_rw = -1;
+ 
+ static int add_cryptsetup(
+@@ -725,7 +726,7 @@ static int enumerate_partitions(dev_t devnum) {
+                         r = k;
+         }
+ 
+-        if (m->partitions[PARTITION_XBOOTLDR].found) {
++        if (m->partitions[PARTITION_XBOOTLDR].found && arg_rhel_xbootldr_enabled) {
+                 k = add_partition_xbootldr(m->partitions + PARTITION_XBOOTLDR);
+                 if (k < 0)
+                         r = k;
+@@ -917,6 +918,17 @@ static int parse_proc_cmdline_item(const char *key, const char *value, void *dat
+                 if (!arg_rhel_esp_enabled)
+                         log_debug("Disabling ESP partition auto-detection, systemd.rhel.gpt_auto_esp=no is defined.");
+ 
++        } else if (proc_cmdline_key_streq(key, "systemd.rhel.gpt_auto_xbootldr")) {
++
++                r = value ? parse_boolean(value) : 1;
++                if (r < 0)
++                        log_warning_errno(r, "Failed to parse gpt-auto xbootldr switch \"%s\", ignoring: %m", value);
++                else
++                        arg_rhel_xbootldr_enabled = r;
++
++                if (!arg_rhel_xbootldr_enabled)
++                        log_debug("Disabling XBOOTLDR partition auto-detection, systemd.rhel.gpt_auto_xbootldr=no is defined.");
++
+         }
+ 
+         return 0;

@@ -24,7 +24,7 @@
 Name:           systemd
 Url:            https://systemd.io
 Version:        252
-Release:        79%{?dist}
+Release:        79%{?dist}.1
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1461,6 +1461,14 @@ Patch1372: 1372-test-drop-forgotten-set-e.patch
 Patch1373: 1373-journal-treble-field-hash-table-size.patch
 Patch1374: 1374-test-rename-the-start-limit-subtest.patch
 Patch1375: 1375-ci-install-GPG-keys-for-Fedora-42.patch
+Patch1376: 1376-gpt-auto-generator-also-honor-systemd.swap-no.patch
+Patch1377: 1377-man-fix-example-for-systemd.swap-extra.patch
+Patch1378: 1378-gpt-auto-generator-allow-disabling-auto-mounting-of-.patch
+Patch1379: 1379-gpt-auto-generator-allow-disabling-auto-mounting-of-.patch
+Patch1380: 1380-gpt-auto-generator-allow-disabling-auto-mounting-of-.patch
+Patch1381: 1381-gpt-auto-generator-allow-disabling-auto-mounting-of-.patch
+Patch1382: 1382-gpt-auto-generator-allow-disabling-auto-mounting-of-.patch
+Patch1383: 1383-gpt-auto-generator-allow-disabling-auto-mounting-of-.patch
 
 # Downstream-only patches (9000–9999)
 
@@ -2338,6 +2346,16 @@ systemd-hwdb update &>/dev/null || :
 %{_prefix}/lib/dracut/modules.d/70rhel-net-naming-sysattrs/*
 
 %changelog
+* Wed Nov 11 2026 systemd maintenance team <systemd-maint@redhat.com> - 252-79.1
+- gpt-auto-generator: also honor systemd.swap=no (RHEL-303708)
+- man: fix example for systemd.swap-extra (RHEL-303708)
+- gpt-auto-generator: allow disabling auto-mounting of /home (RHEL-303708)
+- gpt-auto-generator: allow disabling auto-mounting of /var (RHEL-303708)
+- gpt-auto-generator: allow disabling auto-mounting of /srv (RHEL-303708)
+- gpt-auto-generator: allow disabling auto-mounting of /var/tmp (RHEL-303708)
+- gpt-auto-generator: allow disabling auto-mounting of ESP (RHEL-303708)
+- gpt-auto-generator: allow disabling auto-mounting of XBOOTLDR (RHEL-303708)
+
 * Wed Sep 02 2026 Frantisek Sumsal <fsumsal@redhat.com> - 252-79
 - Build docs on 64-bit architectures only (RHEL-212998)
 

@@ -1,0 +1,25 @@
+From 1e30d06eb1ef961be28f8a96e3a3f3070196ac6f Mon Sep 17 00:00:00 2001
+From: Laszlo Gombos <laszlo.gombos@gmail.com>
+Date: Tue, 10 Oct 2023 09:45:20 -0400
+Subject: [PATCH] man: fix example for systemd.swap-extra
+
+(cherry picked from commit 63947fede8f2cf3cf22a4fe96832ea6f20c5df19)
+
+Related: RHEL-303708
+---
+ man/systemd-fstab-generator.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/systemd-fstab-generator.xml b/man/systemd-fstab-generator.xml
+index 66289d6be3..4db7f8ca55 100644
+--- a/man/systemd-fstab-generator.xml
++++ b/man/systemd-fstab-generator.xml
+@@ -269,7 +269,7 @@ systemd.mount-extra=/dev/sda1:/mount-point:ext4:rw,noatime</programlisting>
+           <varname>systemd.swap-extra=</varname> is honored by both the main system and the initrd.</para>
+           <para>Example:
+           <programlisting>
+-systemd.swap=/dev/sda2:x-systemd.makefs</programlisting>
++systemd.swap-extra=/dev/sda2:x-systemd.makefs</programlisting>
+           </para>
+         </listitem>
+       </varlistentry>
