@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        239
-Release:        82%{?dist}.19
+Release:        82%{?dist}.20
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        System and Service Manager
@@ -1135,6 +1135,7 @@ Patch1082: 1082-execute-make-sure-to-call-into-PAM-after-initializin.patch
 Patch1083: 1083-pager-also-check-for-SUDO_UID.patch
 Patch1084: 1084-user-sessions-do-not-remove-etc-nologin.patch
 Patch1085: 1085-core-allow-manager_serialize-to-fail-correctly.patch
+Patch1086: 1086-journal-recover-iteration-over-vacuumed-files-43649.patch
 
 %ifarch %{ix86} x86_64 aarch64
 %global have_gnu_efi 1
@@ -1761,6 +1762,9 @@ fi
 %files tests -f .file-list-tests
 
 %changelog
+* Thu Sep 24 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.20
+- journal: recover iteration over vacuumed files (#43649) (RHEL-85054)
+
 * Mon Jul 27 2026 systemd maintenance team <systemd-maint@redhat.com> - 239-82.19
 - user-sessions: do not remove /etc/nologin (RHEL-85520)
 - core: allow manager_serialize() to fail correctly (RHEL-112550)
